@@ -60,10 +60,10 @@ public:
     }
     void push_back (T t) { this->emplace_back(t); }
     
-    void erase_index (T t) {
+    void erase_index (int index) {
         uint16_t tcnt = 0;
         for (uint16_t i = 0; i < this->array_size; ++i) {
-            if (i != t) {
+            if (i != index) {
                 this->a[tcnt] = this->a[i];
                 tcnt += 1;
             }
