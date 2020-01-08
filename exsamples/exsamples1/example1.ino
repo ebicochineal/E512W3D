@@ -6,7 +6,7 @@ E512WindowManager wm(160, 80);
 // E512W3D w( 0, 0, 160, 80, M5.Lcd.color565(200, 44, 85));
 E512W3D w( 0, 0, 160, 80, M5.Lcd.color565(20, 20, 20));
 
-Object3D a, b, c, d, e;
+Object3D a, b, c, d, e, f;
 void setup() {
     M5.begin();
     M5.Lcd.setRotation(1);
@@ -24,28 +24,34 @@ void setup() {
     b.mesh = &cube;
     b.position.x = 12;
     b.rotation.y = 180;
-    b.render_type = RenderType::PolygonNormal;
+    b.render_type = RenderType::Polygon;
+    b.color = M5.Lcd.color565(255, 0, 0);
     
     c.mesh = &cube;
     c.position.x = -12;
-    c.render_type = RenderType::PolygonNormal;
+    c.render_type = RenderType::Polygon;
+    c.color = M5.Lcd.color565(0, 255, 0);
     
     d.mesh = &cube;
     d.position.z = 12;
     d.rotation.y = 90;
-    d.render_type = RenderType::PolygonNormal;
+    d.render_type = RenderType::Polygon;
+    d.color = M5.Lcd.color565(0, 0, 255);
     
     e.mesh = &cube;
     e.position.z = -12;
     e.rotation.y = 270;
-    e.render_type = RenderType::PolygonNormal;
+    e.render_type = RenderType::WireFrame;
+    e.color = M5.Lcd.color565(255, 255, 255);
+    
     
     w.child.emplace_back(&a);
-    
     w.camera.position.y = 16;
     w.camera.rotation.x = -30;
+    w.setDirectionalLight(-1, -1, -1);
     wm.add(w);
     
+    // w.ambient = 1;
     
     M5.MPU6886.Init();
 }
@@ -59,6 +65,8 @@ float gyroZ = 0;
 float temp = 0;
 
 float v = 0;
+
+
 void loop() {
     M5.MPU6886.getGyroData(&gyroX, &gyroY, &gyroZ);
     M5.MPU6886.getAccelData(&accX, &accY, &accZ);
@@ -84,6 +92,7 @@ void loop() {
     c.position.y = abs(sin(v+0.25)) * 3 * g;
     d.position.y = abs(sin(v+0.5)) * 3 * g;
     e.position.y = abs(sin(v+1)) * 3 * g;
+    
     
     wm.fixedDraw();
     

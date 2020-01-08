@@ -243,7 +243,7 @@ public:
         return r;
     }
     
-    static Matrix4x4 movMatrix (Vector3 v) {
+    static Matrix4x4 moveMatrix (Vector3 v) {
         Matrix4x4 r = Matrix4x4::identity();
         r.m[3][0] = v.x;
         r.m[3][1] = v.y;
@@ -278,6 +278,14 @@ public:
         t.m[1][1] =  cos(z);
         r = Matrix4x4::mul(r, t);
         
+        return r;
+    }
+    
+    static Matrix4x4 scaleMatrix (Vector3 v) {
+        Matrix4x4 r = Matrix4x4::identity();
+        r.m[0][0] = v.x;
+        r.m[1][1] = v.y;
+        r.m[2][2] = v.z;
         return r;
     }
 };
@@ -315,8 +323,8 @@ public:
 enum RenderType {
     WireFrame,
     Polygon,
-    PolygonColor,
     PolygonNormal,
+    Hide,
     
 };
 
@@ -324,9 +332,9 @@ struct Object3D {
 public:
     Vector3 position;
     Vector3 rotation;
-    // Vector3 scale;
+    Vector3 scale = Vector3(1.0f, 1.0f, 1.0f);
     Mesh* mesh = NULL;
-    uint16_t linecolor = 65535;
+    uint16_t color = 65535;
     int render_type = 0;
     E512Array<Object3D*> child;
     Object3D () {};
@@ -350,15 +358,26 @@ public:
     E512Array<Object3D*> child;
     Camera3D camera;
     uint16_t bgcolor = 0;
-    uint16_t linecolor = 0;
+    float ambient = 0;// 0f - 1f
     
+    E512W3D (int16_t sx, int16_t sy, uint8_t width, uint8_t height) {
+        this->init(sx, sy, width, height, 0, Vector3(0, -1, 0));
+    }
     E512W3D (int16_t sx, int16_t sy, uint8_t width, uint8_t height, uint16_t bgcolor) {
+        this->init(sx, sy, width, height, bgcolor, Vector3(0, -1, 0));
+    }
+    E512W3D (int16_t sx, int16_t sy, uint8_t width, uint8_t height, uint16_t bgcolor, Vector3 ligtht) {
+        this->init(sx, sy, width, height, bgcolor, ligtht);
+    }
+    
+    void init (int16_t sx, int16_t sy, uint8_t width, uint8_t height, uint16_t bgcolor, Vector3 ligtht) {
         this->sx = sx;
         this->sy = sy;
         this->width = width;
         this->height = height;
         this->buffsize = width * height;
         this->bgcolor = bgcolor;
+        this->setDirectionalLight(ligtht);
     }
     
     ~E512W3D () {
@@ -381,9 +400,10 @@ public:
         for (auto&& c : this->child) {
             Matrix4x4 mat = Matrix4x4::identity();
             mat = this->worldMatrix(c, mat);
+            if (c->render_type == RenderType::Hide) { break; }
             if (c->mesh != NULL) {
                 this->worldviewTransform(c, mat);
-                if (c->render_type == 0) {
+                if (c->render_type == RenderType::WireFrame) {
                     this->projscreenTransform(c);
                     this->drawWire(c);
                 } else {
@@ -401,12 +421,16 @@ public:
         }
     }
     
-private:
-    bool bnew = true;
+    void setDirectionalLight (float x, float y, float z) { this->setDirectionalLight(Vector3(x, y, z)); }
+    void setDirectionalLight (Vector3 d) { this->light = Vector3::normalize(Vector3() - d); }
     
+private:
+    Vector3 light;
+    bool bnew = true;
     void drawChild (Object3D* p, Matrix4x4 pmat) {
         for (auto&& c : p->child) {
             Matrix4x4 mat = this->worldMatrix(c, pmat);
+            if (c->render_type == RenderType::Hide) { break; }
             if (c->mesh != NULL) {
                 this->worldviewTransform(c, mat);
                 if (c->render_type == RenderType::WireFrame) {
@@ -428,14 +452,20 @@ private:
     }
     
     void polygon (Object3D* o) {
+        
+        float r = max((((o->color >> 11) * 527 + 23 ) >> 6) - 0.1f, 0.0f);
+        float g = max(((((o->color >> 5) & 0b111111) * 259 + 33 ) >> 6) - 0.1f, 0.0f);
+        float b = max((((o->color & 0b11111) * 527 + 23 ) >> 6) - 0.1f, 0.0f);
+        
+        
         for (int i = 0; i < o->mesh->faces.size(); ++i) {
             const Face& f = o->mesh->faces[i];
             const Vector3& v0 = o->mesh->tvertexs[f.x];
             const Vector3& v1 = o->mesh->tvertexs[f.y];
             const Vector3& v2 = o->mesh->tvertexs[f.z];
             const Vector3 n = Vector3::normalize(Vector3::cross(v1-v0, v2-v0));
-            const float d = min(max(Vector3::dot(Vector3(1.0f, 0.5f, 0.5f), n), 0.1f), 1.0f) * 255.0f;
-            o->mesh->colors[i] = M5.Lcd.color565(d, d, d);
+            const float d = min(max(Vector3::dot(this->light, n), 0.0f) + this->ambient, 1.0f);
+            o->mesh->colors[i] = M5.Lcd.color565(r*d+this->ambient, g*d, b*d);
         }
     }
     
@@ -463,16 +493,17 @@ private:
         // world
         Matrix4x4 mat = Matrix4x4::identity();
         mat = Matrix4x4::mul(mat, Matrix4x4::rotMatrix(o->rotation));
-        mat = Matrix4x4::mul(mat, Matrix4x4::movMatrix(o->position));
-        
+        mat = Matrix4x4::mul(mat, Matrix4x4::moveMatrix(o->position));
+        mat = Matrix4x4::mul(mat, Matrix4x4::scaleMatrix(o->scale));
         mat = Matrix4x4::mul(mat, pmat);
         return mat;
     }
     
     void worldviewTransform (Object3D* o,  Matrix4x4 mat) {
         // viwe
+        mat = Matrix4x4::mul(mat, Matrix4x4::moveMatrix(Vector3() - this->camera.position));
         mat = Matrix4x4::mul(mat, Matrix4x4::rotMatrix(Vector3() - this->camera.rotation));
-        mat = Matrix4x4::mul(mat, Matrix4x4::movMatrix(Vector3() - this->camera.position));
+        
         
         // WorldViewTransform
         for (int i = 0; i < o->mesh->vertexs.size(); ++i) {
@@ -505,9 +536,9 @@ private:
             if (!((v0.x >= 0 && v0.x < this->width) || (v1.x >= 0 && v1.x < this->width) || (v2.x >= 0 && v2.x < this->width))) { continue; }
             if (!((v0.y >= 0 && v0.y < this->height) || (v1.y >= 0 && v1.y < this->height) || (v2.y >= 0 && v2.y < this->height))) { continue; }
             
-            this->drawBuffLine(v0.x, v0.y, v1.x, v1.y, o->linecolor);
-            this->drawBuffLine(v1.x, v1.y, v2.x, v2.y, o->linecolor);
-            this->drawBuffLine(v2.x, v2.y, v0.x, v0.y, o->linecolor);
+            this->drawBuffLine(v0.x, v0.y, v1.x, v1.y, o->color);
+            this->drawBuffLine(v1.x, v1.y, v2.x, v2.y, o->color);
+            this->drawBuffLine(v2.x, v2.y, v0.x, v0.y, o->color);
         }
     }
     
