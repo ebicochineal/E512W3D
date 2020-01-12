@@ -7,11 +7,11 @@ template <class T>
 class E512Array {
 private:
     uint16_t array_size = 0;
-    uint16_t max_array_size = 8;
+    uint16_t max_array_size = 2;
 public:
     T* a;
     
-    E512Array () { this->a = new T[8]; }
+    E512Array () { this->a = new T[2]; }
     E512Array (uint16_t s) {
         this->a = new T[s];
         this->max_array_size = s;
@@ -40,13 +40,7 @@ public:
     template <class... Args>
     void emplace_back (Args... args) {
         if (this->array_size + 1 > this->max_array_size) {
-            if (this->max_array_size < 128) {
-                this->max_array_size += 8;
-            } else if (this->max_array_size < 512) {
-                this->max_array_size += 64;
-            } else {
-                this->max_array_size += 128;
-            }
+            this->max_array_size *= 2;
             T* a = new T[this->max_array_size];
             for (int i = 0; i < this->array_size; ++i) { a[i] = this->a[i]; }
             a[this->array_size] = T(args...);
@@ -325,7 +319,6 @@ enum RenderType {
     Polygon,
     PolygonNormal,
     Hide,
-    
 };
 
 struct Object3D {
@@ -335,7 +328,7 @@ public:
     Vector3 scale = Vector3(1.0f, 1.0f, 1.0f);
     Mesh* mesh = NULL;
     uint16_t color = 65535;
-    int render_type = 0;
+    uint8_t render_type = 0;
     E512Array<Object3D*> child;
     Object3D () {};
 };
@@ -378,6 +371,9 @@ public:
         this->buffsize = width * height;
         this->bgcolor = bgcolor;
         this->setDirectionalLight(ligtht);
+        
+        this->buff = new uint16_t[this->buffsize];
+        this->zbuff = new uint16_t[this->buffsize];
     }
     
     ~E512W3D () {
@@ -385,40 +381,23 @@ public:
         delete[] this->zbuff;
     }
     
+    void resize (uint8_t width, uint8_t height) {
+        delete[] this->buff;
+        delete[] this->zbuff;
+        
+        this->width = width;
+        this->height = height;
+        this->buffsize = width * height;
+        
+        this->buff = new uint16_t[this->buffsize];
+        this->zbuff = new uint16_t[this->buffsize];
+    }
+    
+    
     void draw () {
-        
-        if (this->bnew) {
-            this->buff = new uint16_t[this->buffsize];
-            this->zbuff = new uint16_t[this->buffsize];
-            this->bnew = false;
-        }
-        
-        
         this->clear();
         
-        
-        for (auto&& c : this->child) {
-            Matrix4x4 mat = Matrix4x4::identity();
-            mat = this->worldMatrix(c, mat);
-            if (c->render_type == RenderType::Hide) { break; }
-            if (c->mesh != NULL) {
-                this->worldviewTransform(c, mat);
-                if (c->render_type == RenderType::WireFrame) {
-                    this->projscreenTransform(c);
-                    this->drawWire(c);
-                } else {
-                    if (c->render_type == RenderType::Polygon) {
-                        this->polygon(c);
-                    }
-                    if (c->render_type == RenderType::PolygonNormal) {
-                        this->polygonNormal(c);
-                    }
-                    this->projscreenTransform(c);
-                    this->drawPolygon(c);
-                }
-            }
-            this->drawChild(c, mat);
-        }
+        this->drawChild(this->child, Matrix4x4::identity());
     }
     
     void setDirectionalLight (float x, float y, float z) { this->setDirectionalLight(Vector3(x, y, z)); }
@@ -426,11 +405,12 @@ public:
     
 private:
     Vector3 light;
-    bool bnew = true;
-    void drawChild (Object3D* p, Matrix4x4 pmat) {
-        for (auto&& c : p->child) {
+    
+    void drawChild (E512Array<Object3D*>& child, Matrix4x4 pmat) {
+        for (auto&& c : child) {
+            if (c->render_type == RenderType::Hide) { continue; }
+            
             Matrix4x4 mat = this->worldMatrix(c, pmat);
-            if (c->render_type == RenderType::Hide) { break; }
             if (c->mesh != NULL) {
                 this->worldviewTransform(c, mat);
                 if (c->render_type == RenderType::WireFrame) {
@@ -447,7 +427,7 @@ private:
                     this->drawPolygon(c);
                 }
             }
-            this->drawChild(c, mat);
+            this->drawChild(c->child, mat);
         }
     }
     
@@ -465,7 +445,7 @@ private:
             const Vector3& v2 = o->mesh->tvertexs[f.z];
             const Vector3 n = Vector3::normalize(Vector3::cross(v1-v0, v2-v0));
             const float d = min(max(Vector3::dot(this->light, n), 0.0f) + this->ambient, 1.0f);
-            o->mesh->colors[i] = M5.Lcd.color565(r*d+this->ambient, g*d, b*d);
+            o->mesh->colors[i] = M5.Lcd.color565(r*d, g*d, b*d);
         }
     }
     
@@ -725,15 +705,20 @@ public:
     }
     
     void add (E512W3D& w) {
-        this->ws[this->wsize] = &w;
-        this->wsize += 1;
+        if (this->wsize < 32) {
+            this->ws[this->wsize] = &w;
+            this->wsize += 1;
+        }
+        
+        
     }
     
     void add (int16_t sx, int16_t sy, uint8_t width, uint8_t height, uint16_t bgcolor) {
-        this->ws[this->wsize] = new E512W3D(sx, sy, width, height, bgcolor);
-        this->wsize += 1;
+        if (this->wsize < 32) {
+            this->ws[this->wsize] = new E512W3D(sx, sy, width, height, bgcolor);
+            this->wsize += 1;
+        }
     }
-    
     
     void buffUpdate () {
         // for (int i = 0; i < this->buffsize; ++i) { this->buff[i] = 0; }

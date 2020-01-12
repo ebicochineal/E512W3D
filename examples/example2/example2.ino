@@ -7,14 +7,17 @@ E512W3D w( 0, 0, 160, 80, M5.Lcd.color565(0, 0, 0));
 E512Array<Object3D> origins;
 E512Array<Object3D> objs;
 Object3D a;
+
+const uint8_t gsize = 16;
+
 void setup() {
     M5.begin();
     M5.Lcd.setRotation(1);
     M5.Axp.ScreenBreath(8);
     cubeInit();
     
-    for (int y = 0; y < 8; ++y) {
-        for (int x = 0; x < 8; ++x) {
+    for (int y = 0; y < gsize; ++y) {
+        for (int x = 0; x < gsize; ++x) {
             Object3D o;
             o.mesh = &cube;
             o.render_type = RenderType::Polygon;
@@ -24,11 +27,11 @@ void setup() {
         }
     }
     
-    for (int y = 0; y < 8; ++y) {
-        for (int x = 0; x < 8; ++x) {
+    for (int y = 0; y < gsize; ++y) {
+        for (int x = 0; x < gsize; ++x) {
             Object3D o;
-            o.position.x = -7 + x * 2;
-            o.position.z = 7 + -y * 2;
+            o.position.x = -gsize + x * 2 + 1;
+            o.position.z = gsize + -y * 2 - 1;
             o.child.emplace_back(&objs[origins.size()]);
             origins.emplace_back(o);
         }
@@ -41,8 +44,8 @@ void setup() {
     w.child.emplace_back(&a);
     
     
-    w.camera.position.z = 16;
-    w.camera.position.y = 10;
+    w.camera.position.z = 32;
+    w.camera.position.y = 16;
     w.camera.rotation.x = -30;
     w.setDirectionalLight(0, -1, -1);
     w.ambient = 0.7;
@@ -82,9 +85,9 @@ void loop() {
     int16_t bati = (int16_t)map(batv, 3300, 4100, 0, 100);
     float g = bati * 0.01f;
     
-    for (int i = 0; i < 64; ++i) {
-        int x = i % 8;
-        int y = i / 8;
+    for (int i = 0; i < gsize * gsize; ++i) {
+        int x = i % gsize;
+        int y = i / gsize;
         
         origins[i].scale.y = sin((x+y) + v) * 0.5 + cos(y + v) * 0.5 + 1.0;
         float t = sin((x+y) + v) * 0.5  + cos(y + v) * 0.5  + 1.0;
@@ -93,7 +96,7 @@ void loop() {
         objs[i].color = M5.Lcd.color565(32.0 * t, 64.0 * t, 255.0 * t);
     }
     
-    a.rotation.y = v * 2;
+    a.rotation.y = v * 4;
     v += 0.2;
     
     wm.fixedDraw();
