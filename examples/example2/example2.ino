@@ -7,6 +7,7 @@ E512W3D w( 0, 0, 160, 80, M5.Lcd.color565(0, 0, 0));
 E512Array<Object3D> origins;
 E512Array<Object3D> objs;
 Object3D a;
+Object3D camera;
 
 const uint8_t gsize = 16;
 
@@ -32,21 +33,27 @@ void setup() {
             Object3D o;
             o.position.x = -gsize + x * 2 + 1;
             o.position.z = gsize + -y * 2 - 1;
-            o.child.emplace_back(&objs[origins.size()]);
             origins.emplace_back(o);
         }
     }
     
-    for (auto&& i : origins) {
-        a.child.emplace_back(&i);
+    for (int i = 0; i < gsize * gsize; ++i) {
+        // objs[i].setParent(origins[i]);
+        origins[i].addChild(objs[i]);
     }
     
-    w.child.emplace_back(&a);
     
+    for (auto&& i : origins) {
+        a.addChild(i);
+    }
     
-    w.camera.position.z = 32;
-    w.camera.position.y = 16;
-    w.camera.rotation.x = -30;
+    w.addChild(a);
+    
+    camera.position.z = 32;
+    camera.position.y = 16;
+    camera.rotation.x = -30;
+    w.setCamera(camera);
+    
     w.setDirectionalLight(0, -1, -1);
     w.ambient = 0.7;
     wm.add(w);

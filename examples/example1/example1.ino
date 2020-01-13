@@ -7,6 +7,8 @@ E512WindowManager wm(160, 80);
 E512W3D w( 0, 0, 160, 80, M5.Lcd.color565(20, 20, 20));
 
 Object3D a, b, c, d, e, f;
+Object3D camera;
+
 void setup() {
     M5.begin();
     M5.Lcd.setRotation(1);
@@ -14,12 +16,11 @@ void setup() {
     cubeInit();
     
     a.mesh = &cube;
-    a.position.z = -32;
     a.render_type = RenderType::PolygonNormal;
-    a.child.emplace_back(&b);
-    a.child.emplace_back(&c);
-    a.child.emplace_back(&d);
-    a.child.emplace_back(&e);
+    a.addChild(b);
+    a.addChild(c);
+    a.addChild(d);
+    a.addChild(e);
     
     b.mesh = &cube;
     b.position.x = 12;
@@ -44,10 +45,11 @@ void setup() {
     e.render_type = RenderType::WireFrame;
     e.color = M5.Lcd.color565(255, 255, 255);
     
-    
-    w.child.emplace_back(&a);
-    w.camera.position.y = 16;
-    w.camera.rotation.x = -30;
+    w.addChild(a);
+    camera.position.z = 32;
+    camera.position.y = 16;
+    camera.rotation.x = -30;
+    w.setCamera(camera);
     w.setDirectionalLight(-1, -1, -1);
     wm.add(w);
     

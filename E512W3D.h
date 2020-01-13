@@ -7,11 +7,11 @@ template <class T>
 class E512Array {
 private:
     uint16_t array_size = 0;
-    uint16_t max_array_size = 2;
+    uint16_t max_array_size = 1;
 public:
     T* a;
     
-    E512Array () { this->a = new T[2]; }
+    E512Array () { this->a = new T[1]; }
     E512Array (uint16_t s) {
         this->a = new T[s];
         this->max_array_size = s;
@@ -293,22 +293,19 @@ struct Face {
 struct Mesh{
 public:
     E512Array<Vector3> vertexs;
-    E512Array<Vector3> tvertexs;
     E512Array<Face> faces;
-    E512Array<uint16_t> colors;
     Mesh () {};
     ~Mesh () {};
     
     void addVertex (float x, float y, float z) { this->addVertex(Vector3(x, y, z)); }
     void addVertex (Vector3 v) {
         this->vertexs.emplace_back(v);
-        this->tvertexs.emplace_back(v);
+        // this->tvertexs.emplace_back(v);
     }
     
     void addFace (uint16_t x, uint16_t y, uint16_t z) { this->addFace(Face(x, y, z)); }
     void addFace (Face f) {
         this->faces.emplace_back(f);
-        this->colors.emplace_back(0);
     }
     
 };
@@ -328,9 +325,20 @@ public:
     Vector3 scale = Vector3(1.0f, 1.0f, 1.0f);
     Mesh* mesh = NULL;
     uint16_t color = 65535;
-    uint8_t render_type = 0;
+    uint8_t render_type = RenderType::WireFrame;
+    Object3D* parent;
     E512Array<Object3D*> child;
     Object3D () {};
+    
+    
+    void setParent (Object3D& o) {
+        this->parent = &o;
+        o.child.emplace_back(this);
+    }
+    void addChild (Object3D& o) {
+        o.parent = this;
+        this->child.emplace_back(&o);
+    }
 };
 
 struct Camera3D {
@@ -349,8 +357,9 @@ public:
     uint16_t width, height;
     uint16_t buffsize = 0;
     E512Array<Object3D*> child;
-    Camera3D camera;
+    Object3D* camera = NULL;
     uint16_t bgcolor = 0;
+    Matrix4x4 view;
     float ambient = 0;// 0f - 1f
     
     E512W3D (int16_t sx, int16_t sy, uint8_t width, uint8_t height) {
@@ -396,13 +405,21 @@ public:
     
     void draw () {
         this->clear();
-        
+        this->updateViewMatrix();
         this->drawChild(this->child, Matrix4x4::identity());
     }
     
     void setDirectionalLight (float x, float y, float z) { this->setDirectionalLight(Vector3(x, y, z)); }
     void setDirectionalLight (Vector3 d) { this->light = Vector3::normalize(Vector3() - d); }
     
+    void addChild (Object3D& o) {
+        o.parent = NULL;
+        this->child.emplace_back(&o);
+    }
+    
+    void setCamera (Object3D& o) {
+        this->camera = &o;
+    }
 private:
     Vector3 light;
     
@@ -412,65 +429,66 @@ private:
             
             Matrix4x4 mat = this->worldMatrix(c, pmat);
             if (c->mesh != NULL) {
-                this->worldviewTransform(c, mat);
+                E512Array<Vector3> v = c->mesh->vertexs;
                 if (c->render_type == RenderType::WireFrame) {
-                    this->projscreenTransform(c);
-                    this->drawWire(c);
-                } else {
-                    if (c->render_type == RenderType::Polygon) {
-                        this->polygon(c);
-                    }
-                    if (c->render_type == RenderType::PolygonNormal) {
-                        this->polygonNormal(c);
-                    }
-                    this->projscreenTransform(c);
-                    this->drawPolygon(c);
+                    this->worldviewTransform(c, mat, v);
+                    this->projscreenTransform(c, v);
+                    this->drawWire(c, v);
+                }
+                if (c->render_type == RenderType::Polygon) {
+                    E512Array<uint16_t> colors(c->mesh->faces.size());
+                    this->worldviewTransform(c, mat, v);
+                    this->polygon(c, v, colors);
+                    this->projscreenTransform(c, v);
+                    this->drawPolygon(c, v, colors);
+                }
+                if (c->render_type == RenderType::PolygonNormal) {
+                    E512Array<uint16_t> colors(c->mesh->faces.size());
+                    this->worldviewTransform(c, mat, v);
+                    this->polygonNormal(c, v, colors);
+                    this->projscreenTransform(c, v);
+                    this->drawPolygon(c, v, colors);
                 }
             }
             this->drawChild(c->child, mat);
         }
     }
     
-    void polygon (Object3D* o) {
-        
+    void polygon (Object3D* o, E512Array<Vector3>& v, E512Array<uint16_t>& colors) {
         float r = max((((o->color >> 11) * 527 + 23 ) >> 6) - 0.1f, 0.0f);
         float g = max(((((o->color >> 5) & 0b111111) * 259 + 33 ) >> 6) - 0.1f, 0.0f);
         float b = max((((o->color & 0b11111) * 527 + 23 ) >> 6) - 0.1f, 0.0f);
         
-        
         for (int i = 0; i < o->mesh->faces.size(); ++i) {
             const Face& f = o->mesh->faces[i];
-            const Vector3& v0 = o->mesh->tvertexs[f.x];
-            const Vector3& v1 = o->mesh->tvertexs[f.y];
-            const Vector3& v2 = o->mesh->tvertexs[f.z];
+            const Vector3& v0 = v[f.x];
+            const Vector3& v1 = v[f.y];
+            const Vector3& v2 = v[f.z];
             const Vector3 n = Vector3::normalize(Vector3::cross(v1-v0, v2-v0));
             const float d = min(max(Vector3::dot(this->light, n), 0.0f) + this->ambient, 1.0f);
-            o->mesh->colors[i] = M5.Lcd.color565(r*d, g*d, b*d);
+            colors[i] = M5.Lcd.color565(r*d, g*d, b*d);
         }
     }
     
-    void polygonNormal (Object3D* o) {
+    void polygonNormal (Object3D* o, E512Array<Vector3>& v, E512Array<uint16_t>& colors) {
         for (int i = 0; i < o->mesh->faces.size(); ++i) {
             const Face& f = o->mesh->faces[i];
-            const Vector3& v0 = o->mesh->tvertexs[f.x];
-            const Vector3& v1 = o->mesh->tvertexs[f.y];
-            const Vector3& v2 = o->mesh->tvertexs[f.z];
+            const Vector3& v0 = v[f.x];
+            const Vector3& v1 = v[f.y];
+            const Vector3& v2 = v[f.z];
             const Vector3 n = (Vector3::normalize(Vector3::cross(v1-v0, v2-v0)) * 0.5f + 0.5f) * 255.0f;
-            o->mesh->colors[i] = M5.Lcd.color565(n.x, n.y, n.z);
+            colors[i] = M5.Lcd.color565(n.x, n.y, n.z);
         }
     }
     
-    void projscreenTransform (Object3D* o) {
+    void projscreenTransform (Object3D* o, E512Array<Vector3>& v) {
         Matrix4x4 mat = Matrix4x4::projscreenMatrix(sx, sy, this->width, this->height);
-        for (int i = 0; i < o->mesh->vertexs.size(); ++i) {
-            Vector3 t = o->mesh->tvertexs[i];
-            t = Matrix4x4::mul(t, mat);
-            o->mesh->tvertexs[i] = t;
+        for (int i = 0; i < v.size(); ++i) {
+            v[i] = Matrix4x4::mul(v[i], mat);
         }
     }
     
     Matrix4x4 worldMatrix (Object3D* o, Matrix4x4 pmat) {
-        // world
         Matrix4x4 mat = Matrix4x4::identity();
         mat = Matrix4x4::mul(mat, Matrix4x4::rotMatrix(o->rotation));
         mat = Matrix4x4::mul(mat, Matrix4x4::moveMatrix(o->position));
@@ -479,20 +497,29 @@ private:
         return mat;
     }
     
-    void worldviewTransform (Object3D* o,  Matrix4x4 mat) {
-        // viwe
-        mat = Matrix4x4::mul(mat, Matrix4x4::moveMatrix(Vector3() - this->camera.position));
-        mat = Matrix4x4::mul(mat, Matrix4x4::rotMatrix(Vector3() - this->camera.rotation));
-        
-        
-        // WorldViewTransform
-        for (int i = 0; i < o->mesh->vertexs.size(); ++i) {
-            Vector3 t = o->mesh->vertexs[i];
-            t = Matrix4x4::mul(t, mat);
-            o->mesh->tvertexs[i] = t;
+    void updateViewMatrix () {
+        Matrix4x4 mat = Matrix4x4::identity();
+        // mat = Matrix4x4::mul(mat, Matrix4x4::moveMatrix(Vector3() - this->camera->position));
+        // mat = Matrix4x4::mul(mat, Matrix4x4::rotMatrix(Vector3() - this->camera->rotation));
+        // mat = Matrix4x4::mul(mat, Matrix4x4::moveMatrix(Vector3() - this->camera->parent->position));
+        // mat = Matrix4x4::mul(mat, Matrix4x4::rotMatrix(Vector3() - this->camera->parent->rotation));
+        if (this->camera != NULL) {
+            Object3D* obj = this->camera;
+            while (obj != NULL) {
+                mat = Matrix4x4::mul(mat, Matrix4x4::moveMatrix(Vector3() - obj->position));
+                mat = Matrix4x4::mul(mat, Matrix4x4::rotMatrix(Vector3() - obj->rotation));
+                obj = obj->parent;
+            }
         }
+        this->view = mat;
     }
     
+    void worldviewTransform (Object3D* o, Matrix4x4 mat, E512Array<Vector3>& v) {
+        mat = Matrix4x4::mul(mat, this->view);
+        for (int i = 0; i < v.size(); ++i) {
+            v[i] = Matrix4x4::mul(v[i], mat);
+        }
+    }
     
     void clear () {
         for (int y = 0; y < this->height; ++y) {
@@ -503,38 +530,36 @@ private:
         }
     }
     
-    void drawWire (Object3D* o) {
+    void drawWire (Object3D* o, E512Array<Vector3>& v) {
         for (int i = 0; i < o->mesh->faces.size(); ++i) {
             const Face& f = o->mesh->faces[i];
-            const Vector3& v0 = o->mesh->tvertexs[f.x];
-            const Vector3& v1 = o->mesh->tvertexs[f.y];
-            const Vector3& v2 = o->mesh->tvertexs[f.z];
+            const Vector3& v0 = v[f.x];
+            const Vector3& v1 = v[f.y];
+            const Vector3& v2 = v[f.z];
             
             if (Vector3::cross(v1 - v0, v2 - v1).z > 0) { continue; }
-            
             if (!((v0.z > 0 && v0.z < 1) || (v1.z > 0 && v1.z < 1) || (v2.z > 0 && v2.z < 1))) { continue; }
             if (!((v0.x >= 0 && v0.x < this->width) || (v1.x >= 0 && v1.x < this->width) || (v2.x >= 0 && v2.x < this->width))) { continue; }
             if (!((v0.y >= 0 && v0.y < this->height) || (v1.y >= 0 && v1.y < this->height) || (v2.y >= 0 && v2.y < this->height))) { continue; }
-            
             this->drawBuffLine(v0.x, v0.y, v1.x, v1.y, o->color);
             this->drawBuffLine(v1.x, v1.y, v2.x, v2.y, o->color);
             this->drawBuffLine(v2.x, v2.y, v0.x, v0.y, o->color);
         }
     }
     
-    void drawPolygon (Object3D* o) {
+    void drawPolygon (Object3D* o, E512Array<Vector3>& v, E512Array<uint16_t>& colors) {
         for (int i = 0; i < o->mesh->faces.size(); ++i) {
             const Face& f = o->mesh->faces[i];
-            const Vector3& v0 = o->mesh->tvertexs[f.x];
-            const Vector3& v1 = o->mesh->tvertexs[f.y];
-            const Vector3& v2 = o->mesh->tvertexs[f.z];
+            const Vector3& v0 = v[f.x];
+            const Vector3& v1 = v[f.y];
+            const Vector3& v2 = v[f.z];
             
             if (Vector3::cross(v1 - v0, v2 - v1).z > 0) { continue; }
             if (!((v0.z > 0 && v0.z < 1) || (v1.z > 0 && v1.z < 1) || (v2.z > 0 && v2.z < 1))) { continue; }
             if (!((v0.x >= 0 && v0.x < this->width) || (v1.x >= 0 && v1.x < this->width) || (v2.x >= 0 && v2.x < this->width))) { continue; }
             if (!((v0.y >= 0 && v0.y < this->height) || (v1.y >= 0 && v1.y < this->height) || (v2.y >= 0 && v2.y < this->height))) { continue; }
             uint16_t z = (1.0f-(v0.z+v1.z+v2.z)*0.333f) * 32767;
-            this->fillTriangle(v0.x, v0.y, v1.x, v1.y, v2.x, v2.y, o->mesh->colors[i], z);
+            this->fillTriangle(v0.x, v0.y, v1.x, v1.y, v2.x, v2.y, colors[i], z);
         }
     }
     
