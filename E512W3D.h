@@ -356,10 +356,7 @@ public:
     int16_t sy = 0;
     uint16_t width, height;
     uint16_t buffsize = 0;
-    E512Array<Object3D*> child;
-    Object3D* camera = NULL;
     uint16_t bgcolor = 0;
-    Matrix4x4 view;
     float ambient = 0;// 0f - 1f
     
     E512W3D (int16_t sx, int16_t sy, uint8_t width, uint8_t height) {
@@ -406,6 +403,7 @@ public:
     void draw () {
         this->clear();
         this->updateViewMatrix();
+        this->projescreen = Matrix4x4::projscreenMatrix(sx, sy, this->width, this->height);
         this->drawChild(this->child, Matrix4x4::identity());
     }
     
@@ -421,7 +419,11 @@ public:
         this->camera = &o;
     }
 private:
+    Object3D* camera = NULL;
+    E512Array<Object3D*> child;
     Vector3 light;
+    Matrix4x4 view;
+    Matrix4x4 projescreen;
     
     void drawChild (E512Array<Object3D*>& child, Matrix4x4 pmat) {
         for (auto&& c : child) {
@@ -482,9 +484,8 @@ private:
     }
     
     void projscreenTransform (Object3D* o, E512Array<Vector3>& v) {
-        Matrix4x4 mat = Matrix4x4::projscreenMatrix(sx, sy, this->width, this->height);
         for (int i = 0; i < v.size(); ++i) {
-            v[i] = Matrix4x4::mul(v[i], mat);
+            v[i] = Matrix4x4::mul(v[i], this->projescreen);
         }
     }
     
@@ -499,10 +500,7 @@ private:
     
     void updateViewMatrix () {
         Matrix4x4 mat = Matrix4x4::identity();
-        // mat = Matrix4x4::mul(mat, Matrix4x4::moveMatrix(Vector3() - this->camera->position));
-        // mat = Matrix4x4::mul(mat, Matrix4x4::rotMatrix(Vector3() - this->camera->rotation));
-        // mat = Matrix4x4::mul(mat, Matrix4x4::moveMatrix(Vector3() - this->camera->parent->position));
-        // mat = Matrix4x4::mul(mat, Matrix4x4::rotMatrix(Vector3() - this->camera->parent->rotation));
+        
         if (this->camera != NULL) {
             Object3D* obj = this->camera;
             while (obj != NULL) {
