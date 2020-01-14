@@ -330,7 +330,6 @@ public:
     E512Array<Object3D*> child;
     Object3D () {};
     
-    
     void setParent (Object3D& o) {
         this->parent = &o;
         o.child.emplace_back(this);
@@ -341,13 +340,6 @@ public:
     }
 };
 
-struct Camera3D {
-public:
-    Vector3 position;
-    Vector3 rotation;
-    Camera3D () {};
-};
-
 class E512W3D {
 public:
     uint16_t* buff = NULL;
@@ -355,7 +347,6 @@ public:
     int16_t sx = 0;
     int16_t sy = 0;
     uint16_t width, height;
-    uint16_t buffsize = 0;
     uint16_t bgcolor = 0;
     float ambient = 0;// 0f - 1f
     
@@ -419,6 +410,7 @@ public:
         this->camera = &o;
     }
 private:
+    uint16_t buffsize = 0;
     Object3D* camera = NULL;
     E512Array<Object3D*> child;
     Vector3 light;
@@ -709,7 +701,6 @@ public:
     uint8_t wsize = 0;
     uint16_t width = 0;
     uint16_t height = 0;
-    uint64_t prev_time = 0;
     // uint16_t* buff;
     // uint16_t buffsize = 0;
     
@@ -732,15 +723,32 @@ public:
             this->ws[this->wsize] = &w;
             this->wsize += 1;
         }
-        
-        
     }
     
-    void add (int16_t sx, int16_t sy, uint8_t width, uint8_t height, uint16_t bgcolor) {
-        if (this->wsize < 32) {
-            this->ws[this->wsize] = new E512W3D(sx, sy, width, height, bgcolor);
-            this->wsize += 1;
+    void fixedDraw () {
+        this->buffUpdate();
+        uint64_t t = millis();
+        while (t - this->prev_time < 33) {
+            delay(1);
+            t = millis();
         }
+        this->prev_time = t;
+        this->screenDraw();
+    }
+    
+    void reDraw () {
+        this->buffUpdate();
+        this->prev_time = millis();
+        this->screenDraw();
+    }
+private:
+    uint64_t prev_time = 0;
+    void screenDraw () {
+        // M5.Lcd.setAddrWindow(0, 0, this->width, this->height);
+        // M5.Lcd.pushColors(this->buff, this->buffsize);
+        
+        
+        this->tft_es_buff->pushSprite(0, 0);
     }
     
     void buffUpdate () {
@@ -769,31 +777,6 @@ public:
         }
     }
     
-    void screenDraw () {
-        // M5.Lcd.setAddrWindow(0, 0, this->width, this->height);
-        // M5.Lcd.pushColors(this->buff, this->buffsize);
-        
-        
-        this->tft_es_buff->pushSprite(0, 0);
-    }
-    
-    
-    void fixedDraw () {
-        this->buffUpdate();
-        uint64_t t = millis();
-        while (t - this->prev_time < 33) {
-            delay(1);
-            t = millis();
-        }
-        this->prev_time = t;
-        this->screenDraw();
-    }
-    
-    void reDraw () {
-        this->buffUpdate();
-        this->prev_time = millis();
-        this->screenDraw();
-    }
 };
 
 #endif
