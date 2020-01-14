@@ -533,19 +533,15 @@ private:
         
         if (this->camera != NULL) {
             Object3D* obj = this->camera;
-            v.emplace_back(obj);
             while (obj != NULL) {
-                // mat = Matrix4x4::mul(mat, Matrix4x4::moveMatrix(Vector3() - obj->position));
-                // mat = Matrix4x4::mul(mat, Matrix4x4::rotMatrix(Vector3() - obj->rotation));
-                obj = obj->parent;
                 v.emplace_back(obj);
+                obj = obj->parent;
             }
         }
         for (int i = v.size()-1; i >= 0; --i) {
-            Object3D* obj = v[i];
-            if (obj == NULL) { continue; }
-            mat = Matrix4x4::mul(mat, Matrix4x4::moveMatrix(Vector3() - obj->position));
-            mat = Matrix4x4::mul(mat, Matrix4x4::rotMatrix(Vector3() - obj->rotation));
+            if (v[i] == NULL) { break; }
+            mat = Matrix4x4::mul(mat, Matrix4x4::moveMatrix(Vector3() - v[i]->position));
+            mat = Matrix4x4::mul(mat, Matrix4x4::rotMatrix(Vector3() - v[i]->rotation));
         }
         
         
