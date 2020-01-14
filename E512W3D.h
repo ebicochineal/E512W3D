@@ -218,7 +218,28 @@ public:
         return r;
     }
     
-    static Matrix4x4 screenMatrix (float sx, float sy, float w, float h) {
+    static Matrix4x4 orthoMatrix (float w, float h, float size) {
+        Matrix4x4 r;
+        float left = -w * size;
+        float right = w * size;
+        
+        float top = h * size;
+        float bottom = -h * size;
+        
+        float near = 4.0f;
+        float far = 100.0f;
+        r.m[0][0] = 2.0f / (right - left);
+        r.m[1][1] = 2.0f / (top - bottom);
+        r.m[2][2] = -2.0f / (near - far);
+        r.m[3][0] = -((right+left)/(right-left));
+        r.m[3][1] = -((top+bottom)/(top-bottom));
+        r.m[3][2] = ((far+near)/(far-near));
+        
+        r.m[3][3] = 1.0f;
+        
+        return r;
+    }
+    static Matrix4x4 screenMatrix (float w, float h) {
         Matrix4x4 r;
         float hcx = w / 2;
         float hcy = h / 2;
@@ -229,11 +250,18 @@ public:
         return r;
     }
     
-    static Matrix4x4 projscreenMatrix (float sx, float sy, float w, float h) {
+    static Matrix4x4 projscreenMatrix (float w, float h) {
         Matrix4x4 r;
         r.m[0][0] = 1.0f; r.m[1][1] = 1.0f; r.m[2][2] = 1.0f; r.m[3][3] = 1.0f;
         r = Matrix4x4::mul(r, Matrix4x4::projectionMatrix(w, h));
-        r = Matrix4x4::mul(r, Matrix4x4::screenMatrix(sx, sy, w, h));
+        r = Matrix4x4::mul(r, Matrix4x4::screenMatrix(w, h));
+        return r;
+    }
+    static Matrix4x4 orthoscreenMatrix (float w, float h, float size) {
+        Matrix4x4 r;
+        r.m[0][0] = 1.0f; r.m[1][1] = 1.0f; r.m[2][2] = 1.0f; r.m[3][3] = 1.0f;
+        r = Matrix4x4::mul(r, Matrix4x4::orthoMatrix(w, h, size));
+        r = Matrix4x4::mul(r, Matrix4x4::screenMatrix(w, h));
         return r;
     }
     
@@ -348,6 +376,8 @@ public:
     int16_t sy = 0;
     uint16_t width, height;
     uint16_t bgcolor = 0;
+    bool isortho = false;
+    float ortho_size = 0.1f;
     float ambient = 0;// 0f - 1f
     
     E512W3D (int16_t sx, int16_t sy, uint8_t width, uint8_t height) {
@@ -394,7 +424,13 @@ public:
     void draw () {
         this->clear();
         this->updateViewMatrix();
-        this->projescreen = Matrix4x4::projscreenMatrix(sx, sy, this->width, this->height);
+        
+        if (this->isortho) {
+            this->projescreen = Matrix4x4::orthoscreenMatrix(this->width, this->height, this->ortho_size);
+        } else {
+            this->projescreen = Matrix4x4::projscreenMatrix(this->width, this->height);
+        }
+        
         this->drawChild(this->child, Matrix4x4::identity());
     }
     
@@ -493,14 +529,26 @@ private:
     void updateViewMatrix () {
         Matrix4x4 mat = Matrix4x4::identity();
         
+        E512Array<Object3D*> v;
+        
         if (this->camera != NULL) {
             Object3D* obj = this->camera;
+            v.emplace_back(obj);
             while (obj != NULL) {
-                mat = Matrix4x4::mul(mat, Matrix4x4::moveMatrix(Vector3() - obj->position));
-                mat = Matrix4x4::mul(mat, Matrix4x4::rotMatrix(Vector3() - obj->rotation));
+                // mat = Matrix4x4::mul(mat, Matrix4x4::moveMatrix(Vector3() - obj->position));
+                // mat = Matrix4x4::mul(mat, Matrix4x4::rotMatrix(Vector3() - obj->rotation));
                 obj = obj->parent;
+                v.emplace_back(obj);
             }
         }
+        for (int i = v.size()-1; i >= 0; --i) {
+            Object3D* obj = v[i];
+            if (obj == NULL) { continue; }
+            mat = Matrix4x4::mul(mat, Matrix4x4::moveMatrix(Vector3() - obj->position));
+            mat = Matrix4x4::mul(mat, Matrix4x4::rotMatrix(Vector3() - obj->rotation));
+        }
+        
+        
         this->view = mat;
     }
     
@@ -534,6 +582,22 @@ private:
             this->drawBuffLine(v0.x, v0.y, v1.x, v1.y, o->color);
             this->drawBuffLine(v1.x, v1.y, v2.x, v2.y, o->color);
             this->drawBuffLine(v2.x, v2.y, v0.x, v0.y, o->color);
+            
+            // if (!((v0.z > 0 && v0.z < 1) || (v1.z > 0 && v1.z < 1) || (v2.z > 0 && v2.z < 1))) {
+            //     if (!((v0.x >= 0 && v0.x < this->width) || (v1.x >= 0 && v1.x < this->width) || (v2.x >= 0 && v2.x < this->width))) { continue; }
+            //     if (!((v0.y >= 0 && v0.y < this->height) || (v1.y >= 0 && v1.y < this->height) || (v2.y >= 0 && v2.y < this->height))) { continue; }
+            //     this->drawBuffLine(v0.x, v0.y, v1.x, v1.y, 60000);
+            //     this->drawBuffLine(v1.x, v1.y, v2.x, v2.y, 60000);
+            //     this->drawBuffLine(v2.x, v2.y, v0.x, v0.y, 60000);
+                
+            // } else {
+            //     if (!((v0.x >= 0 && v0.x < this->width) || (v1.x >= 0 && v1.x < this->width) || (v2.x >= 0 && v2.x < this->width))) { continue; }
+            //     if (!((v0.y >= 0 && v0.y < this->height) || (v1.y >= 0 && v1.y < this->height) || (v2.y >= 0 && v2.y < this->height))) { continue; }
+            //     this->drawBuffLine(v0.x, v0.y, v1.x, v1.y, o->color);
+            //     this->drawBuffLine(v1.x, v1.y, v2.x, v2.y, o->color);
+            //     this->drawBuffLine(v2.x, v2.y, v0.x, v0.y, o->color);
+            // }
+            
         }
     }
     
