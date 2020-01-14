@@ -529,19 +529,13 @@ private:
     void updateViewMatrix () {
         Matrix4x4 mat = Matrix4x4::identity();
         
-        E512Array<Object3D*> v;
-        
         if (this->camera != NULL) {
             Object3D* obj = this->camera;
             while (obj != NULL) {
-                v.emplace_back(obj);
+                mat = Matrix4x4::mul(Matrix4x4::rotMatrix(Vector3() - obj->rotation), mat);
+                mat = Matrix4x4::mul(Matrix4x4::moveMatrix(Vector3() - obj->position), mat);
                 obj = obj->parent;
             }
-        }
-        for (int i = v.size()-1; i >= 0; --i) {
-            if (v[i] == NULL) { break; }
-            mat = Matrix4x4::mul(mat, Matrix4x4::moveMatrix(Vector3() - v[i]->position));
-            mat = Matrix4x4::mul(mat, Matrix4x4::rotMatrix(Vector3() - v[i]->rotation));
         }
         
         
@@ -578,22 +572,6 @@ private:
             this->drawBuffLine(v0.x, v0.y, v1.x, v1.y, o->color);
             this->drawBuffLine(v1.x, v1.y, v2.x, v2.y, o->color);
             this->drawBuffLine(v2.x, v2.y, v0.x, v0.y, o->color);
-            
-            // if (!((v0.z > 0 && v0.z < 1) || (v1.z > 0 && v1.z < 1) || (v2.z > 0 && v2.z < 1))) {
-            //     if (!((v0.x >= 0 && v0.x < this->width) || (v1.x >= 0 && v1.x < this->width) || (v2.x >= 0 && v2.x < this->width))) { continue; }
-            //     if (!((v0.y >= 0 && v0.y < this->height) || (v1.y >= 0 && v1.y < this->height) || (v2.y >= 0 && v2.y < this->height))) { continue; }
-            //     this->drawBuffLine(v0.x, v0.y, v1.x, v1.y, 60000);
-            //     this->drawBuffLine(v1.x, v1.y, v2.x, v2.y, 60000);
-            //     this->drawBuffLine(v2.x, v2.y, v0.x, v0.y, 60000);
-                
-            // } else {
-            //     if (!((v0.x >= 0 && v0.x < this->width) || (v1.x >= 0 && v1.x < this->width) || (v2.x >= 0 && v2.x < this->width))) { continue; }
-            //     if (!((v0.y >= 0 && v0.y < this->height) || (v1.y >= 0 && v1.y < this->height) || (v2.y >= 0 && v2.y < this->height))) { continue; }
-            //     this->drawBuffLine(v0.x, v0.y, v1.x, v1.y, o->color);
-            //     this->drawBuffLine(v1.x, v1.y, v2.x, v2.y, o->color);
-            //     this->drawBuffLine(v2.x, v2.y, v0.x, v0.y, o->color);
-            // }
-            
         }
     }
     
