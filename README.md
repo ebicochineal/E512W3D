@@ -11,8 +11,6 @@
 #### todo
 - オブジェクト　：　削除、検索
 - ウィンドウ　：　削除、非表示、描画順変更
-- カメラ　：　平行投影
-
 
 ----
 
@@ -46,6 +44,8 @@ uint16_t width
 uint16_t height  
 uint16_t bgcolor  
 float ambient = 0 // 0f - 1f  
+bool isortho = false
+float ortho_size = 0.1f
   
 #### Object3D  
 Vector3 position  
