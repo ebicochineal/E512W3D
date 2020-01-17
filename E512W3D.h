@@ -84,7 +84,7 @@ public:
         for (int i = 0; i < t.array_size; ++i) { a[i] = t.a[i]; }
         this->array_size = t.array_size;
         this->max_array_size = t.max_array_size;
-        delete[] this->a;
+        // delete[] this->a;
         this->a = a;
     }
     
@@ -93,7 +93,7 @@ public:
         for (int i = 0; i < t.array_size; ++i) { a[i] = t.a[i]; }
         this->array_size = t.array_size;
         this->max_array_size = t.max_array_size;
-        delete[] this->a;
+        // delete[] this->a;
         this->a = a;
         return *this;
     }
