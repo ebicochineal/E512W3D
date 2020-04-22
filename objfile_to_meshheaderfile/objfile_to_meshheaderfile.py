@@ -13,7 +13,6 @@ with open(path) as f:
             vertex += [[float(x), float(y), float(z)]]
         if i.startswith('f '):
             *l, = i.split(' ')
-            print(l)
             if len(l) == 4:
                 _, a, b, c = l
                 face += [[toint(a)-1, toint(b)-1, toint(c)-1]]
