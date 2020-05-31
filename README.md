@@ -7,6 +7,7 @@
 - 法線カラー表示
 - Directional Light
 - Ambient
+- 2000ポリゴンくらいまで
 
 #### todo
 - オブジェクト　：　削除、検索
