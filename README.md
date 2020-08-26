@@ -45,6 +45,7 @@ uint16_t width
 uint16_t height  
 uint16_t bgcolor  
 float ambient = 0 // 0f - 1f  
+float light_strength = 1.0f;  
 bool isortho = false
 float ortho_size = 0.1f
   

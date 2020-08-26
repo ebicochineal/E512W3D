@@ -379,6 +379,7 @@ public:
     bool isortho = false;
     float ortho_size = 0.1f;
     float ambient = 0;// 0f - 1f
+    float light_strength = 1.0f;
     
     E512W3D (int16_t sx, int16_t sy, uint8_t width, uint8_t height) {
         this->init(sx, sy, width, height, 0, Vector3(0, -1, 0));
@@ -424,7 +425,7 @@ public:
     void draw () {
         this->clear();
         this->updateViewMatrix();
-        
+        this->updateLightVector();
         if (this->isortho) {
             this->projescreen = Matrix4x4::orthoscreenMatrix(this->width, this->height, this->ortho_size);
         } else {
@@ -450,6 +451,7 @@ private:
     Object3D* camera = NULL;
     E512Array<Object3D*> child;
     Vector3 light;
+    Vector3 light_vector;
     Matrix4x4 view;
     Matrix4x4 projescreen;
     
@@ -495,8 +497,8 @@ private:
             const Vector3& v1 = v[f.y];
             const Vector3& v2 = v[f.z];
             const Vector3 n = Vector3::normalize(Vector3::cross(v1-v0, v2-v0));
-            const float d = min(max(Vector3::dot(this->light, n), 0.0f) + this->ambient, 1.0f);
-            colors[i] = M5.Lcd.color565(r*d, g*d, b*d);
+            const float d = max(max(Vector3::dot(this->light_vector, n) * this->light_strength, this->ambient), 0.0f);
+            colors[i] = M5.Lcd.color565(min(r*d, 255.0f), min(g*d, 255.0f), min(b*d, 255.0f));
         }
     }
     
@@ -538,8 +540,20 @@ private:
             }
         }
         
-        
         this->view = mat;
+    }
+    
+    void updateLightVector () {
+        Matrix4x4 mat = Matrix4x4::identity();
+        
+        if (this->camera != NULL) {
+            Object3D* obj = this->camera;
+            while (obj != NULL) {
+                mat = Matrix4x4::mul(Matrix4x4::rotMatrix(Vector3() - obj->rotation), mat);
+                obj = obj->parent;
+            }
+        }
+        this->light_vector = Matrix4x4::mul(this->light, mat);
     }
     
     void worldviewTransform (Object3D* o, Matrix4x4 mat, E512Array<Vector3>& v) {
