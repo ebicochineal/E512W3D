@@ -519,9 +519,9 @@ private:
     
     Matrix4x4 worldMatrix (Object3D* o, Matrix4x4 pmat) {
         Matrix4x4 mat = Matrix4x4::identity();
+        mat = Matrix4x4::mul(mat, Matrix4x4::scaleMatrix(o->scale));
         mat = Matrix4x4::mul(mat, Matrix4x4::rotMatrix(o->rotation));
         mat = Matrix4x4::mul(mat, Matrix4x4::moveMatrix(o->position));
-        mat = Matrix4x4::mul(mat, Matrix4x4::scaleMatrix(o->scale));
         mat = Matrix4x4::mul(mat, pmat);
         return mat;
     }
