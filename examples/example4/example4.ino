@@ -4,7 +4,7 @@
 #include "eye.h"
 E512WindowManager wm(160, 80);
 E512W3D w( 0, 0, 160, 80, M5.Lcd.color565(20, 20, 20));
-Object3D o, x;
+Object3D o;
 Object3D a, b, t1,t2;
 Object3D camera;
 
@@ -15,28 +15,28 @@ void setup() {
     bodyInit();
     eyeInit();
     
-    w.addChild(x);
-    
-    o.scale = Vector3(1.5f, 1.5f, 1.5f);
-    o.rotation.y = 270;
-    x.addChild(o);
-    
     a.mesh = &body;
-    a.render_type = RenderType::PolygonNormal;
+    // a.render_type = RenderType::PolygonNormal;
+    a.render_type = RenderType::Polygon;
     a.color = M5.Lcd.color565(200, 44, 85);
     o.addChild(a);
+    
     b.mesh = &eye;
-    b.render_type = RenderType::PolygonNormal;
+    // b.render_type = RenderType::PolygonNormal;
+    b.render_type = RenderType::Polygon;
     b.color = M5.Lcd.color565(0, 0, 0);
     o.addChild(b);
     
-    camera.position.z = 16;
-    camera.position.y = 1;
+    camera.position.z = 10;
+    camera.position.y = 0;
     w.setCamera(camera);
     w.setDirectionalLight(-1, -1, -1);
-    wm.add(w);
-    
     w.ambient = 0.4;
+    w.addChild(o);
+    
+    o.rotation.y = 270;
+    
+    wm.add(w);
     
     M5.MPU6886.Init();
 }
@@ -48,7 +48,7 @@ void loop() {
     int16_t bati = (int16_t)map(batv, 3300, 4100, 0, 100);
     float g = bati * 0.01f;
     
-    o.rotation.y += 3;
+    o.rotation.y += 5;
     wm.fixedDraw();
     
     // text

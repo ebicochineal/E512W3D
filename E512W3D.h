@@ -34,7 +34,7 @@ public:
         for (int i = 0; i < min(this->array_size, this->max_array_size); ++i) { a[i] = this->a[i]; }
         delete[] this->a;
         this->a = a;
-        this->array_size = this->max_array_size;
+        this->array_size = min(this->array_size, this->max_array_size);
     }
     
     template <class... Args>
@@ -370,8 +370,12 @@ public:
 
 class E512W3D {
 public:
-    uint16_t* buff = NULL;
-    uint16_t* zbuff = NULL;
+    // uint16_t* buff = NULL;
+    // uint16_t* zbuff = NULL;
+    TFT_eSprite* buff;
+    TFT_eSprite* zbuff;
+    uint16_t screen_width, screen_height;
+    
     int16_t sx = 0;
     int16_t sy = 0;
     uint16_t width, height;
@@ -399,30 +403,24 @@ public:
         this->buffsize = width * height;
         this->bgcolor = bgcolor;
         this->setDirectionalLight(ligtht);
-        
-        this->buff = new uint16_t[this->buffsize];
-        this->zbuff = new uint16_t[this->buffsize];
     }
     
-    ~E512W3D () {
-        delete[] this->buff;
-        delete[] this->zbuff;
-    }
+    ~E512W3D () {}
     
     void resize (uint8_t width, uint8_t height) {
-        delete[] this->buff;
-        delete[] this->zbuff;
-        
         this->width = width;
         this->height = height;
         this->buffsize = width * height;
-        
-        this->buff = new uint16_t[this->buffsize];
-        this->zbuff = new uint16_t[this->buffsize];
     }
     
     
     void draw () {
+        this->dsy = max(this->sy, (int16_t)0);
+        this->dsx = max(this->sx, (int16_t)0);
+        this->dey = min(this->sy + this->height, this->screen_height);
+        this->dex = min(this->sx + this->width, this->screen_width);
+        if (this->dsy == this->dey || this->dsx == this->dex) { return; }
+        
         this->clear();
         this->updateViewMatrix();
         this->updateLightVector();
@@ -431,7 +429,6 @@ public:
         } else {
             this->projescreen = Matrix4x4::projscreenMatrix(this->width, this->height);
         }
-        
         this->drawChild(this->child, Matrix4x4::identity());
     }
     
@@ -454,6 +451,7 @@ private:
     Vector3 light_vector;
     Matrix4x4 view;
     Matrix4x4 projescreen;
+    int16_t dsy, dsx, dey, dex;
     
     void drawChild (E512Array<Object3D*>& child, Matrix4x4 pmat) {
         for (auto&& c : child) {
@@ -564,10 +562,13 @@ private:
     }
     
     void clear () {
-        for (int y = 0; y < this->height; ++y) {
-            for (int x = 0; x < this->width; ++x) {
-                this->buff[y*this->width+x] = this->bgcolor;
-                this->zbuff[y*this->width+x] = 0;
+        
+        for (int y = this->dsy; y < this->dey; ++y) {
+            for (int x = this->dsx; x < this->dex; ++x) {
+                this->buff->drawPixel(x, y, this->bgcolor);
+                this->zbuff->drawPixel(x, y, 0);
+                // this->buff[y*this->width+x] = this->bgcolor;
+                // this->zbuff[y*this->width+x] = 0;
             }
         }
     }
@@ -606,6 +607,12 @@ private:
     }
     
     inline bool inSide (const int& x, const int& y) { return !(x < 0 || x >= this->width || y < 0 || y >= this->height); }
+    
+    inline bool inSide2 (int x, int y) {////
+        x += this->sx;
+        y += this->sy;
+        return !(x < this->dsx || x >= this->dex || y < this->dsy || y >= this->dey);
+    }
     inline void swap (int16_t& a, int16_t& b) { int16_t c = a; a = b; b = c; }
     
     
@@ -647,7 +654,7 @@ POSSIBILITY OF SUCH DAMAGE.
             int16_t err = dx >> 1;
             int16_t ystep = y0 < y1 ? 1 : -1;
             for (; x0<=x1; ++x0) {
-                if (this->inSide(y0, x0)) { this->buff[y0+x0*this->width] = color; }
+                if (this->inSide2(y0, x0)) { this->buff->drawPixel(y0+this->sx, x0+this->sy, color); }
                 err -= dy;
                 if (err < 0) {
                     y0 += ystep;
@@ -662,7 +669,7 @@ POSSIBILITY OF SUCH DAMAGE.
             int16_t err = dx >> 1;
             int16_t ystep = y0 < y1 ? 1 : -1;
             for (; x0<=x1; ++x0) {
-                if (this->inSide(x0, y0)) { this->buff[x0+y0*this->width] = color; }
+                if (this->inSide2(x0, y0)) { this->buff->drawPixel(x0+this->sx, y0+this->sy, color); }
                 err -= dy;
                 if (err < 0) {
                     y0 += ystep;
@@ -679,11 +686,12 @@ POSSIBILITY OF SUCH DAMAGE.
         if (x2 < 0) { return; }
         if (x < 0) { x = 0; }
         if(x2 >= this->width) { x2 = this->width - 1; }
-        y = y * this->width;
-        for (int i = x; i < x2; ++i) {
-            if (z > this->zbuff[i+y]) {
-                this->zbuff[i+y] = z;
-                this->buff[i+y] = color;
+        int16_t by = y * this->width;
+        for (int16_t i = x; i < x2; ++i) {
+            if (this->inSide2(i, y) && z > this->zbuff->readPixel(i+this->sx, y+this->sy)) {
+                this->zbuff->drawPixel(i+this->sx, y+this->sy, z);
+                this->buff->drawPixel(i+this->sx, y+this->sy, color);
+                // this->buff[i+by] = color;
             }
         }
     }
@@ -757,7 +765,7 @@ public:
     // uint16_t buffsize = 0;
     
     TFT_eSprite* tft_es_buff;
-    
+    TFT_eSprite* zbuff;
     E512WindowManager (uint16_t width, uint16_t height) {
         this->width = width;
         this->height = height;
@@ -768,11 +776,19 @@ public:
         this->tft_es_buff = new TFT_eSprite(&M5.Lcd);
         this->tft_es_buff->setColorDepth(16);
         this->tft_es_buff->createSprite(width, height);
+        
+        this->zbuff = new TFT_eSprite(&M5.Lcd);
+        this->zbuff->setColorDepth(16);
+        this->zbuff->createSprite(width, height);
     }
     
     void add (E512W3D& w) {
         if (this->wsize < 32) {
             this->ws[this->wsize] = &w;
+            this->ws[this->wsize]->buff = this->tft_es_buff;
+            this->ws[this->wsize]->zbuff = this->zbuff;
+            this->ws[this->wsize]->screen_width = this->width;
+            this->ws[this->wsize]->screen_height = this->height;
             this->wsize += 1;
         }
     }
@@ -825,7 +841,7 @@ private:
         for (int i = 0; i < this->wsize; ++i) {
             E512W3D& w = *this->ws[i];
             w.draw();
-            this->tft_es_buff->pushImage(w.sx, w.sy, w.width, w.height, w.buff);
+            // this->tft_es_buff->pushImage(w.sx, w.sy, w.width, w.height, w.buff);
         }
     }
     

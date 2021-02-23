@@ -28,6 +28,10 @@ p = '' if p == '/' else p
 with open(p+obj_file_name+'.h', 'w') as f:
     
     f.write('#include "E512W3D.h"\nMesh %s;\nvoid %sInit () {\n'%(obj_file_name, obj_file_name))
+    
+    f.write('    %s.vertexs.resize('%obj_file_name + str(len(vertex)) + ');\n')
+    f.write('    %s.faces.resize('%obj_file_name + str(len(face)) + ');\n')
+    
     for i in vertex:
         f.write('    %s.addVertex('%obj_file_name + ', '.join(str(x) for x in i) + ');\n')
     for i in face:
