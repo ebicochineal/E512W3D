@@ -1,5 +1,6 @@
 
 ![Image](https://raw.githubusercontent.com/ebicochineal/Images/master/m5stickc_e512w3d.png)
+
 ### M5StickCで3Dオブジェクトを表示できるライブラリ  
 - 複数のウィンドウ
 - ワイヤーフレーム
@@ -17,9 +18,13 @@
 
 #### E512Array
 uint16_t size ()  
-void resize (uint16_t s)  
+uint16_t capacity ()  
+void resize (uint16_t sz, T c = T())  
+void shrink_to_fit ()  
+void reserve (uint16_t sz)  
 void emplace_back (T t)  
 void push_back (T t)  
+void pop_back (T t)  
 void erase_index (int index)  
 void erase_value (T t)  
 T& front ()  

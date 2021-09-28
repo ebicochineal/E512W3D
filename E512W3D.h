@@ -7,41 +7,55 @@ template <class T>
 class E512Array {
 private:
     uint16_t array_size = 0;
-    uint16_t max_array_size = 1;
+    uint16_t array_capacity = 1;
 public:
     T* a;
     
     E512Array () { this->a = new T[1]; }
-    E512Array (uint16_t s) {
-        this->a = new T[s];
-        this->max_array_size = s;
+    E512Array (uint16_t sz) {
+        this->a = new T[sz];
+        this->array_capacity = sz;
     }
-    E512Array (uint16_t s, T t) {
-        this->a = new T[s];
-        this->array_size = s;
-        this->max_array_size = s;
-        for (int i = 0; i < s; ++i) { this->a[i] = t; }
+    E512Array (uint16_t sz, T t) {
+        this->a = new T[sz];
+        this->array_size = sz;
+        this->array_capacity = sz;
+        for (int i = 0; i < sz; ++i) { this->a[i] = t; }
     }
     
     ~E512Array () { delete[] this->a; }
     
     uint16_t size () { return this->array_size; }
-    uint16_t max_size () { return this->max_array_size; }
+    uint16_t capacity () { return this->array_capacity; }
     
-    void resize (uint16_t s) {
-        this->max_array_size = s;
-        T* a = new T[this->max_array_size];
-        for (int i = 0; i < min(this->array_size, this->max_array_size); ++i) { a[i] = this->a[i]; }
+    void resize (uint16_t sz, T c = T()) {
+        while (sz < this->array_size) { this->pop_back(); }
+        while (sz > this->array_size) { this->push_back(c); }
+    }
+    
+    void reserve (uint16_t sz) {
+        if (sz < this->array_capacity) { return; }
+        this->array_capacity = sz;
+        T* a = new T[this->array_capacity];
+        for (int i = 0; i < min(this->array_size, this->array_capacity); ++i) { a[i] = this->a[i]; }
         delete[] this->a;
         this->a = a;
-        this->array_size = min(this->array_size, this->max_array_size);
+        this->array_size = min(this->array_size, this->array_capacity);
+    }
+    
+    void shrink_to_fit () {
+        this->array_capacity = this->array_size;
+        T* a = new T[this->array_capacity];
+        for (int i = 0; i < this->array_size; ++i) { a[i] = this->a[i]; }
+        delete[] this->a;
+        this->a = a;
     }
     
     template <class... Args>
     void emplace_back (Args... args) {
-        if (this->array_size + 1 > this->max_array_size) {
-            this->max_array_size *= 2;
-            T* a = new T[this->max_array_size];
+        if (this->array_size + 1 > this->array_capacity) {
+            this->array_capacity *= 2;
+            T* a = new T[this->array_capacity];
             for (int i = 0; i < this->array_size; ++i) { a[i] = this->a[i]; }
             a[this->array_size] = T(args...);
             delete[] this->a;
@@ -53,6 +67,10 @@ public:
         }
     }
     void push_back (T t) { this->emplace_back(t); }
+    
+    void pop_back () {
+        if (this->array_size > 0) { this->array_size -= 1; }
+    }
     
     void erase_index (int index) {
         uint16_t tcnt = 0;
@@ -80,18 +98,18 @@ public:
     T& back () { return this->a[this->array_size - 1]; }
     
     E512Array (const E512Array& t) {
-        T* a = new T[t.max_array_size];
+        T* a = new T[t.array_capacity];
         for (int i = 0; i < t.array_size; ++i) { a[i] = t.a[i]; }
         this->array_size = t.array_size;
-        this->max_array_size = t.max_array_size;
+        this->array_capacity = t.array_capacity;
         this->a = a;
     }
     
     E512Array& operator = (const E512Array& t) {
-        T* a = new T[t.max_array_size];
+        T* a = new T[t.array_capacity];
         for (int i = 0; i < t.array_size; ++i) { a[i] = t.a[i]; }
         this->array_size = t.array_size;
-        this->max_array_size = t.max_array_size;
+        this->array_capacity = t.array_capacity;
         delete[] this->a;
         this->a = a;
         return *this;
