@@ -67,13 +67,13 @@ public:
     void pushSprite (int x, int y) {
         std::string s = "\x1B[2J\x1B[H";
         for (int y = 0; y < this->height; y += 2) {
-            
             for (int x = 0; x < this->width; x += 1) {
-                uint16_t r = ((this->buff[y*this->width+x] & 0b1111100000000000) >> 11) << 3;
-                uint16_t g = ((this->buff[y*this->width+x] & 0b0000011111100000) >>  5) << 2;
-                uint16_t b = ((this->buff[y*this->width+x] & 0b0000000000011111)      ) << 3;
-                
-                s += "\033[38;2;"+std::to_string(r)+";"+std::to_string(g)+";" + std::to_string(b) + "m@";
+                uint32_t c1 = this->buff[y*this->width+x];
+                uint32_t c2 = this->buff[(y+1)%this->height*this->width+x];
+                uint16_t r = ((((c1 & 0xF800) >> 11) << 3) + (((c2 & 0xF800) >> 11) << 3)) >> 1;
+                uint16_t g = ((((c1 & 0x07E0) >>  5) << 2) + (((c2 & 0x07E0) >>  5) << 2)) >> 1;
+                uint16_t b = ((((c1 & 0x001F)      ) << 3) + (((c2 & 0x001F)      ) << 3)) >> 1;
+                s += "\033[48;2;"+std::to_string(r)+";"+std::to_string(g)+";" + std::to_string(b) + "m ";
             }
             s += "\033[0m\n";
         }
