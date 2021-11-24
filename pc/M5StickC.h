@@ -65,9 +65,9 @@ public:
         this->buff = new uint16_t[height * width];
     }
     void pushSprite (int x, int y) {
-        std::cout << "\x1B[2J\x1B[H";
+        std::string s = "\x1B[2J\x1B[H";
         for (int y = 0; y < this->height; y += 2) {
-            std::string s = "";
+            
             for (int x = 0; x < this->width; x += 1) {
                 uint16_t r = ((this->buff[y*this->width+x] & 0b1111100000000000) >> 11) << 3;
                 uint16_t g = ((this->buff[y*this->width+x] & 0b0000011111100000) >>  5) << 2;
@@ -75,8 +75,9 @@ public:
                 
                 s += "\033[38;2;"+std::to_string(r)+";"+std::to_string(g)+";" + std::to_string(b) + "m@";
             }
-            std::cout << s << "\033[0m\n";
+            s += "\033[0m\n";
         }
+        std::cout << s;
     }
     void fillSprite (uint16_t color) {
         for (int i = 0; i < this->height*this->width; ++i) { this->buff[i] = color; }
