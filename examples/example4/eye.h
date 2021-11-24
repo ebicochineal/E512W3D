@@ -1,8 +1,8 @@
 #include "E512W3D.h"
 Mesh eye;
 void eyeInit () {
-    eye.vertexs.resize(84);
-    eye.faces.resize(160);
+    eye.vertexs.reserve(84);
+    eye.faces.reserve(160);
     eye.addVertex(0.449708, 0.959339, 3.091888);
     eye.addVertex(0.551224, 1.036889, 3.165642);
     eye.addVertex(0.410933, 1.036889, 3.211226);

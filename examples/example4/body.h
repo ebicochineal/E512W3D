@@ -1,8 +1,8 @@
 #include "E512W3D.h"
 Mesh body;
 void bodyInit () {
-    body.vertexs.resize(3116);
-    body.faces.resize(6014);
+    body.vertexs.reserve(3116);
+    body.faces.reserve(6014);
     body.addVertex(0.648689, -0.466079, 2.974374);
     body.addVertex(0.735002, -0.431592, 2.984069);
     body.addVertex(0.710907, -0.525264, 2.953301);

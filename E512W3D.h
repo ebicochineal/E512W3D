@@ -409,18 +409,18 @@ public:
     E512W3D (int16_t sx, int16_t sy, uint8_t width, uint8_t height, uint16_t bgcolor) {
         this->init(sx, sy, width, height, bgcolor, Vector3(0, -1, 0));
     }
-    E512W3D (int16_t sx, int16_t sy, uint8_t width, uint8_t height, uint16_t bgcolor, Vector3 ligtht) {
-        this->init(sx, sy, width, height, bgcolor, ligtht);
+    E512W3D (int16_t sx, int16_t sy, uint8_t width, uint8_t height, uint16_t bgcolor, Vector3 light) {
+        this->init(sx, sy, width, height, bgcolor, light);
     }
     
-    void init (int16_t sx, int16_t sy, uint8_t width, uint8_t height, uint16_t bgcolor, Vector3 ligtht) {
+    void init (int16_t sx, int16_t sy, uint8_t width, uint8_t height, uint16_t bgcolor, Vector3 light) {
         this->sx = sx;
         this->sy = sy;
         this->width = width;
         this->height = height;
         this->buffsize = width * height;
         this->bgcolor = bgcolor;
-        this->setDirectionalLight(ligtht);
+        this->setDirectionalLight(light);
     }
     
     ~E512W3D () {}
