@@ -1,5 +1,5 @@
 
-![Image](https://raw.githubusercontent.com/ebicochineal/Images/master/m5stickc_e512w3d.png)
+![Image](./img/1.png)
 
 ### M5StickCで3Dオブジェクトを表示できるライブラリ  
 - 複数のウィンドウ
