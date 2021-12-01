@@ -22,9 +22,7 @@ int main () {
 ![Gif](../img/animc.gif) 
 
 ----
-
-####
-時間計測にsys/timeb.hを使っているのでTermuxでは書き換えないと動かないかも  
+ 
 windowsのコマンドプロンプトでも動くけどカラー表示できないためwsl用  
 
 

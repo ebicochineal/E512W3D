@@ -5,8 +5,6 @@
 #include <cstdlib>
 #include <sstream>
 #include <iostream>
-#include <time.h>
-#include <sys/timeb.h>
 #include <unistd.h>
 
 class DammyMPU6886 {
@@ -50,8 +48,6 @@ int min (int a, int b) { return std::min(a, b); }
 double max (double a, double b) { return std::max(a, b); }
 double min (double a, double b) { return std::min(a, b); }
 
-int gfont = 0;
-
 class TFT_eSprite {
 public:
     int colordepth = 24;
@@ -79,7 +75,6 @@ public:
                 uint16_t r = ((((c1 & 0xF800) >> 11) << 3) + (((c2 & 0xF800) >> 11) << 3)) >> 1;
                 uint16_t g = ((((c1 & 0x07E0) >>  5) << 2) + (((c2 & 0x07E0) >>  5) << 2)) >> 1;
                 uint16_t b = ((((c1 & 0x001F)      ) << 3) + (((c2 & 0x001F)      ) << 3)) >> 1;
-                
                 // s += "\033[38;2;"+std::to_string(r)+";"+std::to_string(g)+";" + std::to_string(b) + "m@";
                 s += "\033[48;2;"+std::to_string(r)+";"+std::to_string(g)+";" + std::to_string(b) + "m ";
             }
@@ -87,7 +82,6 @@ public:
         }
         std::cout << s;
     }
-    
     void fillSprite (uint16_t color) {
         for (int i = 0; i < this->height*this->width; ++i) { this->buff[i] = color; }
     }
@@ -101,35 +95,58 @@ public:
 
 void delay (int v) { usleep(v * 1000);  }
 
-class StopWatch {
+// #include <time.h>
+// #include <sys/timeb.h>
+// class StopWatch {
+// public:
+//     int starts;
+//     int startm;
+//     int tstarts = 0;
+//     int tstartm = 0;
+//     struct timeb timebuffer;
+//     StopWatch () {
+//         ftime(&this->timebuffer);
+//         this->starts = this->timebuffer.time;
+//         this->startm = this->timebuffer.millitm;
+//     }
+//     inline void stop () {
+//         ftime(&this->timebuffer);
+//         this->tstarts = this->timebuffer.time;
+//         this->tstartm = this->timebuffer.millitm;
+//     }
+//     inline void resume () {
+//         ftime(&this->timebuffer);
+//         this->starts += this->timebuffer.time - this->tstarts;
+//         this->startm += this->timebuffer.millitm - this->tstartm;
+//     }
+//     inline int get_milli_time () {
+//         ftime(&this->timebuffer);
+//         return (this->timebuffer.time - this->starts) * 1000 + (this->timebuffer.millitm - this->startm);
+//     }
+// };
+// StopWatch gsw;
+
+#include <chrono>
+class StopWatchChrono {
 public:
-    int starts;
-    int startm;
-    int tstarts = 0;
-    int tstartm = 0;
-    struct timeb timebuffer;
-    StopWatch () {
-        ftime(&this->timebuffer);
-        this->starts = this->timebuffer.time;
-        this->startm = this->timebuffer.millitm;
+    std::chrono::system_clock::time_point start, tstart, end;
+    StopWatchChrono () {
+        this->start = std::chrono::system_clock::now();
     }
     inline void stop () {
-        ftime(&this->timebuffer);
-        this->tstarts = this->timebuffer.time;
-        this->tstartm = this->timebuffer.millitm;
+        this->tstart = std::chrono::system_clock::now();
     }
     inline void resume () {
-        ftime(&this->timebuffer);
-        this->starts += this->timebuffer.time - this->tstarts;
-        this->startm += this->timebuffer.millitm - this->tstartm;
+        this->start += std::chrono::system_clock::now() - this->tstart;
     }
     inline int get_milli_time () {
-        ftime(&this->timebuffer);
-        return (this->timebuffer.time - this->starts) * 1000 + (this->timebuffer.millitm - this->startm);
+        this->end = std::chrono::system_clock::now();
+        return std::chrono::duration_cast<std::chrono::milliseconds>(end-start).count();
     }
 };
+StopWatchChrono gsw;
 
-StopWatch gsw;
+
 int millis () { return gsw.get_milli_time(); }
 
 #endif
