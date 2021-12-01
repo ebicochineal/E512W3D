@@ -1,9 +1,8 @@
-#include <M5StickC.h>
+#include "M5StickC.h"
 #include "E512W3D.h"
 #include "cube.h"
 
 E512WindowManager wm(160, 80);
-// E512W3D w( 0, 0, 160, 80, M5.Lcd.color565(200, 44, 85));
 E512W3D w( 0, 0, 160, 80, M5.Lcd.color565(20, 20, 20));
 
 Object3D a, b, c, d, e, f;
@@ -58,49 +57,27 @@ void setup() {
     M5.MPU6886.Init();
 }
 
-float accX = 0;
-float accY = 0;
-float accZ = 0;
-float gyroX = 0;
-float gyroY = 0;
-float gyroZ = 0;
-float temp = 0;
-
 float v = 0;
 
-
 void loop() {
-    M5.MPU6886.getGyroData(&gyroX, &gyroY, &gyroZ);
-    M5.MPU6886.getAccelData(&accX, &accY, &accZ);
-    M5.MPU6886.getTempData(&temp);
-    // rot 0
-    // int x = accY*20;
-    // int y = -accX*20;
-    
-    // rot 1
-    // int x = accY*20;
-    // int y = accX*20;
-    
-    // battery
-    int16_t batv = (int16_t)(M5.Axp.GetVapsData() * 1.4f);
-    batv = max(min(batv, 4100), 3300);
-    int16_t bati = (int16_t)map(batv, 3300, 4100, 0, 100);
-    float g = bati * 0.01f;
     
     // move
-    a.rotation.y += 6 * g;
-    v += 0.5 * g;
-    b.position.y = abs(sin(v)) * 3 * g;
-    c.position.y = abs(sin(v+0.25)) * 3 * g;
-    d.position.y = abs(sin(v+0.5)) * 3 * g;
-    e.position.y = abs(sin(v+1)) * 3 * g;
-    
+    a.rotation.y += 6;
+    v += 0.5;
+    b.position.y = abs(sin(v)) * 3;
+    c.position.y = abs(sin(v+0.25)) * 3;
+    d.position.y = abs(sin(v+0.5)) * 3;
+    e.position.y = abs(sin(v+1)) * 3;
     
     wm.fixedDraw();
     
-    // text
-    M5.Lcd.setCursor(120, 0);
-    M5.Lcd.print(String(bati)+"%");
-    M5.Lcd.setCursor(120, 16);
-    M5.Lcd.print(String(batv*0.001f)+"V");
+    // battery
+    // int16_t batv = (int16_t)(M5.Axp.GetVapsData() * 1.4f);
+    // batv = max(min(batv, 4100), 3300);
+    // int16_t bati = (int16_t)map(batv, 3300, 4100, 0, 100);
+    // float g = bati * 0.01f;
+    // M5.Lcd.setCursor(120, 0);
+    // M5.Lcd.print(String(bati)+"%");
+    // M5.Lcd.setCursor(120, 16);
+    // M5.Lcd.print(String(batv*0.001f)+"V");
 }

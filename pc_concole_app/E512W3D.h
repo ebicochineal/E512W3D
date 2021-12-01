@@ -1,7 +1,6 @@
 #ifndef E512W3D_H
 #define E512W3D_H
 #include "M5StickC.h"
-// #include <M5StickC.h>
 
 template <class T>
 class E512Array {
@@ -331,15 +330,19 @@ public:
 };
 
 struct Face {
-    uint16_t x, y, z;
+    uint16_t a, b, c;
     Face () {};
-    Face (uint16_t x, uint16_t y, uint16_t z) { this->x = x; this->y = y; this->z = z; }
+    Face (uint16_t a, uint16_t b, uint16_t c) { this->a = a; this->b = b; this->c = c; }
 };
 
-struct Mesh{
+struct Mesh {
 public:
     E512Array<Vector3> vertexs;
     E512Array<Face> faces;
+    
+    E512Array<Vector2> uv_vertexs;
+    E512Array<Face> uv_faces;
+    
     Mesh () {};
     ~Mesh () {};
     
@@ -349,11 +352,42 @@ public:
         // this->tvertexs.emplace_back(v);
     }
     
-    void addFace (uint16_t x, uint16_t y, uint16_t z) { this->addFace(Face(x, y, z)); }
+    void addFace (uint16_t a, uint16_t b, uint16_t c) { this->addFace(Face(a, b, c)); }
     void addFace (Face f) {
         this->faces.emplace_back(f);
     }
     
+    void addVertexUV (float x, float y) { this->addVertexUV(Vector2(x, y)); }
+    void addVertexUV (Vector2 v) {
+        this->uv_vertexs.emplace_back(v);
+    }
+    void addFaceUV (uint16_t a, uint16_t b, uint16_t c) { this->addFaceUV(Face(a, b, c)); }
+    void addFaceUV (Face f) {
+        this->uv_faces.emplace_back(f);
+    }
+    
+    // void addFaceUV (float a, float b, float c) { this->addFaceUV(FaceUV(a, b, c)); }
+    // void addFaceUV (FaceUV fuv) {
+    //     this->faceuvs.emplace_back(fuv);
+    // }
+    
+};
+
+struct Texture {
+    uint16_t width = 0;
+    uint16_t height = 0;
+    uint16_t* pixels;
+    Texture () {};
+    Texture (uint16_t width, uint16_t height, uint16_t* pixels) {
+        this->width = width;
+        this->height = height;
+        this->pixels = pixels;
+    }
+    uint16_t getColor (float u, float v) {
+        const uint16_t u16i = (uint16_t)(this->width * u) % this->width;
+        const uint16_t v16i = (uint16_t)(this->height * (1.0-v)) % this->height;
+        return this->pixels[v16i*this->width+u16i];
+    }
 };
 
 
@@ -361,6 +395,7 @@ enum RenderType {
     WireFrame,
     Polygon,
     PolygonNormal,
+    PolygonTexture,
     Hide,
 };
 
@@ -371,9 +406,11 @@ public:
     Vector3 scale = Vector3(1.0f, 1.0f, 1.0f);
     Mesh* mesh = NULL;
     uint16_t color = 65535;
-    uint8_t render_type = RenderType::WireFrame;
+    uint16_t render_type = RenderType::WireFrame;
     Object3D* parent;
     E512Array<Object3D*> child;
+    Texture* texture;
+    
     Object3D () {};
     
     void setParent (Object3D& o) {
@@ -403,17 +440,17 @@ public:
     float ambient = 0;// 0f - 1f
     float light_strength = 1.0f;
     
-    E512W3D (int16_t sx, int16_t sy, uint8_t width, uint8_t height) {
+    E512W3D (int16_t sx, int16_t sy, uint16_t width, uint16_t height) {
         this->init(sx, sy, width, height, 0, Vector3(0, -1, 0));
     }
-    E512W3D (int16_t sx, int16_t sy, uint8_t width, uint8_t height, uint16_t bgcolor) {
+    E512W3D (int16_t sx, int16_t sy, uint16_t width, uint16_t height, uint16_t bgcolor) {
         this->init(sx, sy, width, height, bgcolor, Vector3(0, -1, 0));
     }
-    E512W3D (int16_t sx, int16_t sy, uint8_t width, uint8_t height, uint16_t bgcolor, Vector3 light) {
+    E512W3D (int16_t sx, int16_t sy, uint16_t width, uint16_t height, uint16_t bgcolor, Vector3 light) {
         this->init(sx, sy, width, height, bgcolor, light);
     }
     
-    void init (int16_t sx, int16_t sy, uint8_t width, uint8_t height, uint16_t bgcolor, Vector3 light) {
+    void init (int16_t sx, int16_t sy, uint16_t width, uint16_t height, uint16_t bgcolor, Vector3 light) {
         this->sx = sx;
         this->sy = sy;
         this->width = width;
@@ -425,7 +462,7 @@ public:
     
     ~E512W3D () {}
     
-    void resize (uint8_t width, uint8_t height) {
+    void resize (uint16_t width, uint16_t height) {
         this->width = width;
         this->height = height;
         this->buffsize = width * height;
@@ -497,21 +534,39 @@ private:
                     this->projscreenTransform(c, v);
                     this->drawPolygon(c, v, colors);
                 }
+                if (c->render_type == RenderType::PolygonTexture) {
+                    E512Array<float> lights(c->mesh->faces.size());
+                    this->worldviewTransform(c, mat, v);
+                    this->polygonTexture(c, v, lights);
+                    this->projscreenTransform(c, v);
+                    this->drawPolygonTexture(c, v, lights);
+                }
             }
             this->drawChild(c->child, mat);
         }
     }
     
+    void polygonTexture (Object3D* o, E512Array<Vector3>& v, E512Array<float>& lights) {
+        for (int i = 0; i < o->mesh->faces.size(); ++i) {
+            const Face& f = o->mesh->faces[i];
+            const Vector3& v0 = v[f.a];
+            const Vector3& v1 = v[f.b];
+            const Vector3& v2 = v[f.c];
+            const Vector3 n = Vector3::normalize(Vector3::cross(v1-v0, v2-v0));
+            lights[i] = max(max(Vector3::dot(this->light_vector, n) * this->light_strength, this->ambient), 0.0f);
+        }
+    }
+    
     void polygon (Object3D* o, E512Array<Vector3>& v, E512Array<uint16_t>& colors) {
-        float r = max((((o->color >> 11) * 527 + 23 ) >> 6) - 0.1f, 0.0f);
-        float g = max(((((o->color >> 5) & 0b111111) * 259 + 33 ) >> 6) - 0.1f, 0.0f);
-        float b = max((((o->color & 0b11111) * 527 + 23 ) >> 6) - 0.1f, 0.0f);
+        float r = (o->color >> 11) << 3;
+        float g = ((o->color >> 5) & 0b111111) << 2;
+        float b = (o->color & 0b11111) << 3;
         
         for (int i = 0; i < o->mesh->faces.size(); ++i) {
             const Face& f = o->mesh->faces[i];
-            const Vector3& v0 = v[f.x];
-            const Vector3& v1 = v[f.y];
-            const Vector3& v2 = v[f.z];
+            const Vector3& v0 = v[f.a];
+            const Vector3& v1 = v[f.b];
+            const Vector3& v2 = v[f.c];
             const Vector3 n = Vector3::normalize(Vector3::cross(v1-v0, v2-v0));
             const float d = max(max(Vector3::dot(this->light_vector, n) * this->light_strength, this->ambient), 0.0f);
             colors[i] = M5.Lcd.color565(min(r*d, 255.0f), min(g*d, 255.0f), min(b*d, 255.0f));
@@ -521,9 +576,9 @@ private:
     void polygonNormal (Object3D* o, E512Array<Vector3>& v, E512Array<uint16_t>& colors) {
         for (int i = 0; i < o->mesh->faces.size(); ++i) {
             const Face& f = o->mesh->faces[i];
-            const Vector3& v0 = v[f.x];
-            const Vector3& v1 = v[f.y];
-            const Vector3& v2 = v[f.z];
+            const Vector3& v0 = v[f.a];
+            const Vector3& v1 = v[f.b];
+            const Vector3& v2 = v[f.c];
             const Vector3 n = (Vector3::normalize(Vector3::cross(v1-v0, v2-v0)) * 0.5f + 0.5f) * 255.0f;
             colors[i] = M5.Lcd.color565(n.x, n.y, n.z);
         }
@@ -580,7 +635,6 @@ private:
     }
     
     void clear () {
-        
         for (int y = this->dsy; y < this->dey; ++y) {
             for (int x = this->dsx; x < this->dex; ++x) {
                 this->buff->drawPixel(x, y, this->bgcolor);
@@ -594,33 +648,48 @@ private:
     void drawWire (Object3D* o, E512Array<Vector3>& v) {
         for (int i = 0; i < o->mesh->faces.size(); ++i) {
             const Face& f = o->mesh->faces[i];
-            const Vector3& v0 = v[f.x];
-            const Vector3& v1 = v[f.y];
-            const Vector3& v2 = v[f.z];
+            const Vector3& v1 = v[f.a];
+            const Vector3& v2 = v[f.b];
+            const Vector3& v3 = v[f.c];
             
-            if (Vector3::cross(v1 - v0, v2 - v1).z > 0) { continue; }
-            if (!((v0.z > 0 && v0.z < 1) || (v1.z > 0 && v1.z < 1) || (v2.z > 0 && v2.z < 1))) { continue; }
-            if (!((v0.x >= 0 && v0.x < this->width) || (v1.x >= 0 && v1.x < this->width) || (v2.x >= 0 && v2.x < this->width))) { continue; }
-            if (!((v0.y >= 0 && v0.y < this->height) || (v1.y >= 0 && v1.y < this->height) || (v2.y >= 0 && v2.y < this->height))) { continue; }
-            this->drawBuffLine(v0.x, v0.y, v1.x, v1.y, o->color);
+            if (Vector3::cross(v2 - v1, v3 - v2).z > 0) { continue; }
+            if (!((v1.z > 0 && v1.z < 1) || (v2.z > 0 && v2.z < 1) || (v3.z > 0 && v3.z < 1))) { continue; }
+            if (!((v1.x >= 0 && v1.x < this->width) || (v2.x >= 0 && v2.x < this->width) || (v3.x >= 0 && v3.x < this->width))) { continue; }
+            if (!((v1.y >= 0 && v1.y < this->height) || (v2.y >= 0 && v2.y < this->height) || (v3.y >= 0 && v3.y < this->height))) { continue; }
             this->drawBuffLine(v1.x, v1.y, v2.x, v2.y, o->color);
-            this->drawBuffLine(v2.x, v2.y, v0.x, v0.y, o->color);
+            this->drawBuffLine(v2.x, v2.y, v3.x, v3.y, o->color);
+            this->drawBuffLine(v3.x, v3.y, v1.x, v1.y, o->color);
         }
     }
     
     void drawPolygon (Object3D* o, E512Array<Vector3>& v, E512Array<uint16_t>& colors) {
         for (int i = 0; i < o->mesh->faces.size(); ++i) {
             const Face& f = o->mesh->faces[i];
-            const Vector3& v0 = v[f.x];
-            const Vector3& v1 = v[f.y];
-            const Vector3& v2 = v[f.z];
+            const Vector3& v1 = v[f.a];
+            const Vector3& v2 = v[f.b];
+            const Vector3& v3 = v[f.c];
             
-            if (Vector3::cross(v1 - v0, v2 - v1).z > 0) { continue; }
-            if (!((v0.z > 0 && v0.z < 1) || (v1.z > 0 && v1.z < 1) || (v2.z > 0 && v2.z < 1))) { continue; }
-            if (!((v0.x >= 0 && v0.x < this->width) || (v1.x >= 0 && v1.x < this->width) || (v2.x >= 0 && v2.x < this->width))) { continue; }
-            if (!((v0.y >= 0 && v0.y < this->height) || (v1.y >= 0 && v1.y < this->height) || (v2.y >= 0 && v2.y < this->height))) { continue; }
-            uint16_t z = (1.0f-(v0.z+v1.z+v2.z)*0.333f) * 32767;
-            this->fillTriangle(v0.x, v0.y, v1.x, v1.y, v2.x, v2.y, colors[i], z);
+            if (Vector3::cross(v2 - v1, v3 - v2).z > 0) { continue; }
+            if (!((v1.z > 0 && v1.z < 1) || (v2.z > 0 && v2.z < 1) || (v3.z > 0 && v3.z < 1))) { continue; }
+            if (!((v1.x >= 0 && v1.x < this->width) || (v2.x >= 0 && v2.x < this->width) || (v3.x >= 0 && v3.x < this->width))) { continue; }
+            if (!((v1.y >= 0 && v1.y < this->height) || (v2.y >= 0 && v2.y < this->height) || (v3.y >= 0 && v3.y < this->height))) { continue; }
+            uint16_t z = (1.0f-(v1.z+v2.z+v3.z)*0.333f) * 32767;
+            this->fillTriangle(o, v, i, z, colors[i]);
+        }
+    }
+    
+    void drawPolygonTexture (Object3D* o, E512Array<Vector3>& v, E512Array<float>& lights) {
+        for (int i = 0; i < o->mesh->faces.size(); ++i) {
+            const Face& f = o->mesh->faces[i];
+            const Vector3& v1 = v[f.a];
+            const Vector3& v2 = v[f.b];
+            const Vector3& v3 = v[f.c];
+            
+            if (Vector3::cross(v2 - v1, v3 - v2).z > 0) { continue; }
+            if (!((v1.z > 0 && v1.z < 1) || (v2.z > 0 && v2.z < 1) || (v3.z > 0 && v3.z < 1))) { continue; }
+            if (!((v1.x >= 0 && v1.x < this->width) || (v2.x >= 0 && v2.x < this->width) || (v3.x >= 0 && v3.x < this->width))) { continue; }
+            if (!((v1.y >= 0 && v1.y < this->height) || (v2.y >= 0 && v2.y < this->height) || (v3.y >= 0 && v3.y < this->height))) { continue; }
+            this->fillTriangleTX(o, v, i, lights[i]);
         }
     }
     
@@ -632,6 +701,16 @@ private:
         return !(x < this->dsx || x >= this->dex || y < this->dsy || y >= this->dey);
     }
     inline void swap (int16_t& a, int16_t& b) { int16_t c = a; a = b; b = c; }
+    
+    inline void getUV (float x, float y, float x1, float y1, float x2, float y2, float x3, float y3, float& u, float& v) {
+        float t = abs((x2-x1) * (y3-y1) - (y2-y1) * (x3-x1));
+        u = 0;
+        v = 0;
+        if (t > 0) {
+            u = abs((x1-x) * (y2-y) - (y1-y) * (x2-x)) / t;
+            v = abs((x1-x) * (y3-y) - (y1-y) * (x3-x)) / t;
+        }
+    }
     
     
 /*
@@ -661,113 +740,237 @@ CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
 ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
  */
-    // Adafruit_GFX::drawLine
-    inline void drawBuffLine (int16_t x0, int16_t y0, int16_t x1, int16_t y1, uint16_t color) {
-        if (abs(y1 - y0) > abs(x1 - x0)) {
-            this->swap(x0, y0); this->swap(x1, y1);
-            if (x0 > x1) { this->swap(x0, x1); this->swap(y0, y1); }
-            int16_t dx = x1 - x0;
-            int16_t dy = abs(y1 - y0);
+    // Adafruit_GFX::drawLine modification
+    inline void drawBuffLine (int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color) {
+        if (abs(y2 - y1) > abs(x2 - x1)) {
+            this->swap(x1, y1); this->swap(x2, y2);
+            if (x1 > x2) { this->swap(x1, x2); this->swap(y1, y2); }
+            int16_t dx = x2 - x1;
+            int16_t dy = abs(y2 - y1);
             // int16_t err = dx / 2;
             int16_t err = dx >> 1;
-            int16_t ystep = y0 < y1 ? 1 : -1;
-            for (; x0<=x1; ++x0) {
-                if (this->inSide2(y0, x0)) { this->buff->drawPixel(y0+this->sx, x0+this->sy, color); }
+            int16_t ystep = y1 < y2 ? 1 : -1;
+            for (; x1<=x2; ++x1) {
+                if (this->inSide2(y1, x1)) { this->buff->drawPixel(y1+this->sx, x1+this->sy, color); }
                 err -= dy;
                 if (err < 0) {
-                    y0 += ystep;
+                    y1 += ystep;
                     err += dx;
                 }
             }
         } else {
-            if (x0 > x1) { this->swap(x0, x1); this->swap(y0, y1); }
-            int16_t dx = x1 - x0;
-            int16_t dy = abs(y1 - y0);
+            if (x1 > x2) { this->swap(x1, x2); this->swap(y1, y2); }
+            int16_t dx = x2 - x1;
+            int16_t dy = abs(y2 - y1);
             // int16_t err = dx / 2;
             int16_t err = dx >> 1;
-            int16_t ystep = y0 < y1 ? 1 : -1;
-            for (; x0<=x1; ++x0) {
-                if (this->inSide2(x0, y0)) { this->buff->drawPixel(x0+this->sx, y0+this->sy, color); }
+            int16_t ystep = y1 < y2 ? 1 : -1;
+            for (; x1<=x2; ++x1) {
+                if (this->inSide2(x1, y1)) { this->buff->drawPixel(x1+this->sx, y1+this->sy, color); }
                 err -= dy;
                 if (err < 0) {
-                    y0 += ystep;
+                    y1 += ystep;
                     err += dx;
                 }
             }
         }
     }
-    
-    // GFXcanvas8::writeFastHLine
-    inline void drawBuffLineH (int16_t x, int16_t y, int16_t w, uint16_t color, uint16_t z) {
-        if (x >= this->width || y < 0 || y >= this->height) { return; }
-        int16_t x2 = x + w - 1;
-        if (x2 < 0) { return; }
-        if (x < 0) { x = 0; }
-        if(x2 >= this->width) { x2 = this->width - 1; }
-        int16_t by = y * this->width;
-        for (int16_t i = x; i < x2; ++i) {
-            if (this->inSide2(i, y) && z > this->zbuff->readPixel(i+this->sx, y+this->sy)) {
-                this->zbuff->drawPixel(i+this->sx, y+this->sy, z);
-                this->buff->drawPixel(i+this->sx, y+this->sy, color);
-                // this->buff[i+by] = color;
+    // GFXcanvas8::writeFastHLine modification
+    inline void drawBuffLineH (int16_t sx, int16_t y, int16_t w, int16_t z, uint16_t color) {
+        if (sx >= this->width || y < 0 || y >= this->height) { return; }
+        int16_t ex = sx + w - 1;
+        if (ex < 0) { return; }
+        sx = max(sx, (int16_t)0);
+        ex = min(ex, (int16_t)(this->width - 1));
+        
+        for (int16_t x = sx; x < ex; ++x) {
+            if (!this->inSide2(x, y)) { continue; }
+            if (z > this->zbuff->readPixel(x+this->sx, y+this->sy)) {
+                this->zbuff->drawPixel(x+this->sx, y+this->sy, z);
+                this->buff->drawPixel(x+this->sx, y+this->sy, color);
             }
+            
         }
     }
-    
-    // Adafruit_GFX::fillTriangle
-    inline void fillTriangle (int16_t x0, int16_t y0, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color, uint16_t z) {
+    // Adafruit_GFX::fillTriangle modification
+    inline void fillTriangle (Object3D* o, E512Array<Vector3>& v, int16_t index, uint16_t z, uint16_t color) {
+        const Face& f = o->mesh->faces[index];
+        
+        int16_t x1 = v[f.a].x;
+        int16_t y1 = v[f.a].y;
+        int16_t x2 = v[f.b].x;
+        int16_t y2 = v[f.b].y;
+        int16_t x3 = v[f.c].x;
+        int16_t y3 = v[f.c].y;
+        
+        if (y1 > y2) { this->swap(y1, y2); this->swap(x1, x2); }
+        if (y2 > y3) { this->swap(y3, y2); this->swap(x3, x2); }
+        if (y1 > y2) { this->swap(y1, y2); this->swap(x1, x2); }
+        
         int16_t a, b, y;
-        if (y0 > y1) { this->swap(y0, y1); this->swap(x0, x1); }
-        if (y1 > y2) { this->swap(y2, y1); this->swap(x2, x1); }
-        if (y0 > y1) { this->swap(y0, y1); this->swap(x0, x1); }
-        if (y0 == y2) {
-            a = b = x0;
-            if (x1 < a) {
-                a = x1;
-            } else if(x1 > b) {
-                b = x1;
-            }
+        if (y1 == y3) {
+            a = b = x1;
             if (x2 < a) {
                 a = x2;
-            } else if (x2 > b) {
+            } else if(x2 > b) {
                 b = x2;
             }
-            this->drawBuffLineH(a, y0, b-a+1, color, z);
-            //this->drawBuffLine(a, y0, b+1, y0, color);
+            if (x3 < a) {
+                a = x3;
+            } else if (x3 > b) {
+                b = x3;
+            }
+            this->drawBuffLineH(a, y1, b-a+1, z, color);
             return;
         }
         
-        int16_t dx01 = x1 - x0;
-        int16_t dy01 = y1 - y0;
-        int16_t dx02 = x2 - x0;
-        int16_t dy02 = y2 - y0;
-        int16_t dx12 = x2 - x1;
-        int16_t dy12 = y2 - y1;
+        int32_t dx21 = x2 - x1;
+        int32_t dy21 = y2 - y1;
+        int32_t dx31 = x3 - x1;
+        int32_t dy31 = y3 - y1;
+        int32_t dx32 = x3 - x2;
+        int32_t dy32 = y3 - y2;
         int32_t sa = 0;
         int32_t sb = 0;
-        int16_t last = y1 == y2 ? y1 : y1-1;
+        int16_t last = y2 == y3 ? y2 : y2-1;
         
-        for(y=y0; y<=last; ++y) {
-            a = x0 + sa / dy01;
-            b = x0 + sb / dy02;
-            sa += dx01;
-            sb += dx02;
+        for(y=y1; y<=last; ++y) {
+            a = x1 + sa / dy21;
+            b = x1 + sb / dy31;
+            sa += dx21;
+            sb += dx31;
             if(a > b) { this->swap(a, b); }
-            this->drawBuffLineH(a, y, b-a+1, color, z);
-            //this->drawBuffLine(a, y, b+1, y, color);
+            this->drawBuffLineH(a, y, b-a+1, z, color);
         }
         
-        sa = (int32_t)dx12 * (y - y1);
-        sb = (int32_t)dx02 * (y - y0);
-        for(; y<=y2; ++y) {
-            a = x1 + sa / dy12;
-            b = x0 + sb / dy02;
-            sa += dx12;
-            sb += dx02;
-            
+        sa = dx32 * (y - y2);
+        sb = dx31 * (y - y1);
+        for(; y<=y3; ++y) {
+            a = x2 + sa / dy32;
+            b = x1 + sb / dy31;
+            sa += dx32;
+            sb += dx31;
             if(a > b) { this->swap(a, b); }
-            this->drawBuffLineH(a, y, b-a+1, color, z);
-            //this->drawBuffLine(a, y, b+1, y, color);
+            this->drawBuffLineH(a, y, b-a+1, z, color);
+        }
+    }
+    
+    // GFXcanvas8::writeFastHLine modification
+    inline void drawBuffLineHTX (int16_t sx, int16_t y, int16_t w, int16_t z, Object3D* o, E512Array<Vector3>& v, int16_t index, float light) {
+        if (sx >= this->width || y < 0 || y >= this->height) { return; }
+        int16_t ex = sx + w - 1;
+        if (ex < 0) { return; }
+        sx = max(sx, (int16_t)0);
+        ex = min(ex, (int16_t)(this->width - 1));
+        
+        
+        const Face& f = o->mesh->faces[index];
+        const int16_t v1x = v[f.a].x;
+        const int16_t v1y = v[f.a].y;
+        const int16_t v2x = v[f.b].x;
+        const int16_t v2y = v[f.b].y;
+        const int16_t v3x = v[f.c].x;
+        const int16_t v3y = v[f.c].y;
+        
+        
+        const Face& fuv = o->mesh->uv_faces[index];
+        float ax = o->mesh->uv_vertexs[fuv.a].x;
+        float ay = o->mesh->uv_vertexs[fuv.a].y;
+        float bx = o->mesh->uv_vertexs[fuv.b].x;
+        float by = o->mesh->uv_vertexs[fuv.b].y;
+        float cx = o->mesh->uv_vertexs[fuv.c].x;
+        float cy = o->mesh->uv_vertexs[fuv.c].y;
+        float dax = bx-ax;
+        float day = by-ay;
+        float dbx = cx-ax;
+        float dby = cy-ay;
+        
+        for (int16_t x = sx; x < ex; ++x) {
+            if (!this->inSide2(x, y)) { continue; }
+            
+            float u=0;
+            float v=0;
+            this->getUV(x, y, v1x, v1y, v2x, v2y, v3x, v3y, u, v);
+            float tu = dax*v+dbx*u+ax;
+            float tv = day*v+dby*u+ay;
+            if (z > this->zbuff->readPixel(x+this->sx, y+this->sy)) {
+                this->zbuff->drawPixel(x+this->sx, y+this->sy, z);
+                
+                uint16_t color = o->texture->getColor(tu, tv);
+                float r = (color >> 11) << 3;
+                float g = ((color >> 5) & 0b111111) << 2;
+                float b = (color & 0b11111) << 3;
+                
+                color = M5.Lcd.color565(min(r*light, 255.0f), min(g*light, 255.0f), min(b*light, 255.0f));
+                
+                this->buff->drawPixel(x+this->sx, y+this->sy, color);
+            }
+        }
+    }
+    // Adafruit_GFX::fillTriangle modification
+    inline void fillTriangleTX (Object3D* o, E512Array<Vector3>& v, int16_t index, float light) {
+        const Face& f = o->mesh->faces[index];
+        
+        int16_t x1 = v[f.a].x;
+        int16_t y1 = v[f.a].y;
+        int16_t x2 = v[f.b].x;
+        int16_t y2 = v[f.b].y;
+        int16_t x3 = v[f.c].x;
+        int16_t y3 = v[f.c].y;
+        
+        uint16_t z1 = (1.0f-v[f.a].z) * 32767;
+        uint16_t z2 = (1.0f-v[f.b].z) * 32767;
+        uint16_t z3 = (1.0f-v[f.c].z) * 32767;
+        uint32_t z = (z1+z2+z3) / 3;
+        if (y1 > y2) { this->swap(y1, y2); this->swap(x1, x2); }
+        if (y2 > y3) { this->swap(y3, y2); this->swap(x3, x2); }
+        if (y1 > y2) { this->swap(y1, y2); this->swap(x1, x2); }
+        
+        int16_t a, b, y;
+        if (y1 == y3) {
+            a = b = x1;
+            if (x2 < a) {
+                a = x2;
+            } else if(x2 > b) {
+                b = x2;
+            }
+            if (x3 < a) {
+                a = x3;
+            } else if (x3 > b) {
+                b = x3;
+            }
+            this->drawBuffLineHTX(a, y1, b-a+1, z, o, v, index, light);
+            return;
+        }
+        
+        int32_t dx21 = x2 - x1;
+        int32_t dy21 = y2 - y1;
+        int32_t dx31 = x3 - x1;
+        int32_t dy31 = y3 - y1;
+        int32_t dx32 = x3 - x2;
+        int32_t dy32 = y3 - y2;
+        int32_t sa = 0;
+        int32_t sb = 0;
+        int16_t last = y2 == y3 ? y2 : y2-1;
+        
+        for(y=y1; y<=last; ++y) {
+            a = x1 + sa / dy21;
+            b = x1 + sb / dy31;
+            sa += dx21;
+            sb += dx31;
+            if(a > b) { this->swap(a, b); }
+            this->drawBuffLineHTX(a, y, b-a+1, z, o, v, index, light);
+        }
+        
+        sa = dx32 * (y - y2);
+        sb = dx31 * (y - y1);
+        for(; y<=y3; ++y) {
+            a = x2 + sa / dy32;
+            b = x1 + sb / dy31;
+            sa += dx32;
+            sb += dx31;
+            if(a > b) { this->swap(a, b); }
+            this->drawBuffLineHTX(a, y, b-a+1, z, o, v, index, light);
         }
     }
 };
@@ -776,7 +979,7 @@ POSSIBILITY OF SUCH DAMAGE.
 class E512WindowManager {
 public:
     E512W3D* ws[32];
-    uint8_t wsize = 0;
+    uint16_t wsize = 0;
     uint16_t width = 0;
     uint16_t height = 0;
     // uint16_t* buff;

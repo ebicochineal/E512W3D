@@ -50,6 +50,8 @@ int min (int a, int b) { return std::min(a, b); }
 double max (double a, double b) { return std::max(a, b); }
 double min (double a, double b) { return std::min(a, b); }
 
+int gfont = 0;
+
 class TFT_eSprite {
 public:
     int colordepth = 24;
@@ -70,15 +72,22 @@ public:
             for (int x = 0; x < this->width; x += 1) {
                 uint32_t c1 = this->buff[y*this->width+x];
                 uint32_t c2 = this->buff[(y+1)%this->height*this->width+x];
+                // uint16_t r = (((c1 & 0xF800) >> 11) << 3);
+                // uint16_t g = (((c1 & 0x07E0) >>  5) << 2);
+                // uint16_t b = (((c1 & 0x001F)      ) << 3);
+                
                 uint16_t r = ((((c1 & 0xF800) >> 11) << 3) + (((c2 & 0xF800) >> 11) << 3)) >> 1;
                 uint16_t g = ((((c1 & 0x07E0) >>  5) << 2) + (((c2 & 0x07E0) >>  5) << 2)) >> 1;
                 uint16_t b = ((((c1 & 0x001F)      ) << 3) + (((c2 & 0x001F)      ) << 3)) >> 1;
+                
+                // s += "\033[38;2;"+std::to_string(r)+";"+std::to_string(g)+";" + std::to_string(b) + "m@";
                 s += "\033[48;2;"+std::to_string(r)+";"+std::to_string(g)+";" + std::to_string(b) + "m ";
             }
             s += "\033[0m\n";
         }
         std::cout << s;
     }
+    
     void fillSprite (uint16_t color) {
         for (int i = 0; i < this->height*this->width; ++i) { this->buff[i] = color; }
     }

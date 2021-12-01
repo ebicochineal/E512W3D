@@ -1,18 +1,25 @@
 
-![Image](./img/1.png)
-
 ### M5StickCで3Dオブジェクトを表示できるライブラリ  
 - 複数のウィンドウ
 - ワイヤーフレーム
-- ポリゴン表示（Zソート法　Zバッファだけどポリゴン単位なので）
+- ポリゴン表示,テクスチャ（Zソート法　Zバッファだけどポリゴン単位なので）
 - 法線カラー表示
 - Directional Light
 - Ambient
-- 8000ポリゴンくらいまで
+- テクスチャなしなら8000ポリゴンくらいまで
 
-#### todo
-- オブジェクト　：　削除、検索
-- ウィンドウ　：　削除、非表示、描画順変更
+![Gif](./img/anim.gif)  
+### examples  
+1
+![Image](./img/1.jpg)  
+2
+![Image](./img/2.jpg)  
+3
+![Image](./img/3.jpg)  
+4
+![Image](./img/4.jpg)  
+
+
 
 ----
 
@@ -36,10 +43,10 @@ add (E512W3D)
 reDraw ()  
 fixedDraw ()  
 #### E512W3D  
-E512W3D (int16_t sx, int16_t sy, uint8_t width, uint8_t height)  
-E512W3D (int16_t sx, int16_t sy, uint8_t width, uint8_t height, uint16_t bgcolor)  
-E512W3D (int16_t sx, int16_t sy, uint8_t width, uint8_t height, uint16_t bgcolor, Vector3 ligtht)  
-void resize (uint8_t width, uint8_t height)  
+E512W3D (int16_t sx, int16_t sy, uint16_t width, uint16_t height)  
+E512W3D (int16_t sx, int16_t sy, uint16_t width, uint16_t height, uint16_t bgcolor)  
+E512W3D (int16_t sx, int16_t sy, uint16_t width, uint16_t height, uint16_t bgcolor, Vector3 light)  
+void resize (uint16_t width, uint16_t height)  
 void setDirectionalLight (float x, float y, float z)  
 void setDirectionalLight(Vector3(x, y, z))  
 void addChild (Object3D& o)  
@@ -60,7 +67,7 @@ Vector3 rotation
 Vector3 scale  
 Mesh* mesh  
 Object3D* parent  
-uint8_t render_type = RenderType::WireFrame  
+uint16_t render_type = RenderType::WireFrame  
 E512Array<Object3D*> child  
 void setParent (Object3D& o)  
 void addChild (Object3D& o)  
@@ -68,7 +75,7 @@ void addChild (Object3D& o)
 #### Mesh
 void addVertex (float x, float y, float z)  
 void addVertex (Vector3 v)  
-void addFace (uint16_t x, uint16_t y, uint16_t z)  
+void addFace (uint16_t a, uint16_t b, uint16_t c)  
 void addFace (Face f)  
 
 #### Face
@@ -78,6 +85,7 @@ uint16_t x, y, z
 WireFrame  
 Polygon  
 PolygonNormal  
+PolygonTexture  
 Hide  
 
 

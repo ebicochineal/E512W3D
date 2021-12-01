@@ -47,3 +47,11 @@ void loop () {
     // M5.Lcd.setCursor(120, 16);
     // M5.Lcd.print(String(batv*0.001f)+"V");
 }
+
+int main () {
+    setup();
+    while (1) {
+        loop();
+        delay(100);
+    }
+}
