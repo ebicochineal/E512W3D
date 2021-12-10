@@ -1,12 +1,13 @@
 
 ### M5StickCで3Dオブジェクトを表示できるライブラリ  
-- 複数のウィンドウ
-- ワイヤーフレーム
-- ポリゴン表示,テクスチャ（Zソート法　Zバッファだけどポリゴン単位なので）
-- 法線カラー表示
-- Directional Light
-- Ambient
-- テクスチャなしなら8000ポリゴンくらいまで
+- 複数のウィンドウ  
+- ワイヤーフレーム  
+- ポリゴン表示、テクスチャ（Zソート法　Zバッファだけどポリゴン単位なので）  
+- 法線カラー表示  
+- Directional Light  
+- Ambient  
+- テクスチャなしなら8000ポリゴンくらいまで  
+- コンソール、ウィンドウアプリ化できる  
 
 ![Gif](./img/anim.gif)  
 ### examples  
@@ -26,9 +27,9 @@
 #### E512Array
 uint16_t size ()  
 uint16_t capacity ()  
-void resize (uint16_t sz, T c = T())  
 void shrink_to_fit ()  
 void reserve (uint16_t sz)  
+void resize (uint16_t sz, T c = T())  
 void emplace_back (T t)  
 void push_back (T t)  
 void pop_back (T t)  
@@ -39,9 +40,12 @@ T& back ()
 
 #### E512WindowManager
 E512WindowManager (uint16_t width, uint16_t height)  
-add (E512W3D)  
-reDraw ()  
-fixedDraw ()  
+void add (E512W3D)  
+void draw ()  
+void fixedDraw ()  
+void fixedDrawWait ()  
+bool isFixedTime ()  
+uint16_t fixed_milli_time = 33  
 #### E512W3D  
 E512W3D (int16_t sx, int16_t sy, uint16_t width, uint16_t height)  
 E512W3D (int16_t sx, int16_t sy, uint16_t width, uint16_t height, uint16_t bgcolor)  
@@ -77,15 +81,19 @@ void addVertex (float x, float y, float z)
 void addVertex (Vector3 v)  
 void addFace (uint16_t a, uint16_t b, uint16_t c)  
 void addFace (Face f)  
-
+void addVertexUV (float x, float y)  
+void addVertexUV (Vector2 v)  
+void addFaceUV (uint16_t a, uint16_t b, uint16_t c)  
+void addFaceUV (Face f)  
 #### Face
-uint16_t x, y, z  
+uint16_t a, b, c  
 
 #### enum RenderType
 WireFrame  
-Polygon  
+PolygonColor  
 PolygonNormal  
 PolygonTexture  
 Hide  
+None  
 
 
