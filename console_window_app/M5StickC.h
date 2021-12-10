@@ -29,14 +29,16 @@ public:
     
     
 #ifdef _WIN32
-    // bool textdraw;
-    // HWND hwnd;
-    // std::string s;
+    HWND hwnd;
     void print (std::string s) {
-        // this->s = s;
-        // this->textdraw = true;
-        // InvalidateRect(this->hwnd, NULL, false);
-        // UpdateWindow(this->hwnd);
+        HDC hdc = GetDC(hwnd);
+        HFONT hFont = CreateFont(12, 0, 0, 0, FW_NORMAL, 0, 0, 0, 0, 0, 0, 0, FF_SWISS, TEXT("Arial"));
+        SelectObject(hdc, hFont);
+        SetBkMode(hdc, TRANSPARENT);
+        SetTextColor(hdc, 0xFFFFFF);
+        TextOut(hdc, this->x, this->y, TEXT(s.c_str()), s.size());
+        DeleteObject(hFont);
+        ReleaseDC(this->hwnd, hdc);
     }
 #else
     void print (std::string x) {
@@ -69,7 +71,7 @@ public:
         this->width = width;
         this->height = height;
         this->pixels = new uint32_t[width*height];
-        // this->Lcd.hwnd = hwnd;
+        this->Lcd.hwnd = hwnd;
     }
     
 #else
@@ -198,18 +200,6 @@ LRESULT CALLBACK proc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         DeleteDC(hBuffer);
         DeleteObject(hBitmap);
         EndPaint(hwnd, &ps);
-        // if (M5.Lcd.textdraw) {
-        //     PAINTSTRUCT ps;
-        //     HDC hdc = BeginPaint(hwnd, &ps);
-        //     HFONT hFont = CreateFont(12, 0, 0, 0, FW_NORMAL, 0, 0, 0, 0, 0, 0, 0, FF_SWISS, TEXT("Arial"));
-        //     SelectObject(hdc, hFont);
-        //     SetBkMode(hdc, TRANSPARENT);
-        //     SetTextColor(hdc, 0xFFFFFF);
-        //     TextOut(hdc, M5.Lcd.x, M5.Lcd.y, TEXT(M5.Lcd.s.c_str()), M5.Lcd.s.size());
-        //     DeleteObject(hFont);
-        //     EndPaint(hwnd, &ps);
-        //     M5.Lcd.textdraw = false;
-        // }
         return 0;
     }
     return DefWindowProc(hwnd , msg , wp , lp);
