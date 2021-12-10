@@ -48,3 +48,5 @@ void loop () {
         // M5.Lcd.print(String(batv*0.001f)+"V");
     }
 }
+
+VMAINLOOP(wm)

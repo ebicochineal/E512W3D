@@ -44,13 +44,13 @@ with open(path) as f:
                 face += [[toint(a)-1, toint(b)-1, toint(d)-1]]
                 face += [[toint(b)-1, toint(c)-1, toint(d)-1]]
 
-# (this script dirpath)/obj_file_name.h
+# (this script dirpath)/obj_file_name.hpp
 obj_file_name = os.path.basename(path).split('.')[0]
 p = os.path.dirname(__file__).replace('\\', '/') + '/'
 p = '' if p == '/' else p
-with open(p+obj_file_name+'.h', 'w') as f:
+with open(p+obj_file_name+'.hpp', 'w') as f:
     
-    f.write('#include "E512W3D.h"\nMesh %s;\nvoid %sInit () {\n'%(obj_file_name, obj_file_name))
+    f.write('#include "E512W3D.hpp"\nMesh %s;\nvoid %sInit () {\n'%(obj_file_name, obj_file_name))
     
     f.write('    %s.vertexs.reserve('%obj_file_name + str(len(vertex)) + ');\n')
     f.write('    %s.faces.reserve('%obj_file_name + str(len(face)) + ');\n')

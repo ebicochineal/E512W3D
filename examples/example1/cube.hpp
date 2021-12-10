@@ -1,4 +1,4 @@
-#include "E512W3D.h"
+#include "E512W3D.hpp"
 Mesh cube;
 
 void cubeInit () {

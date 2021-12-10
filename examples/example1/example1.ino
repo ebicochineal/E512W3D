@@ -1,9 +1,9 @@
 #include "M5StickC.h"
-#include "E512W3D.h"
-#include "cube.h"
+#include "E512W3D.hpp"
+#include "cube.hpp"
 
 E512WindowManager wm(160, 80);
-E512W3D w( 0, 0, 160, 80, M5.Lcd.color565(20, 20, 20));
+E512W3D w(0, 0, wm.width, wm.height, M5.Lcd.color565(20, 20, 20));
 
 Object3D a, b, c, d, e, f;
 Object3D camera;
@@ -24,18 +24,18 @@ void setup() {
     b.mesh = &cube;
     b.position.x = 12;
     b.rotation.y = 180;
-    b.render_type = RenderType::Polygon;
+    b.render_type = RenderType::PolygonColor;
     b.color = M5.Lcd.color565(255, 0, 0);
     
     c.mesh = &cube;
     c.position.x = -12;
-    c.render_type = RenderType::Polygon;
+    c.render_type = RenderType::PolygonColor;
     c.color = M5.Lcd.color565(0, 255, 0);
     
     d.mesh = &cube;
     d.position.z = 12;
     d.rotation.y = 90;
-    d.render_type = RenderType::Polygon;
+    d.render_type = RenderType::PolygonColor;
     d.color = M5.Lcd.color565(0, 0, 255);
     
     e.mesh = &cube;
@@ -60,24 +60,24 @@ void setup() {
 float v = 0;
 
 void loop() {
-    
-    // move
-    a.rotation.y += 6;
-    v += 0.5;
-    b.position.y = abs(sin(v)) * 3;
-    c.position.y = abs(sin(v+0.25)) * 3;
-    d.position.y = abs(sin(v+0.5)) * 3;
-    e.position.y = abs(sin(v+1)) * 3;
-    
-    wm.fixedDraw();
-    
-    // battery
-    // int16_t batv = (int16_t)(M5.Axp.GetVapsData() * 1.4f);
-    // batv = max(min(batv, 4100), 3300);
-    // int16_t bati = (int16_t)map(batv, 3300, 4100, 0, 100);
-    // float g = bati * 0.01f;
-    // M5.Lcd.setCursor(120, 0);
-    // M5.Lcd.print(String(bati)+"%");
-    // M5.Lcd.setCursor(120, 16);
-    // M5.Lcd.print(String(batv*0.001f)+"V");
+    if (wm.isFixedTime()) {
+        // move
+        a.rotation.y += 6.0f;
+        b.position.y = abs(sin(v)) * 3;
+        c.position.y = abs(sin(v+0.25f)) * 3;
+        d.position.y = abs(sin(v+0.5f)) * 3;
+        e.position.y = abs(sin(v+1.0f)) * 3;
+        v += 0.5f;
+        wm.draw();
+        
+        // battery
+        // int16_t batv = (int16_t)(M5.Axp.GetVapsData() * 1.4f);
+        // batv = max(min(batv, 4100), 3300);
+        // int16_t bati = (int16_t)map(batv, 3300, 4100, 0, 100);
+        // float g = bati * 0.01f;
+        // M5.Lcd.setCursor(120, 0);
+        // M5.Lcd.print(String(bati)+"%");
+        // M5.Lcd.setCursor(120, 16);
+        // M5.Lcd.print(String(batv*0.001f)+"V");
+    }
 }

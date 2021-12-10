@@ -1,9 +1,9 @@
 #include "M5StickC.h"
-#include "E512W3D.h"
-#include "cube.h"
+#include "E512W3D.hpp"
+#include "cube.hpp"
 
 E512WindowManager wm(160, 80);
-E512W3D w( 0, 0, 160, 80, M5.Lcd.color565(0, 0, 0));
+E512W3D w(0, 0, wm.width, wm.height, M5.Lcd.color565(0, 0, 0));
 E512Array<Object3D> origins;
 E512Array<Object3D> objs;
 Object3D a;
@@ -21,7 +21,7 @@ void setup() {
         for (int x = 0; x < gsize; ++x) {
             Object3D o;
             o.mesh = &cube;
-            o.render_type = RenderType::Polygon;
+            o.render_type = RenderType::PolygonColor;
             o.position.y = 1;
             o.color = M5.Lcd.color565(32, 64, 255);
             objs.emplace_back(o);
@@ -65,29 +65,26 @@ void setup() {
 float v = 0;
 
 void loop() {
-    for (int i = 0; i < gsize * gsize; ++i) {
-        int x = i % gsize;
-        int y = i / gsize;
+    if (wm.isFixedTime()) {
+        for (int i = 0; i < gsize * gsize; ++i) {
+            int x = i % gsize;
+            int y = i / gsize;
+            origins[i].scale.y = sin((x+y) + v) * 0.5 + cos(y + v) * 0.5 + 1.0;
+            float t = origins[i].scale.y;
+            objs[i].color = M5.Lcd.color565(min(32.0 * t, 255.0), min(64.0 * t, 255.0), min(255.0 * t, 255.0));
+        }
+        a.rotation.y = v * 4;
+        v += 0.2;
+        wm.draw();
         
-        origins[i].scale.y = sin((x+y) + v) * 0.5 + cos(y + v) * 0.5 + 1.0;
-        float t = sin((x+y) + v) * 0.5  + cos(y + v) * 0.5  + 1.0;
-        t = map(t * 100, 0, 200, 50, 100) * 0.01f;
-        
-        objs[i].color = M5.Lcd.color565(32.0 * t, 64.0 * t, 255.0 * t);
+        // battery
+        // int16_t batv = (int16_t)(M5.Axp.GetVapsData() * 1.4f);
+        // batv = max(min(batv, 4100), 3300);
+        // int16_t bati = (int16_t)map(batv, 3300, 4100, 0, 100);
+        // float g = bati * 0.01f;
+        // M5.Lcd.setCursor(120, 0);
+        // M5.Lcd.print(String(bati)+"%");
+        // M5.Lcd.setCursor(120, 16);
+        // M5.Lcd.print(String(batv*0.001f)+"V");
     }
-    
-    a.rotation.y = v * 4;
-    v += 0.2;
-    
-    wm.fixedDraw();
-    
-    // battery
-    // int16_t batv = (int16_t)(M5.Axp.GetVapsData() * 1.4f);
-    // batv = max(min(batv, 4100), 3300);
-    // int16_t bati = (int16_t)map(batv, 3300, 4100, 0, 100);
-    // float g = bati * 0.01f;
-    // M5.Lcd.setCursor(120, 0);
-    // M5.Lcd.print(String(bati)+"%");
-    // M5.Lcd.setCursor(120, 16);
-    // M5.Lcd.print(String(batv*0.001f)+"V");
 }

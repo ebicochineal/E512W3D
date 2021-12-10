@@ -1,7 +1,5 @@
-#ifndef E512W3D_H
-#define E512W3D_H
+#pragma once
 #include "M5StickC.h"
-
 template <class T>
 class E512Array {
 private:
@@ -222,16 +220,17 @@ public:
     static Matrix4x4 projectionMatrix (float w, float h) {
         Matrix4x4 r;
         float aspect =  w / h;
-        float fov = Matrix4x4::radian(45.0f);
-        float near = 4.0f;
-        float far = 100.0f;
-        float y = 1.0f / tan(fov * 0.5f);
+        float cfov = Matrix4x4::radian(45.0);
+        float cnear = 4.0f;
+        float cfar = 100.0f;
+        float y = 1.0f / tan(cfov * 0.5f);
         float x = y / aspect;
-        float z = far / (near - far);
+        float z = cfar / (cnear - cfar);
         r.m[0][0] = x;
         r.m[1][1] = y;
-        r.m[2][2] = z; r.m[2][3] = -1.0f;
-        r.m[3][2] = z * near;
+        r.m[2][2] = z;
+        r.m[2][3] = -1.0f;
+        r.m[3][2] = z * cnear;
         return r;
     }
     
@@ -243,14 +242,14 @@ public:
         float top = h * size;
         float bottom = -h * size;
         
-        float near = 4.0f;
-        float far = 100.0f;
+        float cnear = 4.0f;
+        float cfar = 100.0f;
         r.m[0][0] = 2.0f / (right - left);
         r.m[1][1] = 2.0f / (top - bottom);
-        r.m[2][2] = -2.0f / (near - far);
+        r.m[2][2] = -2.0f / (cnear - cfar);
         r.m[3][0] = -((right+left)/(right-left));
         r.m[3][1] = -((top+bottom)/(top-bottom));
-        r.m[3][2] = ((far+near)/(far-near));
+        r.m[3][2] = ((cfar+cnear)/(cfar-cnear));
         
         r.m[3][3] = 1.0f;
         
@@ -390,13 +389,13 @@ struct Texture {
     }
 };
 
-
 enum RenderType {
     WireFrame,
-    Polygon,
+    PolygonColor,
     PolygonNormal,
     PolygonTexture,
     Hide,
+    None,
 };
 
 struct Object3D {
@@ -520,7 +519,7 @@ private:
                     this->projscreenTransform(c, v);
                     this->drawWire(c, v);
                 }
-                if (c->render_type == RenderType::Polygon) {
+                if (c->render_type == RenderType::PolygonColor) {
                     E512Array<uint16_t> colors(c->mesh->faces.size());
                     this->worldviewTransform(c, mat, v);
                     this->polygon(c, v, colors);
@@ -975,7 +974,6 @@ POSSIBILITY OF SUCH DAMAGE.
     }
 };
 
-
 class E512WindowManager {
 public:
     E512W3D* ws[32];
@@ -987,6 +985,8 @@ public:
     
     TFT_eSprite* tft_es_buff;
     TFT_eSprite* zbuff;
+    
+    uint16_t fixed_milli_time = 33;
     E512WindowManager (uint16_t width, uint16_t height) {
         this->width = width;
         this->height = height;
@@ -1014,28 +1014,38 @@ public:
         }
     }
     
-    void fixedDraw () {
+    void fixedDrawWait () {
+        while (millis() - this->prev_time < this->fixed_milli_time) { delay(1); }
+        this->prev_time = millis();
         this->buffUpdate();
-        uint64_t t = millis();
-        while (t - this->prev_time < 33) {
-            delay(1);
-            t = millis();
-        }
-        this->prev_time = t;
         this->screenDraw();
     }
     
-    void reDraw () {
-        this->buffUpdate();
+    void fixedDraw () {
+        uint64_t t = millis();
+        if (t - this->prev_time >= this->fixed_milli_time) {
+            this->buffUpdate();
+            this->screenDraw();
+            this->prev_time = t;
+        }
+    }
+    
+    void draw () {
         this->prev_time = millis();
+        this->buffUpdate();
         this->screenDraw();
     }
+    
+    bool isFixedTime () {
+        return millis() - this->prev_time >= this->fixed_milli_time;
+    }
+    
+    
 private:
     uint64_t prev_time = 0;
     void screenDraw () {
         // M5.Lcd.setAddrWindow(0, 0, this->width, this->height);
         // M5.Lcd.pushColors(this->buff, this->buffsize);
-        
         
         this->tft_es_buff->pushSprite(0, 0);
     }
@@ -1056,8 +1066,6 @@ private:
         //     }
         // }
         
-        
-        
         this->tft_es_buff->fillSprite(0);
         for (int i = 0; i < this->wsize; ++i) {
             E512W3D& w = *this->ws[i];
@@ -1067,5 +1075,3 @@ private:
     }
     
 };
-
-#endif

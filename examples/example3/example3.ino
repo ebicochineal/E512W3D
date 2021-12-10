@@ -1,12 +1,12 @@
 #include "M5StickC.h"
-#include "E512W3D.h"
-#include "zou.h"
+#include "E512W3D.hpp"
+#include "zou.hpp"
 
 E512WindowManager wm(160, 80);
-E512W3D w0( 80, 0, 80, 40, M5.Lcd.color565(0, 0, 0));
-E512W3D w1( 0, 40, 80, 40, M5.Lcd.color565(0, 0, 0));
-E512W3D w2( 80, 40, 80, 40, M5.Lcd.color565(0, 0, 0));
-E512W3D w3( 0, 0, 80, 40, M5.Lcd.color565(0, 0, 0));
+E512W3D w0(wm.width/2, 0, wm.width/2, wm.height/2, M5.Lcd.color565(0, 0, 0));
+E512W3D w1(0, wm.height/2, wm.width/2, wm.height/2, M5.Lcd.color565(0, 0, 0));
+E512W3D w2(wm.width/2, wm.height/2, wm.width/2, wm.height/2, M5.Lcd.color565(0, 0, 0));
+E512W3D w3(0, 0, wm.width/2, wm.height/2, M5.Lcd.color565(0, 0, 0));
 Object3D a0, a;
 Object3D o, c0, c1, c2, c3;
 
@@ -65,16 +65,18 @@ void setup() {
 }
 
 void loop() {
-    o.rotation.y += 1.0f;
-    wm.fixedDraw();
-    
-    // battery
-    // int16_t batv = (int16_t)(M5.Axp.GetVapsData() * 1.4f);
-    // batv = max(min(batv, 4100), 3300);
-    // int16_t bati = (int16_t)map(batv, 3300, 4100, 0, 100);
-    // float g = bati * 0.01f;
-    // M5.Lcd.setCursor(120, 0);
-    // M5.Lcd.print(String(bati)+"%");
-    // M5.Lcd.setCursor(120, 16);
-    // M5.Lcd.print(String(batv*0.001f)+"V");
+    if (wm.isFixedTime()) {
+        o.rotation.y += 1.0f;
+        wm.draw();
+        
+        // battery
+        // int16_t batv = (int16_t)(M5.Axp.GetVapsData() * 1.4f);
+        // batv = max(min(batv, 4100), 3300);
+        // int16_t bati = (int16_t)map(batv, 3300, 4100, 0, 100);
+        // float g = bati * 0.01f;
+        // M5.Lcd.setCursor(120, 0);
+        // M5.Lcd.print(String(bati)+"%");
+        // M5.Lcd.setCursor(120, 16);
+        // M5.Lcd.print(String(batv*0.001f)+"V");
+    }
 }

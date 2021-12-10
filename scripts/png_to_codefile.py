@@ -17,13 +17,13 @@ for y in range(h):
         pixels += [color565(r, g, b)]
 
 
-# (this script dirpath)/file_name.h
+# (this script dirpath)/file_name.hpp
 file_name = os.path.basename(path).split('.')[0]
 p = os.path.dirname(__file__).replace('\\', '/') + '/'
 p = '' if p == '/' else p
 if w < 1 : exit()
-with open(p+file_name+'.h', 'w') as f:
-    f.write('#include "E512W3D.h"\n')
+with open(p+file_name+'.hpp', 'w') as f:
+    f.write('#include "E512W3D.hpp"\n')
     f.write('uint16_t %s_pixels[] = {'%(file_name))
     for i in pixels: f.write(str(i) + ',')
     f.write('};\n')
