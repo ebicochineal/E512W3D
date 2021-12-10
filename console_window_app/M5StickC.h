@@ -29,18 +29,14 @@ public:
     
     
 #ifdef _WIN32
-    HDC hdc;
-    
-    void init (HDC hdc) {
-        this->hdc = hdc;
-        HFONT hFont = CreateFont(12, 0, 0, 0, FW_NORMAL, 0, 0, 0, 0, 0, 0, 0, FF_SWISS, TEXT("Arial"));
-        SelectObject(this->hdc, hFont);
-        SetBkMode(this->hdc , TRANSPARENT);
-        SetTextColor(this->hdc , 0xFFFFFF);
-    }
-    
-    void print (std::string x) {
-        TextOut(this->hdc, this->x, this->y, TEXT(x.c_str()), x.size());
+    // bool textdraw;
+    // HWND hwnd;
+    // std::string s;
+    void print (std::string s) {
+        // this->s = s;
+        // this->textdraw = true;
+        // InvalidateRect(this->hwnd, NULL, false);
+        // UpdateWindow(this->hwnd);
     }
 #else
     void print (std::string x) {
@@ -62,18 +58,23 @@ public:
     
 #ifdef _WIN32
     HWND hwnd;
-    PAINTSTRUCT ps;
-    HDC hdc;
-    void begin () {
-        this->hdc = BeginPaint(this->hwnd , &this->ps);
-        this->Lcd.init(this->hdc);
+    uint16_t width;
+    uint16_t height;
+    uint32_t* pixels;
+    bool draw = false;
+    void begin () {}
+    
+    void window_app (HWND hwnd, uint16_t width, uint16_t height) {
+        this->hwnd = hwnd;
+        this->width = width;
+        this->height = height;
+        this->pixels = new uint32_t[width*height];
+        // this->Lcd.hwnd = hwnd;
     }
+    
 #else
     void begin () {}
 #endif
-    
-    
-    
 };
 
 M5StickC M5;
@@ -84,8 +85,6 @@ int max (int a, int b) { return std::max(a, b); }
 int min (int a, int b) { return std::min(a, b); }
 double max (double a, double b) { return std::max(a, b); }
 double min (double a, double b) { return std::min(a, b); }
-
-
 
 class TFT_eSprite {
 public:
@@ -104,26 +103,19 @@ public:
     
 #ifdef _WIN32
     void pushSprite (int x, int y) {
-        static uint32_t* px = new uint32_t[this->height * this->width];
-        for (int y = 0; y < this->height; y += 1) {
-            for (int x = 0; x < this->width; x += 1) {
-                uint32_t c1 = this->buff[y*this->width+x];
+        for (int y = 0; y < M5.height; y += 1) {
+            for (int x = 0; x < M5.width; x += 1) {
+                uint32_t c1 = this->buff[y*M5.width+x];
                 uint16_t r = (((c1 & 0xF800) >> 11) << 3);
                 uint16_t g = (((c1 & 0x07E0) >>  5) << 2);
                 uint16_t b = (((c1 & 0x001F)      ) << 3);
                 
-                px[y*this->width+x] = (r << 16) | (g << 8) | (b);
+                M5.pixels[y*M5.width+x] = (r << 16) | (g << 8) | (b);
                 // SetPixel(hdc, x, y, r | (g << 8) | (b << 16));
             }
         }
-        
-        // BeginPaint(M5.hwnd , &M5.ps);
-        HBITMAP hBitmap = CreateBitmap(this->width, this->height , 1 , 32 , px);
-        HDC hBuffer = CreateCompatibleDC(M5.hdc);
-        SelectObject(hBuffer , hBitmap);
-        BitBlt(M5.hdc , 0 , 0 , this->width , this->height , hBuffer , 0 , 0 , SRCCOPY);
-        DeleteDC(hBuffer);
-        // EndPaint(M5.hwnd , &M5.ps);
+        InvalidateRect(M5.hwnd, NULL, false);
+        UpdateWindow(M5.hwnd);
     }
 #else
     void pushSprite (int x, int y) {
@@ -157,43 +149,11 @@ public:
     uint16_t readPixel (uint16_t x, uint16_t y) { return this->buff[y*this->width+x]; }
 };
 
-
 void delay (int v) { usleep(v * 1000);  }
 
 int64_t map(int64_t x, int64_t in_min, int64_t in_max, int64_t out_min, int64_t out_max) {
   return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
-
-// #include <time.h>
-// #include <sys/timeb.h>
-// class StopWatch {
-// public:
-//     uint64_t starts;
-//     uint64_t startm;
-//     uint64_t tstarts = 0;
-//     uint64_t tstartm = 0;
-//     struct timeb timebuffer;
-//     StopWatch () {
-//         ftime(&this->timebuffer);
-//         this->starts = this->timebuffer.time;
-//         this->startm = this->timebuffer.millitm;
-//     }
-//     inline void stop () {
-//         ftime(&this->timebuffer);
-//         this->tstarts = this->timebuffer.time;
-//         this->tstartm = this->timebuffer.millitm;
-//     }
-//     inline void resume () {
-//         ftime(&this->timebuffer);
-//         this->starts += this->timebuffer.time - this->tstarts;
-//         this->startm += this->timebuffer.millitm - this->tstartm;
-//     }
-//     inline uint64_t get_milli_time () {
-//         ftime(&this->timebuffer);
-//         return (this->timebuffer.time - this->starts) * 1000 + (this->timebuffer.millitm - this->startm);
-//     }
-// };
-// StopWatch gsw;
 
 #include <chrono>
 class StopWatchChrono {
@@ -215,15 +175,41 @@ public:
 };
 StopWatchChrono gsw;
 
-int millis () { return gsw.get_milli_time(); }
+uint64_t millis () { return gsw.get_milli_time(); }
 
 #ifdef _WIN32
 #define WC_NAME TEXT("e512w3d")
 #define WT_NAME TEXT("e512w3d")
+
+int gwidth;
+int gheight;
 LRESULT CALLBACK proc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
     switch (msg) {
     case WM_DESTROY:
         PostQuitMessage(0);
+        return 0;
+    case WM_PAINT:
+        PAINTSTRUCT ps;
+        HDC hdc = BeginPaint(hwnd, &ps);
+        HBITMAP hBitmap = CreateBitmap(M5.width, M5.height, 1, 32, M5.pixels);
+        HDC hBuffer = CreateCompatibleDC(hdc);
+        SelectObject(hBuffer, hBitmap);
+        BitBlt(hdc, 0, 0, M5.width, M5.height, hBuffer, 0, 0, SRCCOPY);
+        DeleteDC(hBuffer);
+        DeleteObject(hBitmap);
+        EndPaint(hwnd, &ps);
+        // if (M5.Lcd.textdraw) {
+        //     PAINTSTRUCT ps;
+        //     HDC hdc = BeginPaint(hwnd, &ps);
+        //     HFONT hFont = CreateFont(12, 0, 0, 0, FW_NORMAL, 0, 0, 0, 0, 0, 0, 0, FF_SWISS, TEXT("Arial"));
+        //     SelectObject(hdc, hFont);
+        //     SetBkMode(hdc, TRANSPARENT);
+        //     SetTextColor(hdc, 0xFFFFFF);
+        //     TextOut(hdc, M5.Lcd.x, M5.Lcd.y, TEXT(M5.Lcd.s.c_str()), M5.Lcd.s.size());
+        //     DeleteObject(hFont);
+        //     EndPaint(hwnd, &ps);
+        //     M5.Lcd.textdraw = false;
+        // }
         return 0;
     }
     return DefWindowProc(hwnd , msg , wp , lp);
@@ -249,15 +235,15 @@ WPARAM mainloop (void (*setup)(), void (*loop)(), int width, int height, HINSTAN
         NULL, NULL, hInstance, NULL
     );
     if (hwnd == NULL) { return 0; }
-    int prev = gsw.get_milli_time();
-    M5.hwnd = hwnd;
+    uint64_t prev = gsw.get_milli_time();
+    M5.window_app(hwnd, width, height);
     setup();
     while (true) {
         if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
             if(msg.message == WM_QUIT) { break; }
             DispatchMessage(&msg);
         } else {
-            int t = gsw.get_milli_time();
+            uint64_t t = gsw.get_milli_time();
             if (t - prev >= 16) {
                 loop();
                 prev = t;

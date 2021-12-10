@@ -1041,8 +1041,8 @@ public:
     }
     
     
-private:
     uint64_t prev_time = 0;
+private:
     void screenDraw () {
         // M5.Lcd.setAddrWindow(0, 0, this->width, this->height);
         // M5.Lcd.pushColors(this->buff, this->buffsize);
