@@ -222,7 +222,7 @@ public:
         float aspect =  w / h;
         float cfov = Matrix4x4::radian(45.0);
         float cnear = 4.0f;
-        float cfar = 100.0f;
+        float cfar = 1000.0f;
         float y = 1.0f / tan(cfov * 0.5f);
         float x = y / aspect;
         float z = cfar / (cnear - cfar);
@@ -243,7 +243,7 @@ public:
         float bottom = -h * size;
         
         float cnear = 4.0f;
-        float cfar = 100.0f;
+        float cfar = 1000.0f;
         r.m[0][0] = 2.0f / (right - left);
         r.m[1][1] = 2.0f / (top - bottom);
         r.m[2][2] = -2.0f / (cnear - cfar);
@@ -855,7 +855,7 @@ POSSIBILITY OF SUCH DAMAGE.
     }
     
     // GFXcanvas8::writeFastHLine modification
-    inline void drawBuffLineHTX (int16_t sx, int16_t y, int16_t w, int16_t z, Object3D* o, E512Array<Vector3>& v, int16_t index, float light) {
+    inline void drawBuffLineHTX (int16_t sx, int16_t y, int16_t w, int16_t za,int16_t zba, int16_t zca, Object3D* o, E512Array<Vector3>& v, int16_t index, float light) {
         if (sx >= this->width || y < 0 || y >= this->height) { return; }
         int16_t ex = sx + w - 1;
         if (ex < 0) { return; }
@@ -890,8 +890,12 @@ POSSIBILITY OF SUCH DAMAGE.
             float u=0;
             float v=0;
             this->getUV(x, y, v1x, v1y, v2x, v2y, v3x, v3y, u, v);
+            
             float tu = dax*v+dbx*u+ax;
             float tv = day*v+dby*u+ay;
+            
+            uint16_t z = zba*v+zca*u+za;
+            
             if (z > this->zbuff->readPixel(x+this->sx, y+this->sy)) {
                 this->zbuff->drawPixel(x+this->sx, y+this->sy, z);
                 
@@ -917,10 +921,12 @@ POSSIBILITY OF SUCH DAMAGE.
         int16_t x3 = v[f.c].x;
         int16_t y3 = v[f.c].y;
         
-        uint16_t z1 = (1.0f-v[f.a].z) * 32767;
-        uint16_t z2 = (1.0f-v[f.b].z) * 32767;
-        uint16_t z3 = (1.0f-v[f.c].z) * 32767;
-        uint32_t z = (z1+z2+z3) / 3;
+        int16_t za = (1.0f-v[f.a].z) * 32767;
+        int16_t zb = (1.0f-v[f.b].z) * 32767;
+        int16_t zc = (1.0f-v[f.c].z) * 32767;
+        int16_t zba = zb - za;
+        int16_t zca = zc - za;
+        
         if (y1 > y2) { this->swap(y1, y2); this->swap(x1, x2); }
         if (y2 > y3) { this->swap(y3, y2); this->swap(x3, x2); }
         if (y1 > y2) { this->swap(y1, y2); this->swap(x1, x2); }
@@ -938,7 +944,7 @@ POSSIBILITY OF SUCH DAMAGE.
             } else if (x3 > b) {
                 b = x3;
             }
-            this->drawBuffLineHTX(a, y1, b-a+1, z, o, v, index, light);
+            this->drawBuffLineHTX(a, y1, b-a+1, za, zba, zca, o, v, index, light);
             return;
         }
         
@@ -958,7 +964,7 @@ POSSIBILITY OF SUCH DAMAGE.
             sa += dx21;
             sb += dx31;
             if(a > b) { this->swap(a, b); }
-            this->drawBuffLineHTX(a, y, b-a+1, z, o, v, index, light);
+            this->drawBuffLineHTX(a, y, b-a+1, za, zba, zca, o, v, index, light);
         }
         
         sa = dx32 * (y - y2);
@@ -969,7 +975,7 @@ POSSIBILITY OF SUCH DAMAGE.
             sa += dx32;
             sb += dx31;
             if(a > b) { this->swap(a, b); }
-            this->drawBuffLineHTX(a, y, b-a+1, z, o, v, index, light);
+            this->drawBuffLineHTX(a, y, b-a+1, za, zba, zca, o, v, index, light);
         }
     }
 };
