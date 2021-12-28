@@ -1,19 +1,40 @@
-#include "M5StickC.h"
 #include "E512W3D.hpp"
 #include "zou.hpp"
 
-E512WindowManager wm(160, 80);
-E512W3D w0(wm.width/2, 0, wm.width/2, wm.height/2, M5.Lcd.color565(0, 0, 0));
-E512W3D w1(0, wm.height/2, wm.width/2, wm.height/2, M5.Lcd.color565(0, 0, 0));
-E512W3D w2(wm.width/2, wm.height/2, wm.width/2, wm.height/2, M5.Lcd.color565(0, 0, 0));
-E512W3D w3(0, 0, wm.width/2, wm.height/2, M5.Lcd.color565(0, 0, 0));
+E512W3DWindow w0, w1, w2, w3;
+
 Object3D a0, a;
 Object3D o, c0, c1, c2, c3;
 
 void setup() {
     M5.begin();
     M5.Lcd.setRotation(1);
-    M5.Axp.ScreenBreath(8);
+    M5.Axp.ScreenBreath(9);
+    M5.MPU6886.Init();
+    
+    e512w3d.width = 160;
+    e512w3d.height = 80;
+    w0.sx = e512w3d.width/2;
+    w0.sy = 0;
+    w0.width = e512w3d.width/2;
+    w0.height = e512w3d.height/2;
+    
+    w1.sx = 0;
+    w1.sy = e512w3d.height/2;
+    w1.width = e512w3d.width/2;
+    w1.height = e512w3d.height/2;
+    
+    w2.sx = e512w3d.width/2;
+    w2.sy = e512w3d.height/2;
+    w2.width = e512w3d.width/2;
+    w2.height = e512w3d.height/2;
+    
+    w3.sx = 0;
+    w3.sy = 0;
+    w3.width = e512w3d.width/2;
+    w3.height = e512w3d.height/2;
+    
+    
     zouInit();
     
     a.mesh = &zou;
@@ -58,16 +79,18 @@ void setup() {
     // 3 0
     // 1 2
     
-    wm.add(w0);
-    wm.add(w1);
-    wm.add(w2);
-    wm.add(w3);
+    e512w3d.add(w0);
+    e512w3d.add(w1);
+    e512w3d.add(w2);
+    e512w3d.add(w3);
+    
+    e512w3d.begin();
 }
 
 void loop() {
-    if (wm.isFixedTime()) {
+    if (e512w3d.isFixedTime()) {
         o.rotation.y += 1.0f;
-        wm.draw();
+        e512w3d.draw();
         
         // battery
         // int16_t batv = (int16_t)(M5.Axp.GetVapsData() * 1.4f);

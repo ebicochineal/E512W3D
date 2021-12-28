@@ -1,9 +1,7 @@
-#include "M5StickC.h"
 #include "E512W3D.hpp"
 #include "cube.hpp"
 
-E512WindowManager wm(160, 80);
-E512W3D w(0, 0, wm.width, wm.height, M5.Lcd.color565(20, 20, 20));
+E512W3DWindow w(color565(20, 20, 20));
 
 Object3D a, b, c, d, e, f;
 Object3D camera;
@@ -11,7 +9,14 @@ Object3D camera;
 void setup() {
     M5.begin();
     M5.Lcd.setRotation(1);
-    M5.Axp.ScreenBreath(8);
+    M5.Axp.ScreenBreath(9);
+    M5.MPU6886.Init();
+    
+    e512w3d.width = 160;
+    e512w3d.height = 80;
+    w.width = e512w3d.width;
+    w.height = e512w3d.height;
+    
     cubeInit();
     
     a.mesh = &cube;
@@ -25,24 +30,24 @@ void setup() {
     b.position.x = 12;
     b.rotation.y = 180;
     b.render_type = RenderType::PolygonColor;
-    b.color = M5.Lcd.color565(255, 0, 0);
+    b.color = color565(255, 0, 0);
     
     c.mesh = &cube;
     c.position.x = -12;
     c.render_type = RenderType::PolygonColor;
-    c.color = M5.Lcd.color565(0, 255, 0);
+    c.color = color565(0, 255, 0);
     
     d.mesh = &cube;
     d.position.z = 12;
     d.rotation.y = 90;
     d.render_type = RenderType::PolygonColor;
-    d.color = M5.Lcd.color565(0, 0, 255);
+    d.color = color565(0, 0, 255);
     
     e.mesh = &cube;
     e.position.z = -12;
     e.rotation.y = 270;
     e.render_type = RenderType::WireFrame;
-    e.color = M5.Lcd.color565(255, 255, 255);
+    e.color = color565(255, 255, 255);
     
     w.addChild(a);
     camera.position.z = 32;
@@ -50,17 +55,16 @@ void setup() {
     camera.rotation.x = -30;
     w.setCamera(camera);
     w.setDirectionalLight(-1, -1, -1);
-    wm.add(w);
+    e512w3d.add(w);
     
     // w.ambient = 1;
     
-    M5.MPU6886.Init();
+    e512w3d.begin();
 }
 
-float v = 0;
-
 void loop() {
-    if (wm.isFixedTime()) {
+    static float v = 0;
+    if (e512w3d.isFixedTime()) {
         // move
         a.rotation.y += 6.0f;
         b.position.y = abs(sin(v)) * 3;
@@ -68,7 +72,7 @@ void loop() {
         d.position.y = abs(sin(v+0.5f)) * 3;
         e.position.y = abs(sin(v+1.0f)) * 3;
         v += 0.5f;
-        wm.draw();
+        e512w3d.draw();
         
         // battery
         // int16_t batv = (int16_t)(M5.Axp.GetVapsData() * 1.4f);

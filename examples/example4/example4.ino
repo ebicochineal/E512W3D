@@ -1,11 +1,9 @@
-#include "M5StickC.h"
 #include "E512W3D.hpp"
 
 #include "ebi.hpp"
 #include "ebi_64_29.hpp"
 
-E512WindowManager wm(160, 80);
-E512W3D w(0, 0, wm.width, wm.height, M5.Lcd.color565(0, 0, 0));
+E512W3DWindow w;
 Object3D a;
 Object3D camera;
 
@@ -13,6 +11,12 @@ void setup() {
     M5.begin();
     M5.Lcd.setRotation(1);
     M5.Axp.ScreenBreath(9);
+    M5.MPU6886.Init();
+    
+    e512w3d.width = 160;
+    e512w3d.height = 80;
+    w.width = e512w3d.width;
+    w.height = e512w3d.height;
     
     ebiInit();
     a.mesh = &ebi;
@@ -28,14 +32,14 @@ void setup() {
     w.ambient = 0.8;
     w.addChild(a);
     
-    wm.add(w);
-    M5.MPU6886.Init();
+    e512w3d.add(w);
+    e512w3d.begin();
 }
 
 void loop () {
-    if (wm.isFixedTime()) {
+    if (e512w3d.isFixedTime()) {
         a.rotation.y += 5.0f;
-        wm.draw();
+        e512w3d.draw();
         
         // battery
         // int16_t batv = (int16_t)(M5.Axp.GetVapsData() * 1.4f);

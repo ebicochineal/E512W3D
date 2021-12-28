@@ -1,5 +1,5 @@
 
-### M5StickCで3Dオブジェクトを表示できるライブラリ  
+## M5StickCで3Dオブジェクトを表示できるライブラリ  
 - 複数のウィンドウ  
 - ワイヤーフレーム  
 - ポリゴン表示、テクスチャ  
@@ -10,19 +10,62 @@
 - コンソール、ウィンドウアプリ化できる  
 
 ![Gif](./img/anim.gif)  
-### examples  
-1
+![Gif](./img/animc.gif)  
+  
+example1  
 ![Image](./img/1.jpg)  
-2
+example2  
 ![Image](./img/2.jpg)  
-3
+example3  
 ![Image](./img/3.jpg)  
-4
+example4  
 ![Image](./img/4.jpg)  
 
+---
+## M5Stick C
+obj形式のファイルをスクリプトでhppに変換  
+```
+Blender設定
+[+] Triangulate Faces
+[-] Write Normals
+[-] Write Materials
+```
+
+---
+## CUI
+.ino -> .cpp  
+windowsのコマンドプロンプトだとカラー表示できないためlinuxかwsl  
+__has_includeを使っているのでC++17の方が良いかも  
+```
+g++ -std=c++1z ***.cpp -o ***.out
+```
+---
+## TUI
+.ino -> .cpp  
+ncuresesインストール
+```
+sudo apt-get install ncurses-dev
+```
+
+```
+g++ -std=c++1z ***.cpp -o ***.out -lncurses
+```
+Escで終了  
+Escで終了しないと色がおかしくなる  
+color_content, pair_contentで色情報保存して最後に戻しているつもり  
 
 
-----
+---
+## GUI
+.ino -> .cpp  
+windows mingw  
+```
+g++ -std=c++1z -static-libstdc++ -mwindows ***.cpp -o ***.exe
+```
+
+
+---
+---
 
 #### E512Array
 uint16_t size ()  
@@ -38,18 +81,21 @@ void erase_value (T t)
 T& front ()  
 T& back ()  
 
-#### E512WindowManager
-E512WindowManager (uint16_t width, uint16_t height)  
-void add (E512W3D)  
+#### E512W3DWindowManager
+E512W3DWindowManager ()  
+void begin ()  
+void add (E512W3DWindow& w)  
 void draw ()  
 void fixedDraw ()  
 void fixedDrawWait ()  
 bool isFixedTime ()  
 uint16_t fixed_milli_time = 33  
-#### E512W3D  
-E512W3D (int16_t sx, int16_t sy, uint16_t width, uint16_t height)  
-E512W3D (int16_t sx, int16_t sy, uint16_t width, uint16_t height, uint16_t bgcolor)  
-E512W3D (int16_t sx, int16_t sy, uint16_t width, uint16_t height, uint16_t bgcolor, Vector3 light)  
+#### E512W3DWindow  
+E512W3DWindow ()  
+E512W3DWindow (uint16_t bgcolor)  
+E512W3DWindow (int16_t sx, int16_t sy, uint16_t width, uint16_t height)  
+E512W3DWindow (int16_t sx, int16_t sy, uint16_t width, uint16_t height, uint16_t bgcolor)  
+E512W3DWindow (int16_t sx, int16_t sy, uint16_t width, uint16_t height, uint16_t bgcolor, Vector3 light)  
 void resize (uint16_t width, uint16_t height)  
 void setDirectionalLight (float x, float y, float z)  
 void setDirectionalLight(Vector3(x, y, z))  
