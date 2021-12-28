@@ -1,5 +1,4 @@
-
-## M5StickCで3Dオブジェクトを表示できるライブラリ  
+## 3d-software-renderer m5stick-c/console-app/windows-app/ncurses  
 - 複数のウィンドウ  
 - ワイヤーフレーム  
 - ポリゴン表示、テクスチャ  
@@ -42,7 +41,7 @@ g++ -std=c++1z ***.cpp -o ***.out
 ---
 ## TUI
 .ino -> .cpp  
-ncuresesインストール
+ncursesインストール
 ```
 sudo apt-get install ncurses-dev
 ```
