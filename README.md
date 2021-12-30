@@ -1,4 +1,4 @@
-## 3d-software-renderer m5stick-c/console-app/windows-app/ncurses  
+## 3d-software-renderer m5stickc/console-app/windows-app/ncurses  
 - 複数のウィンドウ  
 - ワイヤーフレーム  
 - ポリゴン表示、テクスチャ  
@@ -21,7 +21,7 @@ example4
 ![Image](./img/4.jpg)  
 
 ---
-## M5Stick C
+## M5StickC
 obj形式のファイルをスクリプトでhppに変換  
 ```
 Blender設定
