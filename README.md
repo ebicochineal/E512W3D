@@ -22,12 +22,13 @@ example4
 
 ---
 ## M5StickC
-obj形式のファイルをスクリプトでhppに変換  
 ```
-Blender設定
+objエクスポート Blender設定
 [+] Triangulate Faces
 [-] Write Normals
 [-] Write Materials
+obj形式のファイルをスクリプトでhppに変換  
+Arduino IDEで書き込み  
 ```
 
 ---

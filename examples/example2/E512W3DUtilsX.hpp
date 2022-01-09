@@ -48,8 +48,8 @@
     #ifdef _WIN32
         #include <windows.h>
     #else
-        float abs (double v) { return std::abs(v); }
-        float abs (float v) { return std::abs(v); }
+        // float abs (double v) { return std::abs(v); }
+        // float abs (float v) { return std::abs(v); }
         #if __has_include(<curses.h>) && defined(USENCURSES)
             #include <curses.h>
             
