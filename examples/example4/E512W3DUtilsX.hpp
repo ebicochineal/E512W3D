@@ -4,6 +4,14 @@
 
 #ifdef ARDUINO_M5Stick_C
     #include "M5StickC.h"
+#elif ARDUINO_M5Stick_C_PLUS
+    #include "M5StickCPlus.h"
+#elif ARDUINO_M5Stack_Core_ESP32
+    #include "M5Stack.h"
+#elif ARDUINO_M5STACK_FIRE
+    #include "M5Stack.h"
+#elif ARDUINO_M5STACK_Core2
+    #include "M5Core2.h"
 #else
     #include <cmath>
     #include <chrono>
@@ -218,11 +226,21 @@
             for (int y = 0; y < M5.height; y += 1) {
                 for (int x = 0; x < M5.width; x += 1) {
                     uint32_t c1 = this->buff[y*M5.width+x];
+                    
+                    // color565
                     uint16_t r = (((c1 & 0xF800) >> 11) << 3);
                     uint16_t g = (((c1 & 0x07E0) >>  5) << 2);
                     uint16_t b = (((c1 & 0x001F)      ) << 3);
-                    
                     M5.pixels[y*M5.width+x] = (r << 16) | (g << 8) | (b);
+                    
+                    // color555
+                    // uint16_t r = ((c1 >> 10) & 0b11111) << 3;
+                    // uint16_t g = ((c1 >>  5) & 0b11111) << 3;
+                    // uint16_t b = ( c1        & 0b11111) << 3;
+                    // M5.pixels[y*M5.width+x] = (r << 16) | (g << 8) | (b);
+                    
+                    
+                    
                     // SetPixel(hdc, x, y, r | (g << 8) | (b << 16));
                 }
             }
@@ -237,13 +255,20 @@
                     for (int x = 0; x < this->width; x += 1) {
                         uint32_t c1 = this->buff[y*this->width+x];
                         uint32_t c2 = this->buff[(y+1)%this->height*this->width+x];
-                        // uint16_t r = (((c1 & 0xF800) >> 11) << 3);
-                        // uint16_t g = (((c1 & 0x07E0) >>  5) << 2);
-                        // uint16_t b = (((c1 & 0x001F)      ) << 3);
                         
-                        int16_t r = ((((c1 & 0xF800) >> 11) << 3) + (((c2 & 0xF800) >> 11) << 3)) >> 1;
-                        int16_t g = ((((c1 & 0x07E0) >>  5) << 2) + (((c2 & 0x07E0) >>  5) << 2)) >> 1;
-                        int16_t b = ((((c1 & 0x001F)      ) << 3) + (((c2 & 0x001F)      ) << 3)) >> 1;
+                        // color565s
+                        // int16_t r = ((((c1 >> 11) & 0b11111) << 3);
+                        // int16_t g = ((((c1 >>  5) & 0b111111) << 2);
+                        // int16_t b = ((( c1        & 0b11111) << 3);
+                        // color565d
+                        int16_t r = ((((c1 >> 11) &  0b11111) << 3) + (((c2 >> 11) & 0b11111) << 3)) >> 1;
+                        int16_t g = ((((c1 >>  5) & 0b111111) << 2) + (((c2 >>  5) & 0b111111) << 2)) >> 1;
+                        int16_t b = ((( c1        &  0b11111) << 3) + (( c2        & 0b11111) << 3)) >> 1;
+                        
+                        // color555
+                        // int16_t r = ((((c1 >> 10) & 0b11111) << 3) + (((c2 >> 10) & 0b11111) << 3)) >> 1;
+                        // int16_t g = ((((c1 >>  5) & 0b11111) << 3) + (((c2 >>  5) & 0b11111) << 3)) >> 1;
+                        // int16_t b = ((( c1        & 0b11111) << 3) + (( c2        & 0b11111) << 3)) >> 1;
                         
                         attron(COLOR_PAIR(ncc.index(r, g, b)));
                         addstr(" ");
@@ -259,13 +284,21 @@
                     for (int x = 0; x < this->width; x += 1) {
                         uint32_t c1 = this->buff[y*this->width+x];
                         uint32_t c2 = this->buff[(y+1)%this->height*this->width+x];
-                        // uint16_t r = (((c1 & 0xF800) >> 11) << 3);
-                        // uint16_t g = (((c1 & 0x07E0) >>  5) << 2);
-                        // uint16_t b = (((c1 & 0x001F)      ) << 3);
                         
-                        uint16_t r = ((((c1 & 0xF800) >> 11) << 3) + (((c2 & 0xF800) >> 11) << 3)) >> 1;
-                        uint16_t g = ((((c1 & 0x07E0) >>  5) << 2) + (((c2 & 0x07E0) >>  5) << 2)) >> 1;
-                        uint16_t b = ((((c1 & 0x001F)      ) << 3) + (((c2 & 0x001F)      ) << 3)) >> 1;
+                        // color565s
+                        // int16_t r = ((((c1 >> 11) & 0b11111) << 3);
+                        // int16_t g = ((((c1 >>  5) & 0b111111) << 2);
+                        // int16_t b = ((( c1        & 0b11111) << 3);
+                        // color565d
+                        int16_t r = ((((c1 >> 11) &  0b11111) << 3) + (((c2 >> 11) & 0b11111) << 3)) >> 1;
+                        int16_t g = ((((c1 >>  5) & 0b111111) << 2) + (((c2 >>  5) & 0b111111) << 2)) >> 1;
+                        int16_t b = ((( c1        &  0b11111) << 3) + (( c2        & 0b11111) << 3)) >> 1;
+                        
+                        // color555
+                        // int16_t r = ((((c1 >> 10) & 0b11111) << 3) + (((c2 >> 10) & 0b11111) << 3)) >> 1;
+                        // int16_t g = ((((c1 >>  5) & 0b11111) << 3) + (((c2 >>  5) & 0b11111) << 3)) >> 1;
+                        // int16_t b = ((( c1        & 0b11111) << 3) + (( c2        & 0b11111) << 3)) >> 1;
+                        
                         // s += "\033[38;2;"+std::to_string(r)+";"+std::to_string(g)+";" + std::to_string(b) + "m@";
                         s += "\033[48;2;"+std::to_string(r)+";"+std::to_string(g)+";" + std::to_string(b) + "m ";
                     }

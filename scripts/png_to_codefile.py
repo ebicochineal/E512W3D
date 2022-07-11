@@ -3,6 +3,11 @@ import os
 import tkinter
 
 def color565(r, g, b) : return ((r>>3)<<11) | ((g>>2)<<5) | (b>>3)
+
+
+def color1555(abit, r, g, b) : return (abit << 15) | ((r>>3)<<10) | ((g>>3)<<5) | (b>>3)
+
+
 path = input('png_file_path = ')
 
 
@@ -11,10 +16,13 @@ img = tkinter.PhotoImage(file=path)
 pixels = []
 w = img.width()
 h = img.height()
+
 for y in range(h):
     for x in range(w):
         r, g, b = img.get(x, y)
-        pixels += [color565(r, g, b)]
+        # pixels += [color565(r, g, b)]
+        abit = img.transparency_get(x, y)
+        pixels += [color1555(abit, r, g, b)]
 
 
 # (this script dirpath)/file_name.hpp

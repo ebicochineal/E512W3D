@@ -1,7 +1,7 @@
 #include "E512W3D.hpp"
 
 #include "ebi.hpp"
-#include "ebi_64_29.hpp"
+#include "ebi_64_32.hpp"
 
 E512W3DWindow w;
 Object3D a;
@@ -20,7 +20,7 @@ void setup() {
     
     ebiInit();
     a.mesh = &ebi;
-    a.texture = &ebi_64_29_texture;
+    a.texture = &ebi_64_32_texture;
     a.render_type = RenderType::PolygonTexture;
     a.color = M5.Lcd.color565(255, 255, 255);
     a.rotation.x = 0;

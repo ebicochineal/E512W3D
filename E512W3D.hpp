@@ -10,23 +10,46 @@ void loop();
 #ifdef _WIN32
     #define WC_NAME TEXT("e512w3d")
     #define WT_NAME TEXT("e512w3d")
-
+    
+    E512Array<bool> keys = E512Array<bool>(128, false);
+    
+    bool keydown (char c) { return keys[c]; }
+    
     LRESULT CALLBACK proc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         switch (msg) {
-        case WM_DESTROY:
-            PostQuitMessage(0);
-            return 0;
-        case WM_PAINT:
-            PAINTSTRUCT ps;
-            HDC hdc = BeginPaint(hwnd, &ps);
-            HBITMAP hBitmap = CreateBitmap(M5.width, M5.height, 1, 32, M5.pixels);
-            HDC hBuffer = CreateCompatibleDC(hdc);
-            SelectObject(hBuffer, hBitmap);
-            BitBlt(hdc, 0, 0, M5.width, M5.height, hBuffer, 0, 0, SRCCOPY);
-            DeleteDC(hBuffer);
-            DeleteObject(hBitmap);
-            EndPaint(hwnd, &ps);
-            return 0;
+            case WM_DESTROY:
+            {
+                PostQuitMessage(0);
+                return 0;
+            }
+            case WM_PAINT:
+            {
+                PAINTSTRUCT ps;
+                HDC hdc = BeginPaint(hwnd, &ps);
+                HBITMAP hBitmap = CreateBitmap(M5.width, M5.height, 1, 32, M5.pixels);
+                HDC hBuffer = CreateCompatibleDC(hdc);
+                SelectObject(hBuffer, hBitmap);
+                BitBlt(hdc, 0, 0, M5.width, M5.height, hBuffer, 0, 0, SRCCOPY);
+                DeleteDC(hBuffer);
+                DeleteObject(hBitmap);
+                EndPaint(hwnd, &ps);
+                return 0;
+            }
+            case WM_KEYDOWN:
+            {
+                if (wp >= 0 && wp < 128) { keys[wp] = true; }
+                return 0;
+            }
+            case WM_KEYUP:
+            {
+                if (wp >= 0 && wp < 128) { keys[wp] = false; }
+                return 0;
+            }
+            case WM_KILLFOCUS:
+            {
+                for (auto&& i : keys) { i = false; }
+                return 0;
+            }
         }
         return DefWindowProc(hwnd , msg , wp , lp);
     }
@@ -69,6 +92,18 @@ void loop();
     }
 #else
     #if __has_include(<curses.h>) && defined(USENCURSES)
+        E512Array<bool> keys = E512Array<bool>(128, false);
+        bool readkey = false;
+        bool keydown (char c) {
+            readkey = true;
+            return keys[c];
+        }
+        void clearkeyarray () {
+            if (!readkey) { return; }
+            readkey = false;
+            for (int i=0; i < 128; ++i) { keys[i] = false; }
+        }
+        
         int main () {
             initscr();
             start_color();
@@ -82,15 +117,28 @@ void loop();
             
             while (true) {
                 char c = getch();
-                if (c == 0x1b) { break; }
+                if (c >= 'a' && c <= 'z') { keys['A'+c-'a'] = true; }
+                if (c >= 0 && c < 128) { keys[c] = true; }
+                if (keys[0x1b]) { break; }
                 loop();
+                clearkeyarray();
+                flushinp();
                 delay(16);
             }
+            
+            // while (true) {
+            //     char c = getch();
+            //     if (c == 0x1b) { break; }
+            //     loop();
+            //     delay(16);
+            // }
+            
             ncc.end_colors();
             endwin();
             return 0;
         }
     #else
+        bool keydown (char c) { return false; }
         int main () {
             setup();
             while (true) {

@@ -117,6 +117,13 @@ private:
                     this->projscreenTransform(c, v);
                     this->drawPolygonTexture(c, v, lights);
                 }
+                if (c->render_type == RenderType::PolygonTextureDoubleFace) {
+                    E512Array<float> lights(c->mesh->faces.size());
+                    this->worldviewTransform(c, mat, v);
+                    this->polygonTexture(c, v, lights);
+                    this->projscreenTransform(c, v);
+                    this->drawPolygonTextureDoubleFace(c, v, lights);
+                }
             }
             this->drawChild(c->child, mat);
         }
@@ -268,6 +275,20 @@ private:
             this->fillTriangleTX(o, v, i, lights[i]);
         }
     }
+    void drawPolygonTextureDoubleFace (Object3D* o, E512Array<Vector3>& v, E512Array<float>& lights) {
+        for (int i = 0; i < o->mesh->faces.size(); ++i) {
+            const Face& f = o->mesh->faces[i];
+            const Vector3& v1 = v[f.a];
+            const Vector3& v2 = v[f.b];
+            const Vector3& v3 = v[f.c];
+            
+            if (!((v1.z > 0 && v1.z < 1) || (v2.z > 0 && v2.z < 1) || (v3.z > 0 && v3.z < 1))) { continue; }
+            if (!((v1.x >= 0 && v1.x < this->width) || (v2.x >= 0 && v2.x < this->width) || (v3.x >= 0 && v3.x < this->width))) { continue; }
+            if (!((v1.y >= 0 && v1.y < this->height) || (v2.y >= 0 && v2.y < this->height) || (v3.y >= 0 && v3.y < this->height))) { continue; }
+            this->fillTriangleTX(o, v, i, lights[i]);
+        }
+    }
+    
     
     inline bool inSide (const int& x, const int& y) { return !(x < 0 || x >= this->width || y < 0 || y >= this->height); }
     
@@ -431,8 +452,9 @@ POSSIBILITY OF SUCH DAMAGE.
         }
     }
     
+    
     // GFXcanvas8::writeFastHLine modification
-    inline void drawBuffLineHTX (int16_t sx, int16_t y, int16_t w, int16_t za,int16_t zba, int16_t zca, Object3D* o, E512Array<Vector3>& v, int16_t index, float light) {
+    inline void drawBuffLineHTX (int16_t sx, int16_t y, int16_t w, int16_t za, int16_t zba, int16_t zca, Object3D* o, E512Array<Vector3>& v, int16_t index, float light) {
         if (sx >= this->width || y < 0 || y >= this->height) { return; }
         int16_t ex = sx + w - 1;
         if (ex < 0) { return; }
@@ -474,19 +496,20 @@ POSSIBILITY OF SUCH DAMAGE.
             uint16_t z = zba*v+zca*u+za;
             
             if (z > this->zbuff->readPixel(x+this->sx, y+this->sy)) {
-                this->zbuff->drawPixel(x+this->sx, y+this->sy, z);
-                
                 uint16_t color = o->texture->getColor(tu, tv);
-                float r = (color >> 11) << 3;
-                float g = ((color >> 5) & 0b111111) << 2;
-                float b = (color & 0b11111) << 3;
+                if ((color >> 15) & 1) { continue; }
+                float r = ((color >> 10) & 0b11111) << 3;
+                float g = ((color >> 5)  & 0b11111) << 3;
+                float b = ( color        & 0b11111) << 3;
                 
                 color = color565(min(r*light, 255.0f), min(g*light, 255.0f), min(b*light, 255.0f));
-                
+                this->zbuff->drawPixel(x+this->sx, y+this->sy, z);
                 this->buff->drawPixel(x+this->sx, y+this->sy, color);
             }
         }
     }
+    
+    
     // Adafruit_GFX::fillTriangle modification
     inline void fillTriangleTX (Object3D* o, E512Array<Vector3>& v, int16_t index, float light) {
         const Face& f = o->mesh->faces[index];

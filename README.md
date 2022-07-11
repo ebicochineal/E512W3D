@@ -1,4 +1,4 @@
-## 3d-software-renderer m5stickc/console-app/windows-app/ncurses  
+## 3d-software-renderer m5stickc/m5stack/console-app/windows-app/ncurses  
 - 複数のウィンドウ  
 - ワイヤーフレーム  
 - ポリゴン表示、テクスチャ  
@@ -21,15 +21,41 @@ example4
 ![Image](./img/4.jpg)  
 
 ---
-## M5StickC
+
+Blender 3Dファイルエクスポート設定 
 ```
-objエクスポート Blender設定
+objファイル
 [+] Triangulate Faces
 [-] Write Normals
 [-] Write Materials
-obj形式のファイルをスクリプトでhppに変換  
-Arduino IDEで書き込み  
 ```
+objファイルをスクリプトでhppに変換  
+pngファイルをスクリプトでhppに変換  
+
+---
+## M5StickC
+M5StickC以外ではテストしていませんが他のボードでも動くかもしれません  
+- M5StickCPlus
+- M5Stack
+- M5Stack-Fire
+- M5Stack-Core2
+
+
+Arduino IDE設定
+```
+ファイル/環境設定/追加のボードマネージャのURL
+https://dl.espressif.com/dl/package_esp32_index.json
+
+ツール/ボード/ボードマネージャ
+esp32 by Espressif System インストール
+
+ツール/ライブラリを管理
+M5StickC インストール
+// M5StickCPlus, M5Stack インストール
+```
+
+Arduino IDEで書き込み  
+
 
 ---
 ## CUI
@@ -139,6 +165,7 @@ WireFrame
 PolygonColor  
 PolygonNormal  
 PolygonTexture  
+PolygonTextureDoubleFace  
 Hide  
 None  
 

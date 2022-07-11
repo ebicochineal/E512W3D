@@ -3,7 +3,7 @@
 #include "E512W3DUtilsX.hpp"
 
 uint16_t color565 (uint16_t r, uint16_t g, uint16_t b) { return ((r>>3)<<11) | ((g>>2)<<5) | (b>>3); }
-
+// uint16_t color555 (uint16_t r, uint16_t g, uint16_t b) { return ((r>>3)<<10) | ((g>>3)<<5) | (b>>3); }
 
 
 template <class T>
@@ -400,8 +400,10 @@ enum RenderType {
     PolygonColor,
     PolygonNormal,
     PolygonTexture,
+    PolygonTextureDoubleFace,
     Hide,
     None,
+    // Line,
 };
 
 struct Object3D {
