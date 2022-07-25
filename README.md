@@ -1,7 +1,7 @@
 ## 3d-software-renderer m5stickc/m5stack/console-app/windows-app/ncurses  
 - 複数のウィンドウ  
 - ワイヤーフレーム、ポリゴン、法線カラー、半透明、テクスチャ  
-- パース補正あり、なし  
+- テクスチャパース補正  
 - Directional Light  
 - Ambient  
 - テクスチャなしなら8000ポリゴンくらいまで  
