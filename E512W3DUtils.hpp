@@ -168,6 +168,17 @@ public:
     Vector3 operator / (const float& t) const { return Vector3(this->x / t, this->y / t, this->z / t); }
     bool operator == (const Vector3& t) const { return this->x == t.x && this->y == t.y && this->z == t.z; }
 };
+struct Vector4 {
+public:
+    float x, y, z, w;
+    Vector4 () { this->x = 0; this->y = 0; this->z = 0; this->w = 0; }
+    Vector4 (float t) { this->x = t; this->y = t; this->z = t; this->w = t; }
+    Vector4 (Vector3 v) { this->x = v.x; this->y = v.y; this->z = v.z; this->w = 1; }
+    Vector4 (float x, float y, float z, float w) { this->x = x; this->y = y; this->z = z; this->w = w; }
+    Vector3 xyz() { return Vector3(this->x, this->y, this->z); }
+};
+
+
 struct Matrix4x4 {
 public:
     float m[4][4] = {
@@ -208,11 +219,21 @@ public:
     }
     
     static Vector3 mul (Vector3 v, Matrix4x4 m) {
-        float d = v.x * m.m[0][3] + v.y * m.m[1][3] + v.z * m.m[2][3] + 1.0f * m.m[3][3];
         Vector3 r = {
-            v.x * m.m[0][0] + v.y * m.m[1][0] + v.z * m.m[2][0] + 1.0f * m.m[3][0],
-            v.x * m.m[0][1] + v.y * m.m[1][1] + v.z * m.m[2][1] + 1.0f * m.m[3][1],
-            v.x * m.m[0][2] + v.y * m.m[1][2] + v.z * m.m[2][2] + 1.0f * m.m[3][2],
+            v.x * m.m[0][0] + v.y * m.m[1][0] + v.z * m.m[2][0] + m.m[3][0],
+            v.x * m.m[0][1] + v.y * m.m[1][1] + v.z * m.m[2][1] + m.m[3][1],
+            v.x * m.m[0][2] + v.y * m.m[1][2] + v.z * m.m[2][2] + m.m[3][2],
+        };
+        
+        return r;
+    }
+    
+    static Vector3 muld (Vector3 v, Matrix4x4 m) {
+        float d = v.x * m.m[0][3] + v.y * m.m[1][3] + v.z * m.m[2][3] + m.m[3][3];
+        Vector3 r = {
+            v.x * m.m[0][0] + v.y * m.m[1][0] + v.z * m.m[2][0] + m.m[3][0],
+            v.x * m.m[0][1] + v.y * m.m[1][1] + v.z * m.m[2][1] + m.m[3][1],
+            v.x * m.m[0][2] + v.y * m.m[1][2] + v.z * m.m[2][2] + m.m[3][2],
         };
         
         if (d > 0) {
@@ -222,6 +243,35 @@ public:
         }
         return r;
     }
+    
+    static Vector4 muld (Vector4 v, Matrix4x4 m) {
+        float d = v.x * m.m[0][3] + v.y * m.m[1][3] + v.z * m.m[2][3] + m.m[3][3];
+        Vector4 r = {
+            v.x * m.m[0][0] + v.y * m.m[1][0] + v.z * m.m[2][0] + m.m[3][0],
+            v.x * m.m[0][1] + v.y * m.m[1][1] + v.z * m.m[2][1] + m.m[3][1],
+            v.x * m.m[0][2] + v.y * m.m[1][2] + v.z * m.m[2][2] + m.m[3][2],
+            v.x * m.m[0][3] + v.y * m.m[1][3] + v.z * m.m[2][3] + m.m[3][3],
+        };
+        
+        if (d > 0) {
+            r.x /= d;
+            r.y /= d;
+            r.z /= d;
+        }
+        return r;
+    }
+    
+    static Vector4 mul (Vector4 v, Matrix4x4 m) {
+        Vector4 r = {
+            v.x * m.m[0][0] + v.y * m.m[1][0] + v.z * m.m[2][0] + m.m[3][0],
+            v.x * m.m[0][1] + v.y * m.m[1][1] + v.z * m.m[2][1] + m.m[3][1],
+            v.x * m.m[0][2] + v.y * m.m[1][2] + v.z * m.m[2][2] + m.m[3][2],
+            v.x * m.m[0][3] + v.y * m.m[1][3] + v.z * m.m[2][3] + m.m[3][3],
+        };
+        
+        return r;
+    }
+    
     
     static Matrix4x4 projectionMatrix (float w, float h) {
         Matrix4x4 r;
@@ -399,8 +449,11 @@ enum RenderType {
     WireFrame,
     PolygonColor,
     PolygonNormal,
+    PolygonTranslucent,
     PolygonTexture,
     PolygonTextureDoubleFace,
+    PolygonTexturePerspectiveCorrect,
+    PolygonTexturePerspectiveCorrectDoubleFace,
     Hide,
     None,
     // Line,

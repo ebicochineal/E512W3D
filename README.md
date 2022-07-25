@@ -1,8 +1,7 @@
 ## 3d-software-renderer m5stickc/m5stack/console-app/windows-app/ncurses  
 - 複数のウィンドウ  
-- ワイヤーフレーム  
-- ポリゴン表示、テクスチャ  
-- 法線カラー表示  
+- ワイヤーフレーム、ポリゴン、法線カラー、半透明、テクスチャ  
+- パース補正あり、なし  
 - Directional Light  
 - Ambient  
 - テクスチャなしなら8000ポリゴンくらいまで  
@@ -19,6 +18,7 @@ example3
 ![Image](./img/3.jpg)  
 example4  
 ![Image](./img/4.jpg)  
+vert:1183, face:2208, vertuv:1183, faceuv:2208,texture:64x32  
 
 ---
 
@@ -58,7 +58,7 @@ Arduino IDEで書き込み
 
 
 ---
-## CUI
+## console-app
 .ino -> .cpp  
 windowsのコマンドプロンプトだとカラー表示できないためlinuxかwsl  
 __has_includeを使っているのでC++17の方が良いかも  
@@ -66,7 +66,7 @@ __has_includeを使っているのでC++17の方が良いかも
 g++ -std=c++1z ***.cpp -o ***.out
 ```
 ---
-## TUI
+## ncurses
 .ino -> .cpp  
 ncursesインストール
 ```
@@ -82,7 +82,7 @@ color_content, pair_contentで色情報保存して最後に戻しているつ�
 
 
 ---
-## GUI
+## windows-app
 .ino -> .cpp  
 windows mingw  
 ```
@@ -164,8 +164,11 @@ uint16_t a, b, c
 WireFrame  
 PolygonColor  
 PolygonNormal  
+PolygonTranslucent  
 PolygonTexture  
 PolygonTextureDoubleFace  
+PolygonTexturePerspectiveCorrect  
+PolygonTexturePerspectiveCorrectDoubleFace  
 Hide  
 None  
 

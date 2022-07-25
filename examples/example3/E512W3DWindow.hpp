@@ -64,6 +64,7 @@ public:
             this->projescreen = Matrix4x4::projscreenMatrix(this->width, this->height);
         }
         this->drawChild(this->child, Matrix4x4::identity());
+        this->drawChildT(this->child, Matrix4x4::identity());
     }
     
     void setDirectionalLight (float x, float y, float z) { this->setDirectionalLight(Vector3(x, y, z)); }
@@ -89,89 +90,315 @@ private:
             if (c->render_type == RenderType::Hide) { continue; }
             
             Matrix4x4 mat = this->worldMatrix(c, pmat);
+            
             if (c->mesh != NULL) {
-                E512Array<Vector3> v = c->mesh->vertexs;
-                if (c->render_type == RenderType::WireFrame) {
-                    this->worldviewTransform(c, mat, v);
-                    this->projscreenTransform(c, v);
-                    this->drawWire(c, v);
-                }
-                if (c->render_type == RenderType::PolygonColor) {
-                    E512Array<uint16_t> colors(c->mesh->faces.size());
-                    this->worldviewTransform(c, mat, v);
-                    this->polygon(c, v, colors);
-                    this->projscreenTransform(c, v);
-                    this->drawPolygon(c, v, colors);
-                }
-                if (c->render_type == RenderType::PolygonNormal) {
-                    E512Array<uint16_t> colors(c->mesh->faces.size());
-                    this->worldviewTransform(c, mat, v);
-                    this->polygonNormal(c, v, colors);
-                    this->projscreenTransform(c, v);
-                    this->drawPolygon(c, v, colors);
-                }
-                if (c->render_type == RenderType::PolygonTexture) {
-                    E512Array<float> lights(c->mesh->faces.size());
-                    this->worldviewTransform(c, mat, v);
-                    this->polygonTexture(c, v, lights);
-                    this->projscreenTransform(c, v);
-                    this->drawPolygonTexture(c, v, lights);
-                }
-                if (c->render_type == RenderType::PolygonTextureDoubleFace) {
-                    E512Array<float> lights(c->mesh->faces.size());
-                    this->worldviewTransform(c, mat, v);
-                    this->polygonTexture(c, v, lights);
-                    this->projscreenTransform(c, v);
-                    this->drawPolygonTextureDoubleFace(c, v, lights);
-                }
+                
+                if (c->render_type == RenderType::WireFrame) { this->drawWireFrame(c, mat); }
+                if (c->render_type == RenderType::PolygonColor) { this->drawPolygonColor(c, mat); }
+                if (c->render_type == RenderType::PolygonNormal) { this->drawPolygonNormal(c, mat); }
+                if (c->render_type == RenderType::PolygonTexture) { this->drawPolygonTexture(c, mat); }
+                if (c->render_type == RenderType::PolygonTextureDoubleFace) { this->drawPolygonTextureDoubleFace(c, mat); }
+                if (c->render_type == RenderType::PolygonTexturePerspectiveCorrect) { this->PolygonTexturePerspectiveCorrect(c, mat); }
+                if (c->render_type == RenderType::PolygonTexturePerspectiveCorrectDoubleFace) { this->PolygonTexturePerspectiveCorrectDoubleFace(c, mat); }
             }
             this->drawChild(c->child, mat);
         }
     }
     
-    void polygonTexture (Object3D* o, E512Array<Vector3>& v, E512Array<float>& lights) {
-        for (int i = 0; i < o->mesh->faces.size(); ++i) {
-            const Face& f = o->mesh->faces[i];
-            const Vector3& v0 = v[f.a];
-            const Vector3& v1 = v[f.b];
-            const Vector3& v2 = v[f.c];
-            const Vector3 n = Vector3::normalize(Vector3::cross(v1-v0, v2-v0));
-            lights[i] = max(max(Vector3::dot(this->light_vector, n) * this->light_strength, this->ambient), 0.0f);
+    void drawChildT (E512Array<Object3D*>& child, Matrix4x4 pmat) {
+        for (auto&& c : child) {
+            if (c->render_type == RenderType::Hide) { continue; }
+            
+            Matrix4x4 mat = this->worldMatrix(c, pmat);
+            if (c->mesh != NULL) {
+                if (c->render_type == RenderType::PolygonTranslucent) { this->drawPolygonTranslucent(c, mat); }
+            }
+            this->drawChildT(c->child, mat);
         }
     }
     
-    void polygon (Object3D* o, E512Array<Vector3>& v, E512Array<uint16_t>& colors) {
+    
+    void drawWireFrame (Object3D* o, Matrix4x4 mat) {
+        mat = Matrix4x4::mul(mat, this->view);
+        for (int i = 0; i < o->mesh->faces.size(); ++i) {
+            const Face& f = o->mesh->faces[i];
+            
+            Vector3 v1 = o->mesh->vertexs[f.a];
+            Vector3 v2 = o->mesh->vertexs[f.b];
+            Vector3 v3 = o->mesh->vertexs[f.c];
+            
+            v1 = Matrix4x4::muld(Matrix4x4::mul(v1, mat), this->projescreen);
+            v2 = Matrix4x4::muld(Matrix4x4::mul(v2, mat), this->projescreen);
+            v3 = Matrix4x4::muld(Matrix4x4::mul(v3, mat), this->projescreen);
+            
+            if (Vector3::cross(v2 - v1, v3 - v2).z > 0) { continue; }
+            if (!((v1.z > 0 && v1.z < 1) || (v2.z > 0 && v2.z < 1) || (v3.z > 0 && v3.z < 1))) { continue; }
+            if (!((v1.x >= 0 && v1.x < this->width) || (v2.x >= 0 && v2.x < this->width) || (v3.x >= 0 && v3.x < this->width))) { continue; }
+            if (!((v1.y >= 0 && v1.y < this->height) || (v2.y >= 0 && v2.y < this->height) || (v3.y >= 0 && v3.y < this->height))) { continue; }
+            
+            this->drawBuffLine(v1.x, v1.y, v2.x, v2.y, o->color);
+            this->drawBuffLine(v2.x, v2.y, v3.x, v3.y, o->color);
+            this->drawBuffLine(v3.x, v3.y, v1.x, v1.y, o->color);
+        }
+    }
+    
+    
+    void drawPolygonColor (Object3D* o, Matrix4x4 mat) {
         float r = (o->color >> 11) << 3;
         float g = ((o->color >> 5) & 0b111111) << 2;
         float b = (o->color & 0b11111) << 3;
-        
+        mat = Matrix4x4::mul(mat, this->view);
         for (int i = 0; i < o->mesh->faces.size(); ++i) {
             const Face& f = o->mesh->faces[i];
-            const Vector3& v0 = v[f.a];
-            const Vector3& v1 = v[f.b];
-            const Vector3& v2 = v[f.c];
-            const Vector3 n = Vector3::normalize(Vector3::cross(v1-v0, v2-v0));
+            const Face& fuv = o->mesh->uv_faces[i];
+            
+            Vector3 v1 = o->mesh->vertexs[f.a];
+            Vector3 v2 = o->mesh->vertexs[f.b];
+            Vector3 v3 = o->mesh->vertexs[f.c];
+            
+            v1 = Matrix4x4::mul(v1, mat);
+            v2 = Matrix4x4::mul(v2, mat);
+            v3 = Matrix4x4::mul(v3, mat);
+            
+            const Vector3 n = Vector3::normalize(Vector3::cross(v2-v1, v3-v1));
+            
+            v1 = Matrix4x4::muld(v1, this->projescreen);
+            v2 = Matrix4x4::muld(v2, this->projescreen);
+            v3 = Matrix4x4::muld(v3, this->projescreen);
+            
+            if (Vector3::cross(v2 - v1, v3 - v2).z > 0) { continue; }
+            if (!((v1.z > 0 && v1.z < 1) || (v2.z > 0 && v2.z < 1) || (v3.z > 0 && v3.z < 1))) { continue; }
+            if (!((v1.x >= 0 && v1.x < this->width) || (v2.x >= 0 && v2.x < this->width) || (v3.x >= 0 && v3.x < this->width))) { continue; }
+            if (!((v1.y >= 0 && v1.y < this->height) || (v2.y >= 0 && v2.y < this->height) || (v3.y >= 0 && v3.y < this->height))) { continue; }
+            
             const float d = max(max(Vector3::dot(this->light_vector, n) * this->light_strength, this->ambient), 0.0f);
-            colors[i] = color565(min(r*d, 255.0f), min(g*d, 255.0f), min(b*d, 255.0f));
+            
+            uint16_t color = color565(min(r*d, 255.0f), min(g*d, 255.0f), min(b*d, 255.0f));
+            uint16_t z = (1.0f-(v1.z+v2.z+v3.z)*0.333f) * 32767;
+            this->fillTriangleColor(v1.x, v1.y, v2.x, v2.y, v3.x, v3.y, z, color);
         }
     }
     
-    void polygonNormal (Object3D* o, E512Array<Vector3>& v, E512Array<uint16_t>& colors) {
+    
+    void drawPolygonNormal (Object3D* o, Matrix4x4 mat) {
+        mat = Matrix4x4::mul(mat, this->view);
         for (int i = 0; i < o->mesh->faces.size(); ++i) {
             const Face& f = o->mesh->faces[i];
-            const Vector3& v0 = v[f.a];
-            const Vector3& v1 = v[f.b];
-            const Vector3& v2 = v[f.c];
-            const Vector3 n = (Vector3::normalize(Vector3::cross(v1-v0, v2-v0)) * 0.5f + 0.5f) * 255.0f;
-            colors[i] = color565(n.x, n.y, n.z);
+            const Face& fuv = o->mesh->uv_faces[i];
+            
+            Vector3 v1 = o->mesh->vertexs[f.a];
+            Vector3 v2 = o->mesh->vertexs[f.b];
+            Vector3 v3 = o->mesh->vertexs[f.c];
+            
+            v1 = Matrix4x4::mul(v1, mat);
+            v2 = Matrix4x4::mul(v2, mat);
+            v3 = Matrix4x4::mul(v3, mat);
+            
+            const Vector3 n = Vector3::normalize(Vector3::cross(v2-v1, v3-v1));
+            
+            
+            v1 = Matrix4x4::muld(v1, this->projescreen);
+            v2 = Matrix4x4::muld(v2, this->projescreen);
+            v3 = Matrix4x4::muld(v3, this->projescreen);
+            
+            if (Vector3::cross(v2 - v1, v3 - v2).z > 0) { continue; }
+            if (!((v1.z > 0 && v1.z < 1) || (v2.z > 0 && v2.z < 1) || (v3.z > 0 && v3.z < 1))) { continue; }
+            if (!((v1.x >= 0 && v1.x < this->width) || (v2.x >= 0 && v2.x < this->width) || (v3.x >= 0 && v3.x < this->width))) { continue; }
+            if (!((v1.y >= 0 && v1.y < this->height) || (v2.y >= 0 && v2.y < this->height) || (v3.y >= 0 && v3.y < this->height))) { continue; }
+            
+            Vector3 hn = (n * 0.5f + 0.5f) * 255.0f;
+            uint16_t color = color565(hn.x, hn.y, hn.z);
+            uint16_t z = (1.0f-(v1.z+v2.z+v3.z)*0.333f) * 32767;
+            this->fillTriangleColor(v1.x, v1.y, v2.x, v2.y, v3.x, v3.y, z, color);
         }
     }
     
-    void projscreenTransform (Object3D* o, E512Array<Vector3>& v) {
-        for (int i = 0; i < v.size(); ++i) {
-            v[i] = Matrix4x4::mul(v[i], this->projescreen);
+    
+    void drawPolygonTranslucent (Object3D* o, Matrix4x4 mat) {
+        float r = (o->color >> 11) << 3;
+        float g = ((o->color >> 5) & 0b111111) << 2;
+        float b = (o->color & 0b11111) << 3;
+        mat = Matrix4x4::mul(mat, this->view);
+        for (int i = 0; i < o->mesh->faces.size(); ++i) {
+            const Face& f = o->mesh->faces[i];
+            const Face& fuv = o->mesh->uv_faces[i];
+            
+            Vector3 v1 = o->mesh->vertexs[f.a];
+            Vector3 v2 = o->mesh->vertexs[f.b];
+            Vector3 v3 = o->mesh->vertexs[f.c];
+            
+            v1 = Matrix4x4::mul(v1, mat);
+            v2 = Matrix4x4::mul(v2, mat);
+            v3 = Matrix4x4::mul(v3, mat);
+            
+            const Vector3 n = Vector3::normalize(Vector3::cross(v2-v1, v3-v1));
+            
+            v1 = Matrix4x4::muld(v1, this->projescreen);
+            v2 = Matrix4x4::muld(v2, this->projescreen);
+            v3 = Matrix4x4::muld(v3, this->projescreen);
+            
+            if (Vector3::cross(v2 - v1, v3 - v2).z > 0) { continue; }
+            if (!((v1.z > 0 && v1.z < 1) || (v2.z > 0 && v2.z < 1) || (v3.z > 0 && v3.z < 1))) { continue; }
+            if (!((v1.x >= 0 && v1.x < this->width) || (v2.x >= 0 && v2.x < this->width) || (v3.x >= 0 && v3.x < this->width))) { continue; }
+            if (!((v1.y >= 0 && v1.y < this->height) || (v2.y >= 0 && v2.y < this->height) || (v3.y >= 0 && v3.y < this->height))) { continue; }
+            
+            const float d = max(max(Vector3::dot(this->light_vector, n) * this->light_strength, this->ambient), 0.0f);
+            
+            uint16_t color = color565(min(r*d, 255.0f), min(g*d, 255.0f), min(b*d, 255.0f));
+            uint16_t z = (1.0f-(v1.z+v2.z+v3.z)*0.333f) * 32767;
+            this->fillTriangleTranslucent(v1.x, v1.y, v2.x, v2.y, v3.x, v3.y, z, color);
         }
     }
+    
+    
+    void drawPolygonTexture (Object3D* o, Matrix4x4 mat) {
+        mat = Matrix4x4::mul(mat, this->view);
+        for (int i = 0; i < o->mesh->faces.size(); ++i) {
+            const Face& f = o->mesh->faces[i];
+            const Face& fuv = o->mesh->uv_faces[i];
+            
+            Vector3 v1 = o->mesh->vertexs[f.a];
+            Vector3 v2 = o->mesh->vertexs[f.b];
+            Vector3 v3 = o->mesh->vertexs[f.c];
+            
+            v1 = Matrix4x4::mul(v1, mat);
+            v2 = Matrix4x4::mul(v2, mat);
+            v3 = Matrix4x4::mul(v3, mat);
+            
+            const Vector3 n = Vector3::normalize(Vector3::cross(v2-v1, v3-v1));
+            
+            v1 = Matrix4x4::muld(v1, this->projescreen);
+            v2 = Matrix4x4::muld(v2, this->projescreen);
+            v3 = Matrix4x4::muld(v3, this->projescreen);
+            
+            if (Vector3::cross(v2-v1, v3-v1).z > 0) { continue; }
+            if (!((v1.z > 0 && v1.z < 1) || (v2.z > 0 && v2.z < 1) || (v3.z > 0 && v3.z < 1))) { continue; }
+            if (!((v1.x >= 0 && v1.x < this->width) || (v2.x >= 0 && v2.x < this->width) || (v3.x >= 0 && v3.x < this->width))) { continue; }
+            if (!((v1.y >= 0 && v1.y < this->height) || (v2.y >= 0 && v2.y < this->height) || (v3.y >= 0 && v3.y < this->height))) { continue; }
+            
+            Vector2 v1uv = o->mesh->uv_vertexs[fuv.a];
+            Vector2 v2uv = o->mesh->uv_vertexs[fuv.b];
+            Vector2 v3uv = o->mesh->uv_vertexs[fuv.c];
+            
+            float light = max(max(Vector3::dot(this->light_vector, n) * this->light_strength, this->ambient), 0.0f);
+            this->fillTriangleTexture(v1, v2, v3, v1uv, v2uv, v3uv, light, o);
+            
+            
+        }
+    }
+    
+    void drawPolygonTextureDoubleFace (Object3D* o, Matrix4x4 mat) {
+        mat = Matrix4x4::mul(mat, this->view);
+        for (int i = 0; i < o->mesh->faces.size(); ++i) {
+            const Face& f = o->mesh->faces[i];
+            const Face& fuv = o->mesh->uv_faces[i];
+            
+            Vector3 v1 = o->mesh->vertexs[f.a];
+            Vector3 v2 = o->mesh->vertexs[f.b];
+            Vector3 v3 = o->mesh->vertexs[f.c];
+            
+            v1 = Matrix4x4::mul(v1, mat);
+            v2 = Matrix4x4::mul(v2, mat);
+            v3 = Matrix4x4::mul(v3, mat);
+            
+            const Vector3 n = Vector3::normalize(Vector3::cross(v2-v1, v3-v1));
+            
+            v1 = Matrix4x4::muld(v1, this->projescreen);
+            v2 = Matrix4x4::muld(v2, this->projescreen);
+            v3 = Matrix4x4::muld(v3, this->projescreen);
+            
+            if (!((v1.z > 0 && v1.z < 1) || (v2.z > 0 && v2.z < 1) || (v3.z > 0 && v3.z < 1))) { continue; }
+            if (!((v1.x >= 0 && v1.x < this->width) || (v2.x >= 0 && v2.x < this->width) || (v3.x >= 0 && v3.x < this->width))) { continue; }
+            if (!((v1.y >= 0 && v1.y < this->height) || (v2.y >= 0 && v2.y < this->height) || (v3.y >= 0 && v3.y < this->height))) { continue; }
+            
+            Vector2 v1uv = o->mesh->uv_vertexs[fuv.a];
+            Vector2 v2uv = o->mesh->uv_vertexs[fuv.b];
+            Vector2 v3uv = o->mesh->uv_vertexs[fuv.c];
+            
+            float light = max(max(Vector3::dot(this->light_vector, n) * this->light_strength, this->ambient), 0.0f);
+            this->fillTriangleTexture(v1, v2, v3, v1uv, v2uv, v3uv, light, o);
+        }
+    }
+    
+    
+    void PolygonTexturePerspectiveCorrect (Object3D* o, Matrix4x4 mat) {
+        mat = Matrix4x4::mul(mat, this->view);
+        for (int i = 0; i < o->mesh->faces.size(); ++i) {
+            const Face& f = o->mesh->faces[i];
+            const Face& fuv = o->mesh->uv_faces[i];
+            
+            Vector4 v1 = Vector4(o->mesh->vertexs[f.a]);
+            Vector4 v2 = Vector4(o->mesh->vertexs[f.b]);
+            Vector4 v3 = Vector4(o->mesh->vertexs[f.c]);
+            
+            v1 = Matrix4x4::mul(v1, mat);
+            v2 = Matrix4x4::mul(v2, mat);
+            v3 = Matrix4x4::mul(v3, mat);
+            
+            const Vector3 n = Vector3::normalize(Vector3::cross(v2.xyz()-v1.xyz(), v3.xyz()-v1.xyz()));
+            
+            v1 = Matrix4x4::muld(v1, this->projescreen);
+            v2 = Matrix4x4::muld(v2, this->projescreen);
+            v3 = Matrix4x4::muld(v3, this->projescreen);
+            
+            if (Vector3::cross(v2.xyz()-v1.xyz(), v3.xyz()-v1.xyz()).z > 0) { continue; }
+            if (!((v1.z > 0 && v1.z < 1) || (v2.z > 0 && v2.z < 1) || (v3.z > 0 && v3.z < 1))) { continue; }
+            if (!((v1.x >= 0 && v1.x < this->width) || (v2.x >= 0 && v2.x < this->width) || (v3.x >= 0 && v3.x < this->width))) { continue; }
+            if (!((v1.y >= 0 && v1.y < this->height) || (v2.y >= 0 && v2.y < this->height) || (v3.y >= 0 && v3.y < this->height))) { continue; }
+            
+            Vector2 v1uv = o->mesh->uv_vertexs[fuv.a] / v1.w;
+            Vector2 v2uv = o->mesh->uv_vertexs[fuv.b] / v2.w;
+            Vector2 v3uv = o->mesh->uv_vertexs[fuv.c] / v3.w;
+            
+            v1.w = 1.0 / v1.w;
+            v2.w = 1.0 / v2.w;
+            v3.w = 1.0 / v3.w;
+            
+            float light = max(max(Vector3::dot(this->light_vector, n) * this->light_strength, this->ambient), 0.0f);
+            this->fillTriangleTexturePerspectiveCorrect(v1, v2, v3, v1uv, v2uv, v3uv, light, o);
+        }
+    }
+    
+    
+    void PolygonTexturePerspectiveCorrectDoubleFace (Object3D* o, Matrix4x4 mat) {
+        mat = Matrix4x4::mul(mat, this->view);
+        for (int i = 0; i < o->mesh->faces.size(); ++i) {
+            const Face& f = o->mesh->faces[i];
+            const Face& fuv = o->mesh->uv_faces[i];
+            
+            Vector4 v1 = Vector4(o->mesh->vertexs[f.a]);
+            Vector4 v2 = Vector4(o->mesh->vertexs[f.b]);
+            Vector4 v3 = Vector4(o->mesh->vertexs[f.c]);
+            
+            v1 = Matrix4x4::mul(v1, mat);
+            v2 = Matrix4x4::mul(v2, mat);
+            v3 = Matrix4x4::mul(v3, mat);
+            
+            const Vector3 n = Vector3::normalize(Vector3::cross(v2.xyz()-v1.xyz(), v3.xyz()-v1.xyz()));
+            
+            v1 = Matrix4x4::muld(v1, this->projescreen);
+            v2 = Matrix4x4::muld(v2, this->projescreen);
+            v3 = Matrix4x4::muld(v3, this->projescreen);
+            
+            if (!((v1.z > 0 && v1.z < 1) || (v2.z > 0 && v2.z < 1) || (v3.z > 0 && v3.z < 1))) { continue; }
+            if (!((v1.x >= 0 && v1.x < this->width) || (v2.x >= 0 && v2.x < this->width) || (v3.x >= 0 && v3.x < this->width))) { continue; }
+            if (!((v1.y >= 0 && v1.y < this->height) || (v2.y >= 0 && v2.y < this->height) || (v3.y >= 0 && v3.y < this->height))) { continue; }
+            
+            Vector2 v1uv = o->mesh->uv_vertexs[fuv.a] / v1.w;
+            Vector2 v2uv = o->mesh->uv_vertexs[fuv.b] / v2.w;
+            Vector2 v3uv = o->mesh->uv_vertexs[fuv.c] / v3.w;
+            
+            v1.w = 1.0 / v1.w;
+            v2.w = 1.0 / v2.w;
+            v3.w = 1.0 / v3.w;
+            
+            float light = max(max(Vector3::dot(this->light_vector, n) * this->light_strength, this->ambient), 0.0f);
+            this->fillTriangleTexturePerspectiveCorrect(v1, v2, v3, v1uv, v2uv, v3uv, light, o);
+        }
+    }
+    
+    
+    
     
     Matrix4x4 worldMatrix (Object3D* o, Matrix4x4 pmat) {
         Matrix4x4 mat = Matrix4x4::identity();
@@ -210,13 +437,6 @@ private:
         this->light_vector = Matrix4x4::mul(this->light, mat);
     }
     
-    void worldviewTransform (Object3D* o, Matrix4x4 mat, E512Array<Vector3>& v) {
-        mat = Matrix4x4::mul(mat, this->view);
-        for (int i = 0; i < v.size(); ++i) {
-            v[i] = Matrix4x4::mul(v[i], mat);
-        }
-    }
-    
     void clear () {
         for (int y = this->dsy; y < this->dey; ++y) {
             for (int x = this->dsx; x < this->dex; ++x) {
@@ -228,68 +448,6 @@ private:
         }
     }
     
-    void drawWire (Object3D* o, E512Array<Vector3>& v) {
-        for (int i = 0; i < o->mesh->faces.size(); ++i) {
-            const Face& f = o->mesh->faces[i];
-            const Vector3& v1 = v[f.a];
-            const Vector3& v2 = v[f.b];
-            const Vector3& v3 = v[f.c];
-            
-            if (Vector3::cross(v2 - v1, v3 - v2).z > 0) { continue; }
-            if (!((v1.z > 0 && v1.z < 1) || (v2.z > 0 && v2.z < 1) || (v3.z > 0 && v3.z < 1))) { continue; }
-            if (!((v1.x >= 0 && v1.x < this->width) || (v2.x >= 0 && v2.x < this->width) || (v3.x >= 0 && v3.x < this->width))) { continue; }
-            if (!((v1.y >= 0 && v1.y < this->height) || (v2.y >= 0 && v2.y < this->height) || (v3.y >= 0 && v3.y < this->height))) { continue; }
-            this->drawBuffLine(v1.x, v1.y, v2.x, v2.y, o->color);
-            this->drawBuffLine(v2.x, v2.y, v3.x, v3.y, o->color);
-            this->drawBuffLine(v3.x, v3.y, v1.x, v1.y, o->color);
-        }
-    }
-    
-    void drawPolygon (Object3D* o, E512Array<Vector3>& v, E512Array<uint16_t>& colors) {
-        for (int i = 0; i < o->mesh->faces.size(); ++i) {
-            const Face& f = o->mesh->faces[i];
-            const Vector3& v1 = v[f.a];
-            const Vector3& v2 = v[f.b];
-            const Vector3& v3 = v[f.c];
-            
-            if (Vector3::cross(v2 - v1, v3 - v2).z > 0) { continue; }
-            if (!((v1.z > 0 && v1.z < 1) || (v2.z > 0 && v2.z < 1) || (v3.z > 0 && v3.z < 1))) { continue; }
-            if (!((v1.x >= 0 && v1.x < this->width) || (v2.x >= 0 && v2.x < this->width) || (v3.x >= 0 && v3.x < this->width))) { continue; }
-            if (!((v1.y >= 0 && v1.y < this->height) || (v2.y >= 0 && v2.y < this->height) || (v3.y >= 0 && v3.y < this->height))) { continue; }
-            uint16_t z = (1.0f-(v1.z+v2.z+v3.z)*0.333f) * 32767;
-            this->fillTriangle(o, v, i, z, colors[i]);
-        }
-    }
-    
-    void drawPolygonTexture (Object3D* o, E512Array<Vector3>& v, E512Array<float>& lights) {
-        for (int i = 0; i < o->mesh->faces.size(); ++i) {
-            const Face& f = o->mesh->faces[i];
-            const Vector3& v1 = v[f.a];
-            const Vector3& v2 = v[f.b];
-            const Vector3& v3 = v[f.c];
-            
-            if (Vector3::cross(v2 - v1, v3 - v2).z > 0) { continue; }
-            if (!((v1.z > 0 && v1.z < 1) || (v2.z > 0 && v2.z < 1) || (v3.z > 0 && v3.z < 1))) { continue; }
-            if (!((v1.x >= 0 && v1.x < this->width) || (v2.x >= 0 && v2.x < this->width) || (v3.x >= 0 && v3.x < this->width))) { continue; }
-            if (!((v1.y >= 0 && v1.y < this->height) || (v2.y >= 0 && v2.y < this->height) || (v3.y >= 0 && v3.y < this->height))) { continue; }
-            this->fillTriangleTX(o, v, i, lights[i]);
-        }
-    }
-    void drawPolygonTextureDoubleFace (Object3D* o, E512Array<Vector3>& v, E512Array<float>& lights) {
-        for (int i = 0; i < o->mesh->faces.size(); ++i) {
-            const Face& f = o->mesh->faces[i];
-            const Vector3& v1 = v[f.a];
-            const Vector3& v2 = v[f.b];
-            const Vector3& v3 = v[f.c];
-            
-            if (!((v1.z > 0 && v1.z < 1) || (v2.z > 0 && v2.z < 1) || (v3.z > 0 && v3.z < 1))) { continue; }
-            if (!((v1.x >= 0 && v1.x < this->width) || (v2.x >= 0 && v2.x < this->width) || (v3.x >= 0 && v3.x < this->width))) { continue; }
-            if (!((v1.y >= 0 && v1.y < this->height) || (v2.y >= 0 && v2.y < this->height) || (v3.y >= 0 && v3.y < this->height))) { continue; }
-            this->fillTriangleTX(o, v, i, lights[i]);
-        }
-    }
-    
-    
     inline bool inSide (const int& x, const int& y) { return !(x < 0 || x >= this->width || y < 0 || y >= this->height); }
     
     inline bool inSide2 (int x, int y) {////
@@ -298,17 +456,6 @@ private:
         return !(x < this->dsx || x >= this->dex || y < this->dsy || y >= this->dey);
     }
     inline void swap (int16_t& a, int16_t& b) { int16_t c = a; a = b; b = c; }
-    
-    inline void getUV (float x, float y, float x1, float y1, float x2, float y2, float x3, float y3, float& u, float& v) {
-        float t = abs((x2-x1) * (y3-y1) - (y2-y1) * (x3-x1));
-        u = 0;
-        v = 0;
-        if (t > 0) {
-            u = abs((x1-x) * (y2-y) - (y1-y) * (x2-x)) / t;
-            v = abs((x1-x) * (y3-y) - (y1-y) * (x3-x)) / t;
-        }
-    }
-    
     
 /*
 This is the core graphics library for all our displays, providing a common
@@ -389,16 +536,136 @@ POSSIBILITY OF SUCH DAMAGE.
             
         }
     }
-    // Adafruit_GFX::fillTriangle modification
-    inline void fillTriangle (Object3D* o, E512Array<Vector3>& v, int16_t index, uint16_t z, uint16_t color) {
-        const Face& f = o->mesh->faces[index];
+    
+    // GFXcanvas8::writeFastHLine modification
+    inline void drawBuffLineHTranslucent (int16_t sx, int16_t y, int16_t w, int16_t z, uint16_t color) {
+        if (sx >= this->width || y < 0 || y >= this->height) { return; }
+        int16_t ex = sx + w - 1;
+        if (ex < 0) { return; }
+        sx = max(sx, (int16_t)0);
+        ex = min(ex, (int16_t)(this->width - 1));
         
-        int16_t x1 = v[f.a].x;
-        int16_t y1 = v[f.a].y;
-        int16_t x2 = v[f.b].x;
-        int16_t y2 = v[f.b].y;
-        int16_t x3 = v[f.c].x;
-        int16_t y3 = v[f.c].y;
+        for (int16_t x = sx; x < ex; ++x) {
+            if (!this->inSide2(x, y)) { continue; }
+            if (z > this->zbuff->readPixel(x+this->sx, y+this->sy)) {
+                uint16_t color2 = this->buff->readPixel(x+this->sx, y+this->sy);
+                
+                uint16_t r = ((((color >> 11) &  0b11111) << 3) + (((color2 >> 11) &  0b11111) << 3)) >> 1;
+                uint16_t g = ((((color >> 5)  & 0b111111) << 2) + (((color2 >> 5)  & 0b111111) << 2)) >> 1;
+                uint16_t b = ((( color        &  0b11111) << 3) + (( color2        &  0b11111) << 3)) >> 1;
+                
+                this->buff->drawPixel(x+this->sx, y+this->sy, color565(r, g, b));
+            }
+        }
+    }
+    
+    // GFXcanvas8::writeFastHLine modification
+    inline void drawBuffLineHTexture (int16_t sx, int16_t y, int16_t w, int16_t za, int16_t zba, int16_t zca, Vector3& v1, Vector3& v2, Vector3& v3, Vector2& v1uv, Vector2& v2uv, Vector2& v3uv, float light, Object3D* o) {
+        if (sx >= this->width || y < 0 || y >= this->height) { return; }
+        int16_t ex = sx + w - 1;
+        if (ex < 0) { return; }
+        sx = max(sx, (int16_t)0);
+        ex = min(ex, (int16_t)(this->width - 1));
+        
+        
+        const int16_t v1x = v1.x;
+        const int16_t v1y = v1.y;
+        const int16_t v2x = v2.x;
+        const int16_t v2y = v2.y;
+        const int16_t v3x = v3.x;
+        const int16_t v3y = v3.y;
+        
+        float dbx = v2uv.x-v1uv.x;
+        float dby = v2uv.y-v1uv.y;
+        float dcx = v3uv.x-v1uv.x;
+        float dcy = v3uv.y-v1uv.y;
+        
+        float ab = 0;
+        float ac = 0;
+        float t = abs((v2x-v1x) * (v3y-v1y) - (v2y-v1y) * (v3x-v1x));
+        for (int16_t x = sx; x < ex; ++x) {
+            if (!this->inSide2(x, y)) { continue; }
+            
+            if (t > 0) {
+                ab = abs((v1x-x) * (v2y-y) - (v1y-y) * (v2x-x)) / t;
+                ac = abs((v1x-x) * (v3y-y) - (v1y-y) * (v3x-x)) / t;
+            }
+            
+            float tu = dbx*ac+dcx*ab+v1uv.x;
+            float tv = dby*ac+dcy*ab+v1uv.y;
+            uint16_t z = zba*ac+zca*ab+za;
+            
+            if (z > this->zbuff->readPixel(x+this->sx, y+this->sy)) {
+                uint16_t color = o->texture->getColor(tu, tv);
+                if ((color >> 15) & 1) { continue; }
+                float r = ((color >> 10) & 0b11111) << 3;
+                float g = ((color >> 5)  & 0b11111) << 3;
+                float b = ( color        & 0b11111) << 3;
+                
+                color = color565(min(r*light, 255.0f), min(g*light, 255.0f), min(b*light, 255.0f));
+                this->zbuff->drawPixel(x+this->sx, y+this->sy, z);
+                this->buff->drawPixel(x+this->sx, y+this->sy, color);
+            }
+        }
+    }
+    
+    // GFXcanvas8::writeFastHLine modification
+    inline void drawBuffLineHTexturePerspectiveCorrect (int16_t sx, int16_t y, int16_t w, int16_t za, int16_t zba, int16_t zca, Vector4& v1, Vector4& v2, Vector4& v3, Vector2& v1uv, Vector2& v2uv, Vector2& v3uv, float light, Object3D* o) {
+        if (sx >= this->width || y < 0 || y >= this->height) { return; }
+        int16_t ex = sx + w - 1;
+        if (ex < 0) { return; }
+        sx = max(sx, (int16_t)0);
+        ex = min(ex, (int16_t)(this->width - 1));
+        
+        const int16_t v1x = v1.x;
+        const int16_t v1y = v1.y;
+        const int16_t v2x = v2.x;
+        const int16_t v2y = v2.y;
+        const int16_t v3x = v3.x;
+        const int16_t v3y = v3.y;
+        
+        float dbx = v2uv.x-v1uv.x;
+        float dby = v2uv.y-v1uv.y;
+        float dbz = v2.w-v1.w;
+        float dcx = v3uv.x-v1uv.x;
+        float dcy = v3uv.y-v1uv.y;
+        float dcz = v3.w-v1.w;
+        
+        float ab = 0;
+        float ac = 0;
+        float t = abs((v2x-v1x) * (v3y-v1y) - (v2y-v1y) * (v3x-v1x));
+        for (int16_t x = sx; x < ex; ++x) {
+            if (!this->inSide2(x, y)) { continue; }
+            
+            if (t > 0) {
+                ab = abs((v1x-x) * (v2y-y) - (v1y-y) * (v2x-x)) / t;
+                ac = abs((v1x-x) * (v3y-y) - (v1y-y) * (v3x-x)) / t;
+            }
+            
+            float tu = dbx*ac+dcx*ab+v1uv.x;
+            float tv = dby*ac+dcy*ab+v1uv.y;
+            float tw = dbz*ac+dcz*ab+v1.w;
+            
+            uint16_t z = zba*ac+zca*ab+za;
+            
+            if (z > this->zbuff->readPixel(x+this->sx, y+this->sy)) {
+                uint16_t color = o->texture->getColor(tu/tw, tv/tw);
+                
+                if ((color >> 15) & 1) { continue; }
+                float r = ((color >> 10) & 0b11111) << 3;
+                float g = ((color >> 5)  & 0b11111) << 3;
+                float b = ( color        & 0b11111) << 3;
+                
+                color = color565(min(r*light, 255.0f), min(g*light, 255.0f), min(b*light, 255.0f));
+                this->zbuff->drawPixel(x+this->sx, y+this->sy, z);
+                this->buff->drawPixel(x+this->sx, y+this->sy, color);
+            }
+        }
+    }
+    
+    
+    // Adafruit_GFX::fillTriangle modification
+    inline void fillTriangleColor (int16_t x1, int16_t y1, int16_t x2, int16_t y2, int16_t x3, int16_t y3, uint16_t z, uint16_t color) {
         
         if (y1 > y2) { this->swap(y1, y2); this->swap(x1, x2); }
         if (y2 > y3) { this->swap(y3, y2); this->swap(x3, x2); }
@@ -452,78 +719,73 @@ POSSIBILITY OF SUCH DAMAGE.
         }
     }
     
-    
-    // GFXcanvas8::writeFastHLine modification
-    inline void drawBuffLineHTX (int16_t sx, int16_t y, int16_t w, int16_t za, int16_t zba, int16_t zca, Object3D* o, E512Array<Vector3>& v, int16_t index, float light) {
-        if (sx >= this->width || y < 0 || y >= this->height) { return; }
-        int16_t ex = sx + w - 1;
-        if (ex < 0) { return; }
-        sx = max(sx, (int16_t)0);
-        ex = min(ex, (int16_t)(this->width - 1));
+    // Adafruit_GFX::fillTriangle modification
+    inline void fillTriangleTranslucent (int16_t x1, int16_t y1, int16_t x2, int16_t y2, int16_t x3, int16_t y3, uint16_t z, uint16_t color) {
         
+        if (y1 > y2) { this->swap(y1, y2); this->swap(x1, x2); }
+        if (y2 > y3) { this->swap(y3, y2); this->swap(x3, x2); }
+        if (y1 > y2) { this->swap(y1, y2); this->swap(x1, x2); }
         
-        const Face& f = o->mesh->faces[index];
-        const int16_t v1x = v[f.a].x;
-        const int16_t v1y = v[f.a].y;
-        const int16_t v2x = v[f.b].x;
-        const int16_t v2y = v[f.b].y;
-        const int16_t v3x = v[f.c].x;
-        const int16_t v3y = v[f.c].y;
-        
-        
-        const Face& fuv = o->mesh->uv_faces[index];
-        float ax = o->mesh->uv_vertexs[fuv.a].x;
-        float ay = o->mesh->uv_vertexs[fuv.a].y;
-        float bx = o->mesh->uv_vertexs[fuv.b].x;
-        float by = o->mesh->uv_vertexs[fuv.b].y;
-        float cx = o->mesh->uv_vertexs[fuv.c].x;
-        float cy = o->mesh->uv_vertexs[fuv.c].y;
-        float dax = bx-ax;
-        float day = by-ay;
-        float dbx = cx-ax;
-        float dby = cy-ay;
-        
-        for (int16_t x = sx; x < ex; ++x) {
-            if (!this->inSide2(x, y)) { continue; }
-            
-            float u=0;
-            float v=0;
-            this->getUV(x, y, v1x, v1y, v2x, v2y, v3x, v3y, u, v);
-            
-            float tu = dax*v+dbx*u+ax;
-            float tv = day*v+dby*u+ay;
-            
-            uint16_t z = zba*v+zca*u+za;
-            
-            if (z > this->zbuff->readPixel(x+this->sx, y+this->sy)) {
-                uint16_t color = o->texture->getColor(tu, tv);
-                if ((color >> 15) & 1) { continue; }
-                float r = ((color >> 10) & 0b11111) << 3;
-                float g = ((color >> 5)  & 0b11111) << 3;
-                float b = ( color        & 0b11111) << 3;
-                
-                color = color565(min(r*light, 255.0f), min(g*light, 255.0f), min(b*light, 255.0f));
-                this->zbuff->drawPixel(x+this->sx, y+this->sy, z);
-                this->buff->drawPixel(x+this->sx, y+this->sy, color);
+        int16_t a, b, y;
+        if (y1 == y3) {
+            a = b = x1;
+            if (x2 < a) {
+                a = x2;
+            } else if(x2 > b) {
+                b = x2;
             }
+            if (x3 < a) {
+                a = x3;
+            } else if (x3 > b) {
+                b = x3;
+            }
+            this->drawBuffLineHTranslucent(a, y1, b-a+1, z, color);
+            return;
+        }
+        
+        int32_t dx21 = x2 - x1;
+        int32_t dy21 = y2 - y1;
+        int32_t dx31 = x3 - x1;
+        int32_t dy31 = y3 - y1;
+        int32_t dx32 = x3 - x2;
+        int32_t dy32 = y3 - y2;
+        int32_t sa = 0;
+        int32_t sb = 0;
+        int16_t last = y2 == y3 ? y2 : y2-1;
+        
+        for(y=y1; y<=last; ++y) {
+            a = x1 + sa / dy21;
+            b = x1 + sb / dy31;
+            sa += dx21;
+            sb += dx31;
+            if(a > b) { this->swap(a, b); }
+            this->drawBuffLineHTranslucent(a, y, b-a+1, z, color);
+        }
+        
+        sa = dx32 * (y - y2);
+        sb = dx31 * (y - y1);
+        for(; y<=y3; ++y) {
+            a = x2 + sa / dy32;
+            b = x1 + sb / dy31;
+            sa += dx32;
+            sb += dx31;
+            if(a > b) { this->swap(a, b); }
+            this->drawBuffLineHTranslucent(a, y, b-a+1, z, color);
         }
     }
     
-    
     // Adafruit_GFX::fillTriangle modification
-    inline void fillTriangleTX (Object3D* o, E512Array<Vector3>& v, int16_t index, float light) {
-        const Face& f = o->mesh->faces[index];
+    inline void fillTriangleTexture (Vector3& v1, Vector3& v2, Vector3& v3, Vector2& v1uv, Vector2& v2uv, Vector2& v3uv, float light, Object3D* o) {
+        int16_t x1 = v1.x;
+        int16_t y1 = v1.y;
+        int16_t x2 = v2.x;
+        int16_t y2 = v2.y;
+        int16_t x3 = v3.x;
+        int16_t y3 = v3.y;
         
-        int16_t x1 = v[f.a].x;
-        int16_t y1 = v[f.a].y;
-        int16_t x2 = v[f.b].x;
-        int16_t y2 = v[f.b].y;
-        int16_t x3 = v[f.c].x;
-        int16_t y3 = v[f.c].y;
-        
-        int16_t za = (1.0f-v[f.a].z) * 32767;
-        int16_t zb = (1.0f-v[f.b].z) * 32767;
-        int16_t zc = (1.0f-v[f.c].z) * 32767;
+        int16_t za = (1.0f-v1.z) * 32767;
+        int16_t zb = (1.0f-v2.z) * 32767;
+        int16_t zc = (1.0f-v3.z) * 32767;
         int16_t zba = zb - za;
         int16_t zca = zc - za;
         
@@ -544,7 +806,7 @@ POSSIBILITY OF SUCH DAMAGE.
             } else if (x3 > b) {
                 b = x3;
             }
-            this->drawBuffLineHTX(a, y1, b-a+1, za, zba, zca, o, v, index, light);
+            this->drawBuffLineHTexture(a, y1, b-a+1, za, zba, zca, v1, v2, v3, v1uv, v2uv, v3uv, light, o);
             return;
         }
         
@@ -564,7 +826,7 @@ POSSIBILITY OF SUCH DAMAGE.
             sa += dx21;
             sb += dx31;
             if(a > b) { this->swap(a, b); }
-            this->drawBuffLineHTX(a, y, b-a+1, za, zba, zca, o, v, index, light);
+            this->drawBuffLineHTexture(a, y, b-a+1, za, zba, zca, v1, v2, v3, v1uv, v2uv, v3uv, light, o);
         }
         
         sa = dx32 * (y - y2);
@@ -575,9 +837,79 @@ POSSIBILITY OF SUCH DAMAGE.
             sa += dx32;
             sb += dx31;
             if(a > b) { this->swap(a, b); }
-            this->drawBuffLineHTX(a, y, b-a+1, za, zba, zca, o, v, index, light);
+            this->drawBuffLineHTexture(a, y, b-a+1, za, zba, zca, v1, v2, v3, v1uv, v2uv, v3uv, light, o);
         }
     }
+    
+    // Adafruit_GFX::fillTriangle modification
+    inline void fillTriangleTexturePerspectiveCorrect (Vector4& v1, Vector4& v2, Vector4& v3, Vector2& v1uv, Vector2& v2uv, Vector2& v3uv, float light, Object3D* o) {
+        int16_t x1 = v1.x;
+        int16_t y1 = v1.y;
+        int16_t x2 = v2.x;
+        int16_t y2 = v2.y;
+        int16_t x3 = v3.x;
+        int16_t y3 = v3.y;
+        
+        int16_t za = (1.0f-v1.z) * 32767;
+        int16_t zb = (1.0f-v2.z) * 32767;
+        int16_t zc = (1.0f-v3.z) * 32767;
+        int16_t zba = zb - za;
+        int16_t zca = zc - za;
+        
+        if (y1 > y2) { this->swap(y1, y2); this->swap(x1, x2); }
+        if (y2 > y3) { this->swap(y3, y2); this->swap(x3, x2); }
+        if (y1 > y2) { this->swap(y1, y2); this->swap(x1, x2); }
+        
+        int16_t a, b, y;
+        if (y1 == y3) {
+            a = b = x1;
+            if (x2 < a) {
+                a = x2;
+            } else if(x2 > b) {
+                b = x2;
+            }
+            if (x3 < a) {
+                a = x3;
+            } else if (x3 > b) {
+                b = x3;
+            }
+            this->drawBuffLineHTexturePerspectiveCorrect(a, y1, b-a+1, za, zba, zca, v1, v2, v3, v1uv, v2uv, v3uv, light, o);
+            return;
+        }
+        
+        int32_t dx21 = x2 - x1;
+        int32_t dy21 = y2 - y1;
+        int32_t dx31 = x3 - x1;
+        int32_t dy31 = y3 - y1;
+        int32_t dx32 = x3 - x2;
+        int32_t dy32 = y3 - y2;
+        int32_t sa = 0;
+        int32_t sb = 0;
+        int16_t last = y2 == y3 ? y2 : y2-1;
+        
+        for(y=y1; y<=last; ++y) {
+            a = x1 + sa / dy21;
+            b = x1 + sb / dy31;
+            sa += dx21;
+            sb += dx31;
+            if(a > b) { this->swap(a, b); }
+            this->drawBuffLineHTexturePerspectiveCorrect(a, y, b-a+1, za, zba, zca, v1, v2, v3, v1uv, v2uv, v3uv, light, o);
+        }
+        
+        sa = dx32 * (y - y2);
+        sb = dx31 * (y - y1);
+        for(; y<=y3; ++y) {
+            a = x2 + sa / dy32;
+            b = x1 + sb / dy31;
+            sa += dx32;
+            sb += dx31;
+            if(a > b) { this->swap(a, b); }
+            this->drawBuffLineHTexturePerspectiveCorrect(a, y, b-a+1, za, zba, zca, v1, v2, v3, v1uv, v2uv, v3uv, light, o);
+        }
+    }
+    
+    
+    
 };
 
 class E512W3DWindowManager {
