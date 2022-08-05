@@ -28,7 +28,7 @@ void setup() {
     
     b.mesh = &cube;
     b.position.x = 12;
-    b.rotation.y = 180;
+    b.rotation = Quaternion::angleAxis(180 , Vector3(0, 1, 0));
     b.render_type = RenderType::PolygonColor;
     b.color = color565(255, 0, 0);
     
@@ -39,20 +39,20 @@ void setup() {
     
     d.mesh = &cube;
     d.position.z = 12;
-    d.rotation.y = 90;
+    d.rotation = Quaternion::angleAxis(90 , Vector3(0, 1, 0));
     d.render_type = RenderType::PolygonColor;
     d.color = color565(0, 0, 255);
     
     e.mesh = &cube;
     e.position.z = -12;
-    e.rotation.y = 270;
+    e.rotation = Quaternion::angleAxis(270 , Vector3(0, 1, 0));
     e.render_type = RenderType::WireFrame;
     e.color = color565(255, 255, 255);
     
     w.addChild(a);
     camera.position.z = 32;
     camera.position.y = 16;
-    camera.rotation.x = -30;
+    camera.rotation = Quaternion::angleAxis(-30 , Vector3(1, 0, 0));
     w.setCamera(camera);
     w.setDirectionalLight(-1, -1, -1);
     e512w3d.add(w);
@@ -65,8 +65,7 @@ void setup() {
 void loop() {
     static float v = 0;
     if (e512w3d.isFixedTime()) {
-        // move
-        a.rotation.y += 6.0f;
+        a.rotation *= Quaternion::angleAxis(6 , Vector3(0, 1, 0));
         b.position.y = abs(sin(v)) * 3;
         c.position.y = abs(sin(v+0.25f)) * 3;
         d.position.y = abs(sin(v+0.5f)) * 3;
@@ -78,7 +77,6 @@ void loop() {
         // int16_t batv = (int16_t)(M5.Axp.GetVapsData() * 1.4f);
         // batv = max(min(batv, 4100), 3300);
         // int16_t bati = (int16_t)map(batv, 3300, 4100, 0, 100);
-        // float g = bati * 0.01f;
         // M5.Lcd.setCursor(120, 0);
         // M5.Lcd.print(String(bati)+"%");
         // M5.Lcd.setCursor(120, 16);

@@ -104,6 +104,7 @@ void push_back (T t)
 void pop_back (T t)  
 void erase_index (int index)  
 void erase_value (T t)  
+void clear ()  
 T& front ()  
 T& back ()  
 
@@ -115,7 +116,9 @@ void draw ()
 void fixedDraw ()  
 void fixedDrawWait ()  
 bool isFixedTime ()  
+void pushScreen ()  
 uint16_t fixed_milli_time = 33  
+void clear ()  
 #### E512W3DWindow  
 E512W3DWindow ()  
 E512W3DWindow (uint16_t bgcolor)  
@@ -136,10 +139,23 @@ float ambient = 0 // 0f - 1f
 float light_strength = 1.0f;  
 bool isortho = false
 float ortho_size = 0.1f
+void draw ()  
+void draw (Object3D& obj, bool child = false)  
+void drawObjestAxis (Object3D& obj)  
+void drawLine (Object3D& start, Object3D& end, uint16_t color = 0xFFFF)  
+void drawLine (Vector3 start, Vector3 end, uint16_t color = 0xFFFF)  
+void drawLine (uint16_t sx, uint16_t sy, uint16_t ex, uint16_t ey, uint16_t color = 0xFFFF)  
+void drawPoint (Object3D& obj, uint16_t size = 1, uint16_t color = 0xFFFF)  
+void drawPoint (Vector3 p, uint16_t size = 1, uint16_t color = 0xFFFF)  
+void drawPoint (int16_t px, int16_t py, uint16_t size = 1, uint16_t color = 0xFFFF)  
+void begin (bool color_buffer_clear = true, bool z_buffer_clear = true)  
+
+
+
   
 #### Object3D  
 Vector3 position  
-Vector3 rotation  
+Quaternion rotation  
 Vector3 scale  
 Mesh* mesh  
 Object3D* parent  
@@ -147,6 +163,16 @@ uint16_t render_type = RenderType::WireFrame
 E512Array<Object3D*> child  
 void setParent (Object3D& o)  
 void addChild (Object3D& o)  
+Matrix4x4 worldMatrix ()  
+Vector3 worldPosition ()  
+Vector3 forward ()  
+Vector3 back ()  
+Vector3 up ()  
+Vector3 down ()  
+Vector3 right ()  
+Vector3 left ()  
+
+
     
 #### Mesh
 void addVertex (float x, float y, float z)  
@@ -159,6 +185,10 @@ void addFaceUV (uint16_t a, uint16_t b, uint16_t c)
 void addFaceUV (Face f)  
 #### Face
 uint16_t a, b, c  
+
+#### Quaternion
+static Quaternion angleAxis (float w, float x, float y, float z)  
+static Quaternion angleAxis (float w, Vector3 v)  
 
 #### enum RenderType
 WireFrame  

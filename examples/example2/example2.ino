@@ -2,9 +2,7 @@
 #include "cube.hpp"
 
 E512W3DWindow w;
-E512Array<Object3D> origins;
-E512Array<Object3D> objs;
-Object3D a;
+Object3D a, b, c;
 Object3D camera;
 
 const uint8_t gsize = 16;
@@ -21,41 +19,17 @@ void setup() {
     w.height = e512w3d.height;
     
     cubeInit();
-    
-    for (int y = 0; y < gsize; ++y) {
-        for (int x = 0; x < gsize; ++x) {
-            Object3D o;
-            o.mesh = &cube;
-            o.render_type = RenderType::PolygonColor;
-            o.position.y = 1;
-            o.color = color565(32, 64, 255);
-            objs.emplace_back(o);
-        }
-    }
-    
-    for (int y = 0; y < gsize; ++y) {
-        for (int x = 0; x < gsize; ++x) {
-            Object3D o;
-            o.position.x = -gsize + x * 2 + 1;
-            o.position.z = gsize + -y * 2 - 1;
-            origins.emplace_back(o);
-        }
-    }
-    
-    for (int i = 0; i < gsize * gsize; ++i) {;
-        origins[i].addChild(objs[i]);
-    }
-    
-    
-    for (auto&& i : origins) {
-        a.addChild(i);
-    }
-    
-    w.addChild(a);
+    a.mesh = &cube;
+    a.render_type = RenderType::PolygonColor;
+    a.position.y = 1;
+    b.addChild(a);
+    c.addChild(b);
+    w.addChild(c);
     
     camera.position.z = 32;
     camera.position.y = 16;
-    camera.rotation.x = -30;
+    camera.rotation = Quaternion::angleAxis(-30, Vector3(1, 0, 0));
+    
     w.setCamera(camera);
     
     w.setDirectionalLight(0, -1, -1);
@@ -68,22 +42,27 @@ void setup() {
 void loop() {
     static float v = 0;
     if (e512w3d.isFixedTime()) {
-        for (int i = 0; i < gsize * gsize; ++i) {
-            int x = i % gsize;
-            int y = i / gsize;
-            origins[i].scale.y = sin((x+y) + v) * 0.5 + cos(y + v) * 0.5 + 1.0;
-            float t = origins[i].scale.y;
-            objs[i].color = color565(min(32.0 * t, 255.0), min(64.0 * t, 255.0), min(255.0 * t, 255.0));
-        }
-        a.rotation.y = v * 4;
         v += 0.2;
-        e512w3d.draw();
+        c.rotation = Quaternion::angleAxis(v*4 , Vector3(0, 1, 0));
+        
+        e512w3d.clear();
+        w.begin();
+        for (int y = 0; y < gsize; ++y) {
+            for (int x = 0; x < gsize; ++x) {
+                b.position.x = -gsize + x*2 + 1;
+                b.position.z = gsize + -y*2 - 1;
+                b.scale.y = sin((x+y) + v)*0.5 + cos(y+v)*0.5 + 1.0;
+                float t = b.scale.y;
+                a.color = color565(min(32.0* t, 255.0), min(64.0*t, 255.0), min(255.0*t, 255.0));
+                w.draw(a);
+            }
+        }
+        e512w3d.pushScreen();
         
         // battery
         // int16_t batv = (int16_t)(M5.Axp.GetVapsData() * 1.4f);
         // batv = max(min(batv, 4100), 3300);
         // int16_t bati = (int16_t)map(batv, 3300, 4100, 0, 100);
-        // float g = bati * 0.01f;
         // M5.Lcd.setCursor(120, 0);
         // M5.Lcd.print(String(bati)+"%");
         // M5.Lcd.setCursor(120, 16);

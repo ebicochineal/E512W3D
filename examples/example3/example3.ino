@@ -41,7 +41,7 @@ void setup() {
     a.position.y = -2;
     a.position.z = -1;
     a.render_type = RenderType::WireFrame;
-    a.color = M5.Lcd.color565(255, 255, 255);
+    a.color = color565(255, 255, 255);
     a0.mesh = &zou;
     a0.position.y = -2;
     a0.position.z = -1;
@@ -54,7 +54,8 @@ void setup() {
     
     c0.position.z = 8;
     c0.position.y = 3;
-    c0.rotation.x = -20;
+    c0.rotation *= Quaternion::angleAxis(-20, Vector3(1, 0, 0));
+    
     o.addChild(c0);
     // w0.setDirectionalLight(0, -1, -1);
     w0.setCamera(c0);
@@ -65,13 +66,13 @@ void setup() {
     w1.isortho = true;
     
     c2.position.x = 8;
-    c2.rotation.y = 90;
+    c2.rotation *= Quaternion::angleAxis(90, Vector3(0, 1, 0));
     w2.ortho_size = 0.05;
     w2.setCamera(c2);
     w2.isortho = true;
     
     c3.position.y = 8;
-    c3.rotation.x = -90;
+    c3.rotation *= Quaternion::angleAxis(-90, Vector3(1, 0, 0));
     w3.ortho_size = 0.05;
     w3.setCamera(c3);
     w3.isortho = true;
@@ -89,14 +90,13 @@ void setup() {
 
 void loop() {
     if (e512w3d.isFixedTime()) {
-        o.rotation.y += 1.0f;
+        o.rotation *= Quaternion::angleAxis(1, Vector3(0, 1, 0));
         e512w3d.draw();
         
         // battery
         // int16_t batv = (int16_t)(M5.Axp.GetVapsData() * 1.4f);
         // batv = max(min(batv, 4100), 3300);
         // int16_t bati = (int16_t)map(batv, 3300, 4100, 0, 100);
-        // float g = bati * 0.01f;
         // M5.Lcd.setCursor(120, 0);
         // M5.Lcd.print(String(bati)+"%");
         // M5.Lcd.setCursor(120, 16);

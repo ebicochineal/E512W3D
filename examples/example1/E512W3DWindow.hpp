@@ -47,15 +47,112 @@ public:
         this->height = height;
     }
     
-    
     void draw () {
-        this->dsy = max(this->sy, (int16_t)0);
-        this->dsx = max(this->sx, (int16_t)0);
-        this->dey = min(this->sy + this->height, this->screen_height);
-        this->dex = min(this->sx + this->width, this->screen_width);
+        this->begin();
+        if (this->dsy == this->dey || this->dsx == this->dex) { return; }
+        this->drawChild(this->child, Matrix4x4::identity());
+        this->drawChildT(this->child, Matrix4x4::identity());
+    }
+    
+    
+    
+    void draw (Object3D& obj, bool child = false) {
         if (this->dsy == this->dey || this->dsx == this->dex) { return; }
         
-        this->clear();
+        Matrix4x4 mat = obj.parent->worldMatrix();
+        
+        if (child) {
+            E512Array<Object3D*> objs;
+            objs.emplace_back(&obj);
+            this->drawChild(objs, mat);
+            this->drawChildT(objs, mat);
+        } else {
+            mat = this->worldMatrix(&obj, mat);
+            if (obj.mesh == NULL) { return; }
+            if (obj.render_type == RenderType::WireFrame) { this->drawWireFrame(&obj, mat); }
+            if (obj.render_type == RenderType::PolygonColor) { this->drawPolygonColor(&obj, mat); }
+            if (obj.render_type == RenderType::PolygonNormal) { this->drawPolygonNormal(&obj, mat); }
+            if (obj.render_type == RenderType::PolygonTexture) { this->drawPolygonTexture(&obj, mat); }
+            if (obj.render_type == RenderType::PolygonTextureDoubleFace) { this->drawPolygonTextureDoubleFace(&obj, mat); }
+            if (obj.render_type == RenderType::PolygonTexturePerspectiveCorrect) { this->PolygonTexturePerspectiveCorrect(&obj, mat); }
+            if (obj.render_type == RenderType::PolygonTexturePerspectiveCorrectDoubleFace) { this->PolygonTexturePerspectiveCorrectDoubleFace(&obj, mat); }
+            if (obj.render_type == RenderType::PolygonTranslucent) { this->drawPolygonTranslucent(&obj, mat); }
+        }
+    }
+    
+    void drawObjestAxis (Object3D& obj) {
+        if (this->dsy == this->dey || this->dsx == this->dex) { return; }
+        Matrix4x4 mat = this->objectWorldViewMatrix(obj);
+        Vector3 s = Matrix4x4::muld(Matrix4x4::mul(Vector3(), mat), this->projescreen);
+        Vector3 x = Matrix4x4::muld(Matrix4x4::mul(Vector3(2, 0, 0), mat), this->projescreen);
+        Vector3 y = Matrix4x4::muld(Matrix4x4::mul(Vector3(0, 2, 0), mat), this->projescreen);
+        Vector3 z = Matrix4x4::muld(Matrix4x4::mul(Vector3(0, 0, 2), mat), this->projescreen);
+        this->drawBuffLine(s.x, s.y, x.x, x.y, color565(255, 0, 0));
+        this->drawBuffLine(s.x, s.y, y.x, y.y, color565(0, 255, 0));
+        this->drawBuffLine(s.x, s.y, z.x, z.y, color565(0, 0, 255));
+    }
+    
+    
+    void drawLine (Object3D& start, Object3D& end, uint16_t color = 0xFFFF) {
+        if (this->dsy == this->dey || this->dsx == this->dex) { return; }
+        Vector3 s = Matrix4x4::muld(Matrix4x4::mul(Vector3(), this->objectWorldViewMatrix(start)), this->projescreen);
+        Vector3 e = Matrix4x4::muld(Matrix4x4::mul(Vector3(), this->objectWorldViewMatrix(end)), this->projescreen);
+        if (s.z < 0 || s.z > 1 || e.z < 0 || e.z > 1) { return; }
+        this->drawBuffLine(s.x, s.y, e.x, e.y, color);
+    }
+    
+    void drawLine (Vector3 start, Vector3 end, uint16_t color = 0xFFFF) {
+        if (this->dsy == this->dey || this->dsx == this->dex) { return; }
+        Vector3 s = Matrix4x4::muld(Matrix4x4::mul(start, this->view), this->projescreen);
+        Vector3 e = Matrix4x4::muld(Matrix4x4::mul(end, this->view), this->projescreen);
+        if (s.z < 0 || s.z > 1 || e.z < 0 || e.z > 1) { return; }
+        this->drawBuffLine(s.x, s.y, e.x, e.y, color);
+    }
+    void drawLine (uint16_t sx, uint16_t sy, uint16_t ex, uint16_t ey, uint16_t color = 0xFFFF) {
+        if (this->dsy == this->dey || this->dsx == this->dex) { return; }
+        this->drawBuffLine(sx, sy, ex, ey, color);
+    }
+    
+    void drawPoint (Object3D& obj, uint16_t size = 1, uint16_t color = 0xFFFF) {
+        if (this->dsy == this->dey || this->dsx == this->dex) { return; }
+        Vector3 p = Matrix4x4::muld(Matrix4x4::mul(Vector3(), this->objectWorldViewMatrix(obj)), this->projescreen);
+        if (p.z < 0 || p.z > 1) { return; }
+        this->drawPoint(p.x, p.y, size, color);
+    }
+    void drawPoint (Vector3 p, uint16_t size = 1, uint16_t color = 0xFFFF) {
+        if (this->dsy == this->dey || this->dsx == this->dex) { return; }
+        p = Matrix4x4::muld(Matrix4x4::mul(p, this->view), this->projescreen);
+        if (p.z < 0 || p.z > 1) { return; }
+        this->drawPoint(p.x, p.y, size, color);
+    }
+    
+    void drawPoint (int16_t px, int16_t py, uint16_t size = 1, uint16_t color = 0xFFFF) {
+        if (this->dsy == this->dey || this->dsx == this->dex) { return; }
+        int16_t sx = px - ((size-1) >> 1);
+        int16_t sy = py - ((size-1) >> 1);
+        int16_t ex = min((int16_t)(sx + size), (int16_t)(this->width-1));
+        int16_t ey = min((int16_t)(sy + size), (int16_t)(this->height-1));
+        sx = max(sx, (int16_t)0);
+        sy = max(sy, (int16_t)0);
+        for (int16_t y = sy; y < ey; ++y) {
+            for (int16_t x = sx; x < ex; ++x) {
+                if (this->inSide2(x, y)) { this->buff->drawPixel(x + this->sx, y + this->sy, color); }
+            }
+        }
+    }
+    
+    
+    
+    Matrix4x4 objectWorldViewMatrix (Object3D& obj) {
+        return Matrix4x4::mul(obj.worldMatrix(), this->view);
+    }
+    
+    void begin (bool color_buffer_clear = true, bool z_buffer_clear = true) {
+        this->dsy = min(max(this->sy, (int16_t)0), (int16_t)this->screen_height);
+        this->dsx = min(max(this->sx, (int16_t)0), (int16_t)this->screen_width );
+        this->dey = min(max((int16_t)(this->sy + this->height), (int16_t)0), (int16_t)this->screen_height);
+        this->dex = min(max((int16_t)(this->sx + this->width ), (int16_t)0), (int16_t)this->screen_width );
+        
         this->updateViewMatrix();
         this->updateLightVector();
         if (this->isortho) {
@@ -63,8 +160,9 @@ public:
         } else {
             this->projescreen = Matrix4x4::projscreenMatrix(this->width, this->height);
         }
-        this->drawChild(this->child, Matrix4x4::identity());
-        this->drawChildT(this->child, Matrix4x4::identity());
+        
+        if (color_buffer_clear) { this->clearCbuff(); }
+        if (z_buffer_clear) { this->clearZbuff(); }
     }
     
     void setDirectionalLight (float x, float y, float z) { this->setDirectionalLight(Vector3(x, y, z)); }
@@ -76,6 +174,81 @@ public:
     }
     
     void setCamera (Object3D& o) { this->camera = &o; }
+    
+    void clearCbuff () {
+        for (int y = this->dsy; y < this->dey; ++y) {
+            for (int x = this->dsx; x < this->dex; ++x) {
+                this->buff->drawPixel(x, y, this->bgcolor);
+            }
+        }
+    }
+    void clearZbuff () {
+        for (int y = this->dsy; y < this->dey; ++y) {
+            for (int x = this->dsx; x < this->dex; ++x) {
+                this->zbuff->drawPixel(x, y, 0);
+            }
+        }
+    }
+    
+    // void updateViewMatrix () {
+    //     Matrix4x4 mat = Matrix4x4::identity();
+        
+    //     if (this->camera != NULL) {
+    //         Object3D* obj = this->camera;
+    //         while (obj != NULL) {
+    //             mat = Matrix4x4::mul(Matrix4x4::rotMatrix(Vector3() - obj->rotation), mat);
+    //             mat = Matrix4x4::mul(Matrix4x4::moveMatrix(Vector3() - obj->position), mat);
+    //             obj = obj->parent;
+    //         }
+    //     }
+        
+    //     this->view = mat;
+    // }
+    
+    // void updateLightVector () {
+    //     Matrix4x4 mat = Matrix4x4::identity();
+        
+    //     if (this->camera != NULL) {
+    //         Object3D* obj = this->camera;
+    //         while (obj != NULL) {
+    //             mat = Matrix4x4::mul(Matrix4x4::rotMatrix(Vector3() - obj->rotation), mat);
+    //             obj = obj->parent;
+    //         }
+    //     }
+    //     this->light_vector = Matrix4x4::mul(this->light, mat);
+    // }
+    
+    
+    void updateViewMatrix () {
+        Matrix4x4 mat = Matrix4x4::identity();
+        
+        if (this->camera != NULL) {
+            Object3D* obj = this->camera;
+            while (obj != NULL) {
+                mat = Matrix4x4::mul(Matrix4x4::rotMatrixR(obj->rotation), mat);
+                mat = Matrix4x4::mul(Matrix4x4::moveMatrix(Vector3() - obj->position), mat);
+                obj = obj->parent;
+            }
+        }
+        
+        this->view = mat;
+    }
+    
+    void updateLightVector () {
+        Matrix4x4 mat = Matrix4x4::identity();
+        
+        if (this->camera != NULL) {
+            Object3D* obj = this->camera;
+            while (obj != NULL) {
+                mat = Matrix4x4::mul(Matrix4x4::rotMatrixR(obj->rotation), mat);
+                obj = obj->parent;
+            }
+        }
+        this->light_vector = Matrix4x4::mul(this->light, mat);
+    }
+    
+    
+    
 private:
     Object3D* camera = NULL;
     E512Array<Object3D*> child;
@@ -398,8 +571,6 @@ private:
     }
     
     
-    
-    
     Matrix4x4 worldMatrix (Object3D* o, Matrix4x4 pmat) {
         Matrix4x4 mat = Matrix4x4::identity();
         mat = Matrix4x4::mul(mat, Matrix4x4::scaleMatrix(o->scale));
@@ -407,45 +578,6 @@ private:
         mat = Matrix4x4::mul(mat, Matrix4x4::moveMatrix(o->position));
         mat = Matrix4x4::mul(mat, pmat);
         return mat;
-    }
-    
-    void updateViewMatrix () {
-        Matrix4x4 mat = Matrix4x4::identity();
-        
-        if (this->camera != NULL) {
-            Object3D* obj = this->camera;
-            while (obj != NULL) {
-                mat = Matrix4x4::mul(Matrix4x4::rotMatrix(Vector3() - obj->rotation), mat);
-                mat = Matrix4x4::mul(Matrix4x4::moveMatrix(Vector3() - obj->position), mat);
-                obj = obj->parent;
-            }
-        }
-        
-        this->view = mat;
-    }
-    
-    void updateLightVector () {
-        Matrix4x4 mat = Matrix4x4::identity();
-        
-        if (this->camera != NULL) {
-            Object3D* obj = this->camera;
-            while (obj != NULL) {
-                mat = Matrix4x4::mul(Matrix4x4::rotMatrix(Vector3() - obj->rotation), mat);
-                obj = obj->parent;
-            }
-        }
-        this->light_vector = Matrix4x4::mul(this->light, mat);
-    }
-    
-    void clear () {
-        for (int y = this->dsy; y < this->dey; ++y) {
-            for (int x = this->dsx; x < this->dex; ++x) {
-                this->buff->drawPixel(x, y, this->bgcolor);
-                this->zbuff->drawPixel(x, y, 0);
-                // this->buff[y*this->width+x] = this->bgcolor;
-                // this->zbuff[y*this->width+x] = 0;
-            }
-        }
     }
     
     inline bool inSide (const int& x, const int& y) { return !(x < 0 || x >= this->width || y < 0 || y >= this->height); }
@@ -950,38 +1082,43 @@ public:
     void fixedDrawWait () {
         while (millis() - this->prev_time < this->fixed_milli_time) { delay(1); }
         this->prev_time = millis();
-        this->buffUpdate();
-        this->screenDraw();
+        this->colorBufferClear();
+        this->allWindowDraw();
+        this->pushScreen();
     }
     
     void fixedDraw () {
         uint64_t t = millis();
         if (t - this->prev_time >= this->fixed_milli_time) {
-            this->buffUpdate();
-            this->screenDraw();
+            this->colorBufferClear();
+            this->allWindowDraw();
+            this->pushScreen();
             this->prev_time = t;
         }
     }
     
     void draw () {
         this->prev_time = millis();
-        this->buffUpdate();
-        this->screenDraw();
+        this->colorBufferClear();
+        this->allWindowDraw();
+        this->pushScreen();
     }
     
     bool isFixedTime () {
         return millis() - this->prev_time >= this->fixed_milli_time;
     }
-    
-    
-    uint64_t prev_time = 0;
-private:
-    void screenDraw () {
+    void clear () {
+        this->prev_time = millis();
+        this->colorBufferClear();
+    }
+    void pushScreen () {
         this->tft_es_buff->pushSprite(0, 0);
     }
+    uint64_t prev_time = 0;
+private:
+    void colorBufferClear () { this->tft_es_buff->fillSprite(0); }
     
-    void buffUpdate () {
-        this->tft_es_buff->fillSprite(0);
+    void allWindowDraw () {
         for (int i = 0; i < this->wsize; ++i) {
             E512W3DWindow& w = *this->ws[i];
             w.draw();

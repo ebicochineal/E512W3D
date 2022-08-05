@@ -23,7 +23,6 @@ void setup() {
     a.texture = &ebi_64_32_texture;
     a.render_type = RenderType::PolygonTexture;
     a.color = M5.Lcd.color565(255, 255, 255);
-    a.rotation.x = 0;
     
     camera.position.z = 15;
     camera.position.y = 1;
@@ -38,14 +37,24 @@ void setup() {
 
 void loop () {
     if (e512w3d.isFixedTime()) {
-        a.rotation.y += 5.0f;
+        a.rotation *= Quaternion::angleAxis(5.0, Vector3(0, 1, 0));
+        
         e512w3d.draw();
+        
+        // e512w3d.clear();
+        // w.begin();
+        // a.position.x = -6;
+        // w.draw(a);
+        // a.position.x = 0;
+        // w.draw(a);
+        // a.position.x = 6;
+        // w.draw(a);
+        // e512w3d.pushScreen();
         
         // battery
         // int16_t batv = (int16_t)(M5.Axp.GetVapsData() * 1.4f);
         // batv = max(min(batv, 4100), 3300);
         // int16_t bati = (int16_t)map(batv, 3300, 4100, 0, 100);
-        // float g = bati * 0.01f;
         // M5.Lcd.setCursor(120, 0);
         // M5.Lcd.print(String(bati)+"%");
         // M5.Lcd.setCursor(120, 16);

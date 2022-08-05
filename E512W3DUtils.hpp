@@ -2,6 +2,8 @@
 
 #include "E512W3DUtilsX.hpp"
 
+const float DEGREE_TO_RADIAN_F = 0.01745329251f;
+inline float toRadianF (float d) { return d *DEGREE_TO_RADIAN_F; } 
 uint16_t color565 (uint16_t r, uint16_t g, uint16_t b) { return ((r>>3)<<11) | ((g>>2)<<5) | (b>>3); }
 // uint16_t color555 (uint16_t r, uint16_t g, uint16_t b) { return ((r>>3)<<10) | ((g>>3)<<5) | (b>>3); }
 
@@ -30,6 +32,8 @@ public:
     
     uint16_t size () { return this->array_size; }
     uint16_t capacity () { return this->array_capacity; }
+    
+    void clear () { this->array_size = 0; }
     
     void resize (uint16_t sz, T c = T()) {
         while (sz < this->array_size) { this->pop_back(); }
@@ -178,6 +182,61 @@ public:
     Vector3 xyz() { return Vector3(this->x, this->y, this->z); }
 };
 
+struct Quaternion {
+    float w = 1.0f;
+    float x = 0.0f;
+    float y = 0.0f;
+    float z = 0.0f;
+    Quaternion () {}
+    Quaternion (float w, float x, float y, float z) {
+        this->x = x;
+        this->y = y;
+        this->z = z;
+        this->w = w;
+    }
+    
+    static Quaternion angleAxis (float w, float x, float y, float z) {
+        Quaternion q;
+        w *= DEGREE_TO_RADIAN_F;
+        q.w = cos(w/2);
+        w = sin(-w/2);
+        q.x = x * w;
+        q.y = y * w;
+        q.z = z * w;
+        return q;
+    }
+    
+    static Quaternion angleAxis (float w, Vector3 v) {
+        return Quaternion::angleAxis(w, v.x, v.y, v.z);
+    }
+    
+    Quaternion mul (Quaternion q, Quaternion p) {
+        return Quaternion(
+            -q.x*p.x - q.y*p.y - q.z*p.z + q.w*p.w,
+            q.w*p.x - q.z*p.y + q.y*p.z + q.x*p.w,
+            q.z*p.x + q.w*p.y - q.x*p.z + q.y*p.w,
+            -q.y*p.x + q.x*p.y + q.w*p.z + q.z*p.w
+        );
+    }
+    
+    void mul (Quaternion q) { *this = Quaternion::mul(*this, q); }
+    
+    Quaternion operator * (const Quaternion& t) const {
+        return Quaternion(
+            -this->x*t.x - this->y*t.y - this->z*t.z + this->w*t.w,
+             this->w*t.x - this->z*t.y + this->y*t.z + this->x*t.w,
+             this->z*t.x + this->w*t.y - this->x*t.z + this->y*t.w,
+            -this->y*t.x + this->x*t.y + this->w*t.z + this->z*t.w
+        );
+    }
+    
+    Quaternion &operator *= (const Quaternion& t) {
+        this->mul(t);
+        return *this;
+    }
+    
+};
+
 
 struct Matrix4x4 {
 public:
@@ -195,7 +254,7 @@ public:
             }
         }
     }
-    static float radian (float d) { return d * 0.01745329251f; }
+    
     static Matrix4x4 identity () {
         float a[] = {
             1.0f, 0.0f, 0.0f, 0.0f,
@@ -276,7 +335,7 @@ public:
     static Matrix4x4 projectionMatrix (float w, float h) {
         Matrix4x4 r;
         float aspect =  w / h;
-        float cfov = Matrix4x4::radian(45.0);
+        float cfov = 45.0 * DEGREE_TO_RADIAN_F;
         float cnear = 4.0f;
         float cfar = 1000.0f;
         float y = 1.0f / tan(cfov * 0.5f);
@@ -300,17 +359,18 @@ public:
         
         float cnear = 4.0f;
         float cfar = 1000.0f;
-        r.m[0][0] = 2.0f / (right - left);
-        r.m[1][1] = 2.0f / (top - bottom);
-        r.m[2][2] = -2.0f / (cnear - cfar);
+        r.m[0][0] = 4.0f / (right - left);
+        r.m[1][1] = 4.0f / (top - bottom);
+        r.m[2][2] = -4.0f / (cfar - cnear);
         r.m[3][0] = -((right+left)/(right-left));
         r.m[3][1] = -((top+bottom)/(top-bottom));
         r.m[3][2] = ((cfar+cnear)/(cfar-cnear));
         
-        r.m[3][3] = 1.0f;
+        r.m[3][3] = 2.0f;
         
         return r;
     }
+    
     static Matrix4x4 screenMatrix (float w, float h) {
         Matrix4x4 r;
         float hcx = w / 2;
@@ -347,9 +407,9 @@ public:
     static Matrix4x4 rotMatrix (Vector3 v) {
         Matrix4x4 r = Matrix4x4::identity();
         Matrix4x4 t;
-        float x = Matrix4x4::radian(v.x);
-        float y = Matrix4x4::radian(v.y);
-        float z = Matrix4x4::radian(v.z);
+        float x = v.x * DEGREE_TO_RADIAN_F;
+        float y = v.y * DEGREE_TO_RADIAN_F;
+        float z = v.z * DEGREE_TO_RADIAN_F;
         
         t = Matrix4x4::identity();
         t.m[1][1] =  cos(x);
@@ -380,6 +440,40 @@ public:
         r.m[0][0] = v.x;
         r.m[1][1] = v.y;
         r.m[2][2] = v.z;
+        return r;
+    }
+    
+    static Matrix4x4 rotMatrix (Quaternion q) {
+        Matrix4x4 r = Matrix4x4::identity();
+        r.m[0][0] = 2*q.w*q.w + 2*q.x*q.x - 1.0;
+        r.m[0][1] = 2*q.x*q.y - 2*q.z*q.w;
+        r.m[0][2] = 2*q.x*q.z + 2*q.y*q.w;
+        
+        r.m[1][0] = 2*q.x*q.y + 2*q.z*q.w;
+        r.m[1][1] = 2*q.w*q.w + 2*q.y*q.y - 1.0;
+        r.m[1][2] = 2*q.y*q.z - 2*q.x*q.w;
+        
+        r.m[2][0] = 2*q.x*q.z - 2*q.y*q.w;
+        r.m[2][1] = 2*q.y*q.z + 2*q.x*q.w;
+        r.m[2][2] = 2*q.w*q.w + 2*q.z*q.z - 1.0;
+        
+        return r;
+    }
+    static Matrix4x4 rotMatrixR (Quaternion q) {
+        q.w = -q.w;
+        Matrix4x4 r = Matrix4x4::identity();
+        r.m[0][0] = 2*q.w*q.w + 2*q.x*q.x - 1.0;
+        r.m[0][1] = 2*q.x*q.y - 2*q.z*q.w;
+        r.m[0][2] = 2*q.x*q.z + 2*q.y*q.w;
+        
+        r.m[1][0] = 2*q.x*q.y + 2*q.z*q.w;
+        r.m[1][1] = 2*q.w*q.w + 2*q.y*q.y - 1.0;
+        r.m[1][2] = 2*q.y*q.z - 2*q.x*q.w;
+        
+        r.m[2][0] = 2*q.x*q.z - 2*q.y*q.w;
+        r.m[2][1] = 2*q.y*q.z + 2*q.x*q.w;
+        r.m[2][2] = 2*q.w*q.w + 2*q.z*q.z - 1.0;
+        
         return r;
     }
 };
@@ -462,7 +556,8 @@ enum RenderType {
 struct Object3D {
 public:
     Vector3 position;
-    Vector3 rotation;
+    // Vector3 rotation;
+    Quaternion rotation;
     Vector3 scale = Vector3(1.0f, 1.0f, 1.0f);
     Mesh* mesh = NULL;
     uint16_t color = 65535;
@@ -481,4 +576,46 @@ public:
         o.parent = this;
         this->child.emplace_back(&o);
     }
+    
+    Vector3 worldPosition () {
+        return Matrix4x4::mul(Vector3(), this->worldMatrix());
+    }
+    
+    Vector3 forward () {
+        const Matrix4x4 mat = this->worldMatrix();
+        return Vector3::normalize(Vector3(mat.m[2][0], mat.m[2][1], mat.m[2][2]));
+    }
+    Vector3 back () {
+        const Matrix4x4 mat = this->worldMatrix();
+        return Vector3::normalize(Vector3(-mat.m[2][0], -mat.m[2][1], -mat.m[2][2]));
+    }
+    Vector3 up () {
+        const Matrix4x4 mat = this->worldMatrix();
+        return Vector3::normalize(Vector3(mat.m[1][0], mat.m[1][1], mat.m[1][2]));
+    }
+    Vector3 down () {
+        const Matrix4x4 mat = this->worldMatrix();
+        return Vector3::normalize(Vector3(-mat.m[1][0], -mat.m[1][1], -mat.m[1][2]));
+    }
+    Vector3 right () {
+        const Matrix4x4 mat = this->worldMatrix();
+        return Vector3::normalize(Vector3(-mat.m[0][0], -mat.m[0][1], -mat.m[0][2]));
+    }
+    Vector3 left () {
+        const Matrix4x4 mat = this->worldMatrix();
+        return Vector3::normalize(Vector3(mat.m[0][0], mat.m[0][1], mat.m[0][2]));
+    }
+    
+    Matrix4x4 worldMatrix () {
+        Matrix4x4 mat = Matrix4x4::identity();
+        Object3D* obj = this;
+        while (obj != NULL) {
+            mat = Matrix4x4::mul(mat, Matrix4x4::scaleMatrix(obj->scale));
+            mat = Matrix4x4::mul(mat, Matrix4x4::rotMatrix(obj->rotation));
+            mat = Matrix4x4::mul(mat, Matrix4x4::moveMatrix(obj->position));
+            obj = obj->parent;
+        }
+        return mat;
+    }
+    
 };
