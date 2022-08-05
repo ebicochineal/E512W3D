@@ -40,8 +40,7 @@ M5StickC以外ではテストしていませんが他のボードでも動くか
 - M5Stack-Fire
 - M5Stack-Core2
 
-
-Arduino IDE設定
+Arduino IDE設定  
 ```
 ファイル/環境設定/追加のボードマネージャのURL
 https://dl.espressif.com/dl/package_esp32_index.json
@@ -56,19 +55,22 @@ M5StickC インストール
 
 Arduino IDEで書き込み  
 
-
 ---
 ## console-app
 .ino -> .cpp  
+
+mingw, gcc  
 windowsのコマンドプロンプトだとカラー表示できないためlinuxかwsl  
-__has_includeを使っているのでC++17の方が良いかも  
+
 ```
 g++ -std=c++1z ***.cpp -o ***.out
 ```
 ---
 ## ncurses
 .ino -> .cpp  
-ncursesインストール
+
+mingw, gcc  
+ncursesインストール  
 ```
 sudo apt-get install ncurses-dev
 ```
@@ -80,6 +82,8 @@ Escで終了
 Escで終了しないと色がおかしくなる  
 color_content, pair_contentで色情報保存して最後に戻しているつもり  
 
+#### キー入力  
+bool keydown (char c)  
 
 ---
 ## windows-app
@@ -89,8 +93,9 @@ windows mingw
 g++ -std=c++1z -static-libstdc++ -mwindows ***.cpp -o ***.exe
 ```
 
+#### キー入力  
+bool keydown (char c)  
 
----
 ---
 
 #### E512Array
