@@ -90,7 +90,7 @@ bool keydown (char c)
 .ino -> .cpp  
 windows mingw  
 ```
-g++ -std=c++1z -static-libstdc++ -mwindows ***.cpp -o ***.exe
+g++ -std=c++1z -static-libstdc++ -static -lstdc++ -mwindows ***.cpp -o ***.exe
 ```
 
 #### キー入力  
