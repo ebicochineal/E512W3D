@@ -21,11 +21,17 @@
     #include <sstream>
     #include <unistd.h>
     
+    #define abs(x) std::abs(x)
+    
     template<class T> std::string String (T t) { return std::to_string(t); }
     int max (int a, int b) { return std::max(a, b); }
     int min (int a, int b) { return std::min(a, b); }
     double max (double a, double b) { return std::max(a, b); }
     double min (double a, double b) { return std::min(a, b); }
+    float max (float a, float b) { return std::max(a, b); }
+    float min (float a, float b) { return std::min(a, b); }
+    
+    
     void delay (int v) { usleep(v * 1000);  }
     
     int64_t map(int64_t x, int64_t in_min, int64_t in_max, int64_t out_min, int64_t out_max) {
@@ -317,3 +323,7 @@
 
 
 #endif
+
+
+
+

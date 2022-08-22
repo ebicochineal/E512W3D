@@ -50,22 +50,13 @@ void loop() {
         for (int y = 0; y < gsize; ++y) {
             for (int x = 0; x < gsize; ++x) {
                 b.position.x = -gsize + x*2 + 1;
-                b.position.z = gsize + -y*2 - 1;
+                b.position.z = -gsize + y*2 + 1;
                 b.scale.y = sin((x+y) + v)*0.5 + cos(y+v)*0.5 + 1.0;
                 float t = b.scale.y;
-                a.color = color565(min(32.0* t, 255.0), min(64.0*t, 255.0), min(255.0*t, 255.0));
+                a.color = color565(min(32.0*t, 255.0), min(64.0*t, 255.0), min(255.0*t, 255.0));
                 w.draw(a);
             }
         }
         e512w3d.pushScreen();
-        
-        // battery
-        // int16_t batv = (int16_t)(M5.Axp.GetVapsData() * 1.4f);
-        // batv = max(min(batv, 4100), 3300);
-        // int16_t bati = (int16_t)map(batv, 3300, 4100, 0, 100);
-        // M5.Lcd.setCursor(120, 0);
-        // M5.Lcd.print(String(bati)+"%");
-        // M5.Lcd.setCursor(120, 16);
-        // M5.Lcd.print(String(batv*0.001f)+"V");
     }
 }

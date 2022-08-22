@@ -15,6 +15,7 @@ void loop();
     
     bool keydown (char c) { return keys[c]; }
     
+    
     LRESULT CALLBACK proc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         switch (msg) {
             case WM_DESTROY:
@@ -78,8 +79,17 @@ void loop();
         );
         if (hwnd == NULL) { return 0; }
         M5.window_app(hwnd, e512w3d.width, e512w3d.height);
-        
+        POINT pos;
         while (true) {
+            GetCursorPos(&pos);
+            ScreenToClient(hwnd, &pos);
+            cursor_x = pos.x;
+            cursor_y = pos.y;
+            cursor_l = GetKeyState(VK_LBUTTON) & 0x80;
+            cursor_m = GetKeyState(VK_MBUTTON) & 0x80;
+            cursor_r = GetKeyState(VK_RBUTTON) & 0x80;
+            
+            
             if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
                 if(msg.message == WM_QUIT) { break; }
                 DispatchMessage(&msg);
@@ -115,16 +125,38 @@ void loop();
             ncc.init_colors();
             setup();
             
+            char c = -1;
             while (true) {
-                char c = getch();
-                if (c >= 'a' && c <= 'z') { keys['A'+c-'a'] = true; }
-                if (c >= 0 && c < 128) { keys[c] = true; }
-                if (keys[0x1b]) { break; }
                 loop();
+                
                 clearkeyarray();
-                flushinp();
-                delay(16);
+                while (true) {
+                    c = getch();
+                    if (c == 8 || c == 127) { keys[8] = true; }
+                    if (c >= 'a' && c <= 'z') { keys['A'+c-'a'] = true; }
+                    if (c >= 'A' && c <= 'Z') { keys[16] = true; }// shift
+                    if (c >= 0 && c < 128) {
+                        keys[c] = true;
+                    } else {
+                        c = -1;
+                        flushinp();
+                        break;
+                    }
+                }
+                if (keys[0x1b]) { break; }
+                delay(1);
             }
+            
+            // while (true) {
+            //     char c = getch();
+            //     if (c >= 'a' && c <= 'z') { keys['A'+c-'a'] = true; }
+            //     if (c >= 0 && c < 128) { keys[c] = true; }
+            //     if (keys[0x1b]) { break; }
+            //     loop();
+            //     clearkeyarray();
+            //     flushinp();
+            //     delay(16);
+            // }
             
             // while (true) {
             //     char c = getch();

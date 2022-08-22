@@ -3,6 +3,7 @@
 
 class E512W3DWindow {
 public:
+    E512Font* font;
     TFT_eSprite* buff;
     TFT_eSprite* zbuff;
     uint16_t screen_width, screen_height;
@@ -141,6 +142,154 @@ public:
         }
     }
     
+    void drawChar (uint8_t c, int16_t px, int16_t py) {
+        if (px >= this->width || px + this->font->getWidth(c) * this->text_size < 0) { return; }
+        if (py >= this->height || py + this->font->getHeight(c) * this->text_size < 0) { return; }
+        
+        for (int y = 0; y < this->font->getHeight(c); ++y) {
+            for (int x = 0; x < this->font->getWidth(c); ++x) {
+                if (this->font->getPixel(c, y, x)) {
+                    for (int my = 0; my < this->text_size; ++my) {
+                        for (int mx = 0; mx < this->text_size; ++mx) {
+                            int wx = px + x * this->text_size + mx;
+                            int wy = py + y * this->text_size + my;
+                            if (wx >= this->width || wx < 0) { continue; }
+                            if (wy >= this->height || wy < 0) { continue; }
+                            this->buff->drawPixel(this->sx + wx, this->sy + wy, this->text_color);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    void drawCharBG (uint8_t c, int16_t px, int16_t py) {
+        if (px >= this->width || px + this->font->getWidth(c) * this->text_size < 0) { return; }
+        if (py >= this->height || py + this->font->getHeight(c) * this->text_size < 0) { return; }
+        
+        for (int y = 0; y < this->font->getHeight(c); ++y) {
+            for (int x = 0; x < this->font->getWidth(c); ++x) {
+                if (this->font->getPixel(c, y, x)) {
+                    for (int my = 0; my < this->text_size; ++my) {
+                        for (int mx = 0; mx < this->text_size; ++mx) {
+                            int wx = px + x * this->text_size + mx;
+                            int wy = py + y * this->text_size + my;
+                            if (wx >= this->width || wx < 0) { continue; }
+                            if (wy >= this->height || wy < 0) { continue; }
+                            this->buff->drawPixel(this->sx + wx, this->sy + wy, this->text_color);
+                        }
+                    }
+                } else {
+                    for (int my = 0; my < this->text_size; ++my) {
+                        for (int mx = 0; mx < this->text_size; ++mx) {
+                            int wx = px + x * this->text_size + mx;
+                            int wy = py + y * this->text_size + my;
+                            if (wx >= this->width || wx < 0) { continue; }
+                            if (wy >= this->height || wy < 0) { continue; }
+                            this->buff->drawPixel(this->sx + wx, this->sy + wy, this->text_bgcolor);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    Vector3 screenPosition (Object3D& obj) {
+        return Matrix4x4::muld(Matrix4x4::mul(Vector3(), this->objectWorldViewMatrix(obj)), this->projescreen);
+    }
+    Vector3 screenPosition (Vector3 p) {
+        return Matrix4x4::muld(Matrix4x4::mul(p, this->view), this->projescreen);
+    }
+    
+    
+    int16_t text_cursor_x = 0;
+    int16_t text_cursor_y = 0;
+    int16_t text_sub_cursor_x = 0;
+    int16_t text_sub_cursor_y = 0;
+    int16_t text_size = 1;
+    uint16_t text_color = 0xFFFF;
+    uint16_t text_bgcolor = 0x0000;
+    bool text_use_bgcolor = false;
+    
+    void setTextCursor (int16_t x, int16_t y) {
+        this->text_cursor_x = x;
+        this->text_cursor_y = y;
+        this->text_sub_cursor_x = 0;
+        this->text_sub_cursor_y = 0;
+    }
+    
+    void setTextSize (uint16_t n) {
+        this->text_size = n > 0 ? n : 1;
+        this->text_size = this->text_size <= 32 ? this->text_size : 32;
+    }
+    
+    
+    
+    void print (E512Array<uint8_t> v, bool wordwrap = true) {
+        for (auto&& c : v) {
+            if (c == '\n') {
+                this->text_sub_cursor_y += this->font->getHeight(0) * this->text_size;
+                this->text_sub_cursor_x = 0;
+                continue;
+            }
+            if (wordwrap && this->text_sub_cursor_x > 0 && this->text_cursor_x + this->text_sub_cursor_x + this->font->getWidth(c) * this->text_size > this->width) {
+                this->text_sub_cursor_y += this->font->getHeight(0) * this->text_size;
+                this->text_sub_cursor_x = 0;
+            }
+            if (this->text_use_bgcolor) {
+                this->drawCharBG(c, this->text_cursor_x + this->text_sub_cursor_x, this->text_cursor_y + this->text_sub_cursor_y);
+            } else {
+                this->drawChar(c, this->text_cursor_x + this->text_sub_cursor_x, this->text_cursor_y + this->text_sub_cursor_y);
+            }
+            this->text_sub_cursor_x += this->font->getWidth(c) * this->text_size;
+        }
+    }
+    void println (E512Array<uint8_t> v, bool wordwrap = true) {
+        this->print(v, wordwrap);
+        this->text_sub_cursor_y += this->font->getHeight(0) * this->text_size;
+        this->text_sub_cursor_x = 0;
+    }
+    
+    void print (const char* cp, bool wordwrap = true) {
+        uint16_t index = 0;
+        while (true) {
+            uint8_t c = cp[index];
+            index += 1;
+            if (c == '\0') { break; }
+            if (c == '\n') {
+                this->text_sub_cursor_y += this->font->getHeight(0) * this->text_size;
+                this->text_sub_cursor_x = 0;
+                continue;
+            }
+            if (wordwrap && this->text_sub_cursor_x > 0 && this->text_cursor_x + this->text_sub_cursor_x + this->font->getWidth(c) * this->text_size > this->width) {
+                this->text_sub_cursor_y += this->font->getHeight(0) * this->text_size;
+                this->text_sub_cursor_x = 0;
+            }
+            if (this->text_use_bgcolor) {
+                this->drawCharBG(c, this->text_cursor_x + this->text_sub_cursor_x, this->text_cursor_y + this->text_sub_cursor_y);
+            } else {
+                this->drawChar(c, this->text_cursor_x + this->text_sub_cursor_x, this->text_cursor_y + this->text_sub_cursor_y);
+            }
+            this->text_sub_cursor_x += this->font->getWidth(c) * this->text_size;
+        }
+    }
+    void println (const char* cp, bool wordwrap = true) {
+        this->print(cp, wordwrap);
+        this->text_sub_cursor_y += this->font->getHeight(0) * this->text_size;
+        this->text_sub_cursor_x = 0;
+    }
+    
+    void print (const uint8_t c, bool wordwrap = true) {
+        E512Array<uint8_t> v;
+        v.emplace_back(c);
+        this->print(v, wordwrap);
+    }
+    void println (const uint8_t c, bool wordwrap = true) {
+        E512Array<uint8_t> v;
+        v.emplace_back(c);
+        this->print(v, wordwrap);
+        this->text_sub_cursor_y += this->font->getHeight(0) * this->text_size;
+        this->text_sub_cursor_x = 0;
+    }
     
     
     Matrix4x4 objectWorldViewMatrix (Object3D& obj) {
@@ -163,6 +312,11 @@ public:
         
         if (color_buffer_clear) { this->clearCbuff(); }
         if (z_buffer_clear) { this->clearZbuff(); }
+        
+        this->text_sub_cursor_x = 0;
+        this->text_sub_cursor_y = 0;
+        this->text_cursor_x = 0;
+        this->text_cursor_y = 0;
     }
     
     void setDirectionalLight (float x, float y, float z) { this->setDirectionalLight(Vector3(x, y, z)); }
@@ -189,35 +343,6 @@ public:
             }
         }
     }
-    
-    // void updateViewMatrix () {
-    //     Matrix4x4 mat = Matrix4x4::identity();
-        
-    //     if (this->camera != NULL) {
-    //         Object3D* obj = this->camera;
-    //         while (obj != NULL) {
-    //             mat = Matrix4x4::mul(Matrix4x4::rotMatrix(Vector3() - obj->rotation), mat);
-    //             mat = Matrix4x4::mul(Matrix4x4::moveMatrix(Vector3() - obj->position), mat);
-    //             obj = obj->parent;
-    //         }
-    //     }
-        
-    //     this->view = mat;
-    // }
-    
-    // void updateLightVector () {
-    //     Matrix4x4 mat = Matrix4x4::identity();
-        
-    //     if (this->camera != NULL) {
-    //         Object3D* obj = this->camera;
-    //         while (obj != NULL) {
-    //             mat = Matrix4x4::mul(Matrix4x4::rotMatrix(Vector3() - obj->rotation), mat);
-    //             obj = obj->parent;
-    //         }
-    //     }
-    //     this->light_vector = Matrix4x4::mul(this->light, mat);
-    // }
-    
     
     void updateViewMatrix () {
         Matrix4x4 mat = Matrix4x4::identity();
@@ -246,6 +371,9 @@ public:
         }
         this->light_vector = Matrix4x4::mul(this->light, mat);
     }
+    
+    int16_t getCursorX () { return cursor_x - this->sx; }
+    int16_t getCursorY () { return cursor_y - this->sy; }
     
     
     
@@ -1046,6 +1174,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 class E512W3DWindowManager {
 public:
+    E512Font* font = new DefaultFont12x6();
     E512W3DWindow* ws[32];
     uint16_t wsize = 0;
     uint16_t width = 0;
@@ -1069,8 +1198,17 @@ public:
             this->ws[i]->zbuff = this->zbuff;
             this->ws[i]->screen_width = this->width;
             this->ws[i]->screen_height = this->height;
+            this->ws[i]->font = this->font;
         }
     }
+    
+    void setFont (E512Font* font) {
+        this->font = font;
+        for (int i = 0; i < this->wsize; ++i) {
+            this->ws[i]->font = this->font;
+        }
+    }
+    
     
     void add (E512W3DWindow& w) {
         if (this->wsize < 32) {
@@ -1107,16 +1245,16 @@ public:
     bool isFixedTime () {
         return millis() - this->prev_time >= this->fixed_milli_time;
     }
-    void clear () {
+    void clear (uint16_t color = 0) {
         this->prev_time = millis();
-        this->colorBufferClear();
+        this->colorBufferClear(color);
     }
     void pushScreen () {
         this->tft_es_buff->pushSprite(0, 0);
     }
     uint64_t prev_time = 0;
 private:
-    void colorBufferClear () { this->tft_es_buff->fillSprite(0); }
+    void colorBufferClear (uint16_t color = 0) { this->tft_es_buff->fillSprite(color); }
     
     void allWindowDraw () {
         for (int i = 0; i < this->wsize; ++i) {

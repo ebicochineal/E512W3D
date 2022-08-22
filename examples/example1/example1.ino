@@ -72,14 +72,5 @@ void loop() {
         e.position.y = abs(sin(v+1.0f)) * 3;
         v += 0.5f;
         e512w3d.draw();
-        
-        // battery
-        // int16_t batv = (int16_t)(M5.Axp.GetVapsData() * 1.4f);
-        // batv = max(min(batv, 4100), 3300);
-        // int16_t bati = (int16_t)map(batv, 3300, 4100, 0, 100);
-        // M5.Lcd.setCursor(120, 0);
-        // M5.Lcd.print(String(bati)+"%");
-        // M5.Lcd.setCursor(120, 16);
-        // M5.Lcd.print(String(batv*0.001f)+"V");
     }
 }
