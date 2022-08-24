@@ -97,6 +97,10 @@ g++ -std=c++1z -static-libstdc++ -static -lstdc++ -mwindows ***.cpp -o ***.exe
 bool keydown (char c)  
 
 ---
+E512Array<uint8_t> numtostr (int v)  
+E512Array<uint8_t> numtostr (float v, uint8_t n = 4)  
+uint16_t color565 (uint16_t r, uint16_t g, uint16_t b)  
+
 
 #### E512Array
 uint16_t size ()  
@@ -154,8 +158,20 @@ void drawPoint (Object3D& obj, uint16_t size = 1, uint16_t color = 0xFFFF)
 void drawPoint (Vector3 p, uint16_t size = 1, uint16_t color = 0xFFFF)  
 void drawPoint (int16_t px, int16_t py, uint16_t size = 1, uint16_t color = 0xFFFF)  
 void begin (bool color_buffer_clear = true, bool z_buffer_clear = true)  
-
-
+Vector3 screenPosition (Object3D& obj)  
+Vector3 screenPosition (Vector3 p)  
+  
+uint16_t text_color;
+uint16_t text_bgcolor;
+bool text_use_bgcolor;
+void setTextCursor (int16_t x, int16_t y)  
+void setTextSize (uint16_t n)  
+void print (E512Array<uint8_t> v, bool wordwrap = true)  
+void println (E512Array<uint8_t> v, bool wordwrap = true)  
+void print (const char* cp, bool wordwrap = true)  
+void println (const char* cp, bool wordwrap = true)  
+void print (const uint8_t c, bool wordwrap = true)  
+void println (const uint8_t c, bool wordwrap = true)  
 
   
 #### Object3D  
