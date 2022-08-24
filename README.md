@@ -161,9 +161,9 @@ void begin (bool color_buffer_clear = true, bool z_buffer_clear = true)
 Vector3 screenPosition (Object3D& obj)  
 Vector3 screenPosition (Vector3 p)  
   
-uint16_t text_color;
-uint16_t text_bgcolor;
-bool text_use_bgcolor;
+uint16_t text_color;  
+uint16_t text_bgcolor;  
+bool text_use_bgcolor;  
 void setTextCursor (int16_t x, int16_t y)  
 void setTextSize (uint16_t n)  
 void print (E512Array<uint8_t> v, bool wordwrap = true)  
