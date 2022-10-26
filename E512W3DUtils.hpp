@@ -13,20 +13,144 @@ bool cursor_l = false;
 bool cursor_m = false;
 bool cursor_r = false;
 
+// max size uint16_t
+// template <class T>
+// class E512Array {
+// private:
+//     uint16_t array_size = 0;
+//     uint16_t array_capacity = 1;
+// public:
+//     T* a;
+    
+//     E512Array () { this->a = new T[1]; }
+//     E512Array (uint16_t sz) {
+//         this->a = new T[sz];
+//         this->array_capacity = sz;
+//     }
+//     E512Array (uint16_t sz, T t) {
+//         this->a = new T[sz];
+//         this->array_size = sz;
+//         this->array_capacity = sz;
+//         for (int i = 0; i < sz; ++i) { this->a[i] = t; }
+//     }
+    
+//     ~E512Array () { delete[] this->a; }
+    
+//     uint16_t size () { return this->array_size; }
+//     uint16_t capacity () { return this->array_capacity; }
+    
+//     void clear () { this->array_size = 0; }
+    
+//     void resize (uint16_t sz, T c = T()) {
+//         while (sz < this->array_size) { this->pop_back(); }
+//         while (sz > this->array_size) { this->push_back(c); }
+//     }
+    
+//     void reserve (uint16_t sz) {
+//         if (sz < this->array_capacity) { return; }
+//         this->array_capacity = sz;
+//         T* a = new T[this->array_capacity];
+//         for (int i = 0; i < min(this->array_size, this->array_capacity); ++i) { a[i] = this->a[i]; }
+//         delete[] this->a;
+//         this->a = a;
+//         this->array_size = min(this->array_size, this->array_capacity);
+//     }
+    
+//     void shrink_to_fit () {
+//         this->array_capacity = this->array_size;
+//         T* a = new T[this->array_capacity];
+//         for (int i = 0; i < this->array_size; ++i) { a[i] = this->a[i]; }
+//         delete[] this->a;
+//         this->a = a;
+//     }
+    
+//     template <class... Args>
+//     void emplace_back (Args... args) {
+//         if (this->array_size + 1 > this->array_capacity) {
+//             this->array_capacity *= 2;
+//             T* a = new T[this->array_capacity];
+//             for (int i = 0; i < this->array_size; ++i) { a[i] = this->a[i]; }
+//             a[this->array_size] = T(args...);
+//             delete[] this->a;
+//             this->a = a;
+//             this->array_size += 1;
+//         } else {
+//             this->a[this->array_size] = T(args...);
+//             this->array_size += 1;
+//         }
+//     }
+//     void push_back (T t) { this->emplace_back(t); }
+    
+//     void pop_back () {
+//         if (this->array_size > 0) { this->array_size -= 1; }
+//     }
+    
+//     void erase_index (int index) {
+//         uint16_t tcnt = 0;
+//         for (uint16_t i = 0; i < this->array_size; ++i) {
+//             if (i != index) {
+//                 this->a[tcnt] = this->a[i];
+//                 tcnt += 1;
+//             }
+//         }
+//         this->array_size = tcnt;
+//     }
+    
+//     void erase_value (T t) {
+//         uint16_t tcnt = 0;
+//         for (uint16_t i = 0; i < this->array_size; ++i) {
+//             if (this->a[i] != t) {
+//                 this->a[tcnt] = this->a[i];
+//                 tcnt += 1;
+//             }
+//         }
+//         this->array_size = tcnt;
+//     }
+    
+//     T& front () { return this->a[0]; }
+//     T& back () { return this->a[this->array_size - 1]; }
+    
+//     E512Array (const E512Array& t) {
+//         T* a = new T[t.array_capacity];
+//         for (int i = 0; i < t.array_size; ++i) { a[i] = t.a[i]; }
+//         this->array_size = t.array_size;
+//         this->array_capacity = t.array_capacity;
+//         this->a = a;
+//     }
+    
+//     E512Array& operator = (const E512Array& t) {
+//         T* a = new T[t.array_capacity];
+//         for (int i = 0; i < t.array_size; ++i) { a[i] = t.a[i]; }
+//         this->array_size = t.array_size;
+//         this->array_capacity = t.array_capacity;
+//         delete[] this->a;
+//         this->a = a;
+//         return *this;
+//     }
+    
+//     // indexer
+//     T& operator [] (uint16_t i) { return this->a[i]; }
+    
+//     // range based for
+//     T* begin () { return &this->a[0]; }
+//     T* end () { return &this->a[this->array_size]; }
+// };
+
+// max size uint32_t
 template <class T>
 class E512Array {
 private:
-    uint16_t array_size = 0;
-    uint16_t array_capacity = 1;
+    uint32_t array_size = 0;
+    uint32_t array_capacity = 1;
 public:
     T* a;
     
     E512Array () { this->a = new T[1]; }
-    E512Array (uint16_t sz) {
+    E512Array (uint32_t sz) {
         this->a = new T[sz];
         this->array_capacity = sz;
     }
-    E512Array (uint16_t sz, T t) {
+    E512Array (uint32_t sz, T t) {
         this->a = new T[sz];
         this->array_size = sz;
         this->array_capacity = sz;
@@ -35,17 +159,17 @@ public:
     
     ~E512Array () { delete[] this->a; }
     
-    uint16_t size () { return this->array_size; }
-    uint16_t capacity () { return this->array_capacity; }
+    uint32_t size () { return this->array_size; }
+    uint32_t capacity () { return this->array_capacity; }
     
     void clear () { this->array_size = 0; }
     
-    void resize (uint16_t sz, T c = T()) {
+    void resize (uint32_t sz, T c = T()) {
         while (sz < this->array_size) { this->pop_back(); }
         while (sz > this->array_size) { this->push_back(c); }
     }
     
-    void reserve (uint16_t sz) {
+    void reserve (uint32_t sz) {
         if (sz < this->array_capacity) { return; }
         this->array_capacity = sz;
         T* a = new T[this->array_capacity];
@@ -85,8 +209,8 @@ public:
     }
     
     void erase_index (int index) {
-        uint16_t tcnt = 0;
-        for (uint16_t i = 0; i < this->array_size; ++i) {
+        uint32_t tcnt = 0;
+        for (uint32_t i = 0; i < this->array_size; ++i) {
             if (i != index) {
                 this->a[tcnt] = this->a[i];
                 tcnt += 1;
@@ -96,8 +220,8 @@ public:
     }
     
     void erase_value (T t) {
-        uint16_t tcnt = 0;
-        for (uint16_t i = 0; i < this->array_size; ++i) {
+        uint32_t tcnt = 0;
+        for (uint32_t i = 0; i < this->array_size; ++i) {
             if (this->a[i] != t) {
                 this->a[tcnt] = this->a[i];
                 tcnt += 1;
@@ -128,12 +252,15 @@ public:
     }
     
     // indexer
-    T& operator [] (uint16_t i) { return this->a[i]; }
+    T& operator [] (uint32_t i) { return this->a[i]; }
     
     // range based for
     T* begin () { return &this->a[0]; }
     T* end () { return &this->a[this->array_size]; }
 };
+
+
+
 
 struct Vector2 {
 public:
@@ -688,7 +815,7 @@ private:
         0, 0, 0, 0, 0, 0, 0, 0, 4, 2, 4, 4,
         0, 0, 0, 0, 0, 0, 15, 0, 0, 0, 0, 0,
         0, 0, 0, 0, 0, 0, 0, 0, 0, 2, 0, 0,
-        0, 0, 1, 1, 2, 2, 2, 4, 4, 4, 8, 8,
+        0, 0, 2, 2, 4, 4, 4, 8, 8, 8, 16, 16,
         0, 0, 0, 30, 18, 22, 30, 26, 18, 30, 0, 0,
         0, 0, 0, 4, 12, 4, 4, 4, 4, 14, 0, 0,
         0, 0, 0, 30, 2, 2, 30, 16, 16, 30, 0, 0,
@@ -706,7 +833,7 @@ private:
         0, 0, 0, 8, 4, 2, 1, 2, 4, 8, 0, 0,
         0, 0, 14, 17, 17, 1, 2, 4, 4, 0, 4, 0,
         0, 0, 14, 17, 29, 19, 23, 27, 27, 23, 14, 0,
-        0, 0, 0, 6, 9, 9, 9, 15, 17, 17, 0, 0,
+        0, 0, 0, 4, 4, 10, 10, 14, 17, 17, 0, 0,
         0, 0, 0, 30, 17, 17, 30, 17, 17, 31, 0, 0,
         0, 0, 0, 14, 17, 16, 16, 16, 17, 14, 0, 0,
         0, 0, 0, 30, 17, 17, 17, 17, 17, 30, 0, 0,
@@ -724,12 +851,12 @@ private:
         0, 0, 0, 30, 17, 17, 30, 16, 16, 16, 0, 0,
         0, 0, 0, 14, 17, 17, 17, 21, 19, 15, 0, 0,
         0, 0, 0, 30, 17, 17, 30, 20, 18, 17, 0, 0,
-        0, 0, 0, 14, 17, 16, 14, 3, 17, 14, 0, 0,
+        0, 0, 0, 14, 17, 16, 14, 1, 17, 14, 0, 0,
         0, 0, 0, 31, 4, 4, 4, 4, 4, 4, 0, 0,
         0, 0, 0, 17, 17, 17, 17, 17, 17, 14, 0, 0,
         0, 0, 0, 17, 17, 17, 17, 10, 14, 4, 0, 0,
         0, 0, 0, 21, 21, 21, 21, 21, 10, 10, 0, 0,
-        0, 0, 0, 17, 27, 10, 4, 10, 27, 17, 0, 0,
+        0, 0, 0, 17, 17, 10, 4, 10, 17, 17, 0, 0,
         0, 0, 0, 17, 17, 27, 14, 4, 4, 4, 0, 0,
         0, 0, 0, 31, 1, 2, 4, 8, 16, 31, 0, 0,
         0, 0, 14, 8, 8, 8, 8, 8, 8, 8, 14, 0,
@@ -755,9 +882,9 @@ private:
         0, 0, 0, 0, 0, 14, 17, 17, 17, 14, 0, 0,
         0, 0, 0, 0, 0, 30, 18, 18, 18, 28, 16, 16,
         0, 0, 0, 0, 0, 30, 18, 18, 18, 14, 2, 2,
-        0, 0, 0, 0, 22, 24, 16, 16, 16, 16, 0, 0,
+        0, 0, 0, 0, 0, 22, 24, 16, 16, 16, 0, 0,
         0, 0, 0, 0, 12, 18, 8, 4, 18, 12, 0, 0,
-        0, 0, 0, 8, 30, 8, 8, 8, 8, 6, 0, 0,
+        0, 0, 0, 0, 8, 30, 8, 8, 8, 6, 0, 0,
         0, 0, 0, 0, 0, 18, 18, 18, 18, 14, 0, 0,
         0, 0, 0, 0, 0, 17, 17, 10, 10, 4, 0, 0,
         0, 0, 0, 0, 0, 17, 21, 21, 31, 10, 0, 0,
@@ -807,11 +934,11 @@ private:
         0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 14, 0,
         0, 0, 0, 0, 0, 0, 8, 4, 2, 0, 0, 0,
         0, 0, 0, 0, 12, 12, 0, 0, 0, 0, 0, 0,
-        0, 0, 31, 1, 1, 30, 2, 4, 4, 24, 0, 0,
+        0, 0, 0, 31, 1, 1, 31, 1, 2, 28, 0, 0,
         0, 0, 0, 0, 0, 30, 2, 4, 12, 8, 0, 0,
         0, 0, 0, 0, 2, 4, 28, 4, 4, 4, 0, 0,
         0, 0, 0, 0, 8, 30, 18, 4, 4, 8, 0, 0,
-        0, 0, 0, 0, 0, 0, 7, 2, 2, 15, 0, 0,
+        0, 0, 0, 0, 0, 0, 14, 4, 4, 14, 0, 0,
         0, 0, 0, 0, 0, 2, 31, 6, 10, 18, 0, 0,
         0, 0, 0, 0, 0, 16, 30, 58, 8, 4, 0, 0,
         0, 0, 0, 0, 0, 0, 14, 2, 2, 31, 0, 0,
@@ -820,11 +947,11 @@ private:
         0, 0, 0, 0, 62, 0, 0, 0, 0, 0, 0, 0,
         0, 0, 0, 63, 1, 5, 4, 8, 8, 16, 0, 0,
         0, 0, 1, 6, 28, 36, 4, 4, 4, 4, 0, 0,
-        0, 0, 8, 63, 33, 2, 2, 4, 8, 16, 0, 0,
-        0, 0, 0, 0, 31, 4, 4, 4, 4, 63, 0, 0,
+        0, 4, 4, 31, 17, 17, 1, 1, 2, 12, 0, 0,
+        0, 0, 0, 0, 31, 4, 4, 4, 4, 31, 0, 0,
         0, 0, 2, 31, 2, 6, 10, 18, 38, 2, 0, 0,
         0, 0, 4, 4, 31, 5, 9, 9, 18, 18, 0, 0,
-        0, 0, 8, 60, 8, 62, 4, 4, 2, 2, 0, 0,
+        0, 0, 4, 30, 4, 31, 2, 2, 1, 1, 0, 0,
         0, 0, 8, 14, 17, 33, 2, 2, 4, 8, 16, 0,
         0, 0, 16, 17, 31, 36, 4, 4, 8, 16, 32, 0,
         0, 0, 0, 0, 31, 1, 1, 1, 1, 31, 0, 0,
@@ -856,12 +983,12 @@ private:
         0, 0, 48, 22, 25, 50, 16, 8, 8, 4, 4, 0,
         0, 0, 0, 14, 2, 2, 2, 2, 2, 31, 0, 0,
         0, 0, 0, 31, 1, 1, 31, 1, 1, 31, 0, 0,
-        0, 0, 31, 0, 31, 1, 1, 1, 6, 24, 0, 0,
+        0, 0, 31, 0, 31, 1, 1, 1, 2, 28, 0, 0,
         0, 0, 18, 18, 18, 18, 18, 4, 4, 8, 16, 0,
         0, 0, 0, 20, 20, 20, 21, 37, 38, 36, 0, 0,
         0, 0, 0, 16, 16, 16, 17, 18, 20, 24, 0, 0,
         0, 0, 0, 31, 17, 17, 17, 17, 17, 14, 0, 0,
-        0, 0, 0, 31, 17, 17, 1, 1, 2, 28, 0, 0,
+        0, 0, 0, 31, 17, 17, 1, 1, 2, 12, 0, 0,
         0, 0, 0, 16, 8, 1, 1, 1, 2, 28, 0, 0,
         0, 0, 40, 20, 0, 0, 0, 0, 0, 0, 0, 0,
         0, 56, 40, 56, 0, 0, 0, 0, 0, 0, 0, 0,

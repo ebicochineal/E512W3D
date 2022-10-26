@@ -24,6 +24,8 @@
     #define abs(x) std::abs(x)
     
     template<class T> std::string String (T t) { return std::to_string(t); }
+    int max (uint32_t a, uint32_t b) { return std::max(a, b); }
+    int min (uint32_t a, uint32_t b) { return std::min(a, b); }
     int max (int a, int b) { return std::max(a, b); }
     int min (int a, int b) { return std::min(a, b); }
     double max (double a, double b) { return std::max(a, b); }
