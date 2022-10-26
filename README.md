@@ -103,11 +103,11 @@ uint16_t color565 (uint16_t r, uint16_t g, uint16_t b)
 
 
 #### E512Array
-uint16_t size ()  
-uint16_t capacity ()  
+uint32_t size ()  
+uint32_t capacity ()  
 void shrink_to_fit ()  
-void reserve (uint16_t sz)  
-void resize (uint16_t sz, T c = T())  
+void reserve (uint32_t sz)  
+void resize (uint32_t sz, T c = T())  
 void emplace_back (T t)  
 void push_back (T t)  
 void pop_back (T t)  
