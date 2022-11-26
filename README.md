@@ -20,7 +20,7 @@ example4
 ![Image](./img/4.jpg)  
 vert:1183, face:2208, vertuv:1183, faceuv:2208,texture:64x32  
 
-<https://ebicochineal.github.io/e512w3d/emscripten-e512w3d-example4/>  
+<https://ebicochineal.github.io/E512W3D/emscripten-e512w3d-example4/>  
 
 ---
 
