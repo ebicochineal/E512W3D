@@ -63,6 +63,11 @@
     }
     #ifdef _WIN32
         #include <windows.h>
+    #elif __EMSCRIPTEN__
+        #include <emscripten.h>
+        EM_JS(void, CanvasSetup, (int width, int height), { canvas = document.getElementById('e512w3d-canvas'); ctx = canvas.getContext('2d'); buff = ctx.createImageData(width, height); canvas.width = width; canvas.height = height; });
+        EM_JS(void, CanvasPut, (int x, int y, int r, int g, int b), { var p = (y*canvas.width+x)*4; buff.data[p] = r; buff.data[p+1] = g; buff.data[p+2] = b; buff.data[p+3] = 255; });
+        EM_JS(void, CanvasPush, (), { ctx.putImageData(buff, 0, 0); });
     #else
         // float abs (double v) { return std::abs(v); }
         // float abs (float v) { return std::abs(v); }
@@ -230,7 +235,7 @@
         }
         
     #ifdef _WIN32
-        void pushSprite (int x, int y) {
+        void pushSprite (int px, int py) {
             for (int y = 0; y < M5.height; y += 1) {
                 for (int x = 0; x < M5.width; x += 1) {
                     uint32_t c1 = this->buff[y*M5.width+x];
@@ -247,13 +252,24 @@
                     // uint16_t b = ( c1        & 0b11111) << 3;
                     // M5.pixels[y*M5.width+x] = (r << 16) | (g << 8) | (b);
                     
-                    
-                    
                     // SetPixel(hdc, x, y, r | (g << 8) | (b << 16));
                 }
             }
             InvalidateRect(M5.hwnd, NULL, false);
             UpdateWindow(M5.hwnd);
+        }
+    #elif __EMSCRIPTEN__
+        void pushSprite (int px, int py) {
+            for (int y = 0; y < this->height; y += 1) {
+                for (int x = 0; x < this->width; x += 1) {
+                    uint32_t c1 = this->buff[y*this->width+x];
+                    int16_t r = (((c1 >> 11) & 0b11111) << 3);
+                    int16_t g = (((c1 >>  5) & 0b111111) << 2);
+                    int16_t b = (( c1        & 0b11111) << 3);
+                    CanvasPut(x, y, r, g, b);
+                }
+            }
+            CanvasPush();
         }
     #else
         #if __has_include(<curses.h>) && defined(USENCURSES)
@@ -286,7 +302,7 @@
                 refresh();
             }
         #else
-            void pushSprite (int x, int y) {
+            void pushSprite (int px, int py) {
                 std::string s = "\x1B[2J\x1B[H";
                 for (int y = 0; y < this->height; y += 2) {
                     for (int x = 0; x < this->width; x += 1) {

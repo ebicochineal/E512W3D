@@ -1,4 +1,4 @@
-## 3d-software-renderer m5stickc/m5stack/console-app/windows-app/ncurses  
+## 3d-software-renderer m5stickc/m5stack/console-app/windows-app/ncurses/emscripten  
 - 複数のウィンドウ  
 - ワイヤーフレーム、ポリゴン、法線カラー、半透明、テクスチャ  
 - テクスチャパース補正  
@@ -19,6 +19,8 @@ example3
 example4  
 ![Image](./img/4.jpg)  
 vert:1183, face:2208, vertuv:1183, faceuv:2208,texture:64x32  
+
+<https://ebicochineal.github.io/e512w3d/emscripten-e512w3d-example4/>  
 
 ---
 
@@ -61,7 +63,7 @@ Arduino IDEで書き込み
 
 mingw, gcc  
 windowsのコマンドプロンプトだとカラー表示できないためlinuxかwsl  
-
+ncurses導入済みでこっちを使う場合はE512W3DUtilsXの#define USENCURSESヲコメントアウト  
 ```
 g++ -std=c++1z ***.cpp -o ***.out
 ```
@@ -97,6 +99,39 @@ g++ -std=c++1z -static-libstdc++ -static -lstdc++ -mwindows ***.cpp -o ***.exe
 bool keydown (char c)  
 
 ---
+## emscriptem
+.ino -> .cpp  
+```
+em++ ./***.cpp -o ./e512w3d.js -s ASYNCIFY
+```
+index.html
+```
+<!DOCTYPE html>
+    <html lang="ja">
+    <head>
+        <meta charset="utf-8">
+        <meta name="description" content="emscripten-e512w3d">
+        <title>emscripten-e512w3d</title>
+        <script src="e512w3d.js"></script>
+    </head>
+    <body>
+        <div style="width:640px; height:320px; margin:0 auto; background-color:rgb(0, 0, 0);">
+            <canvas id="e512w3d-canvas" style="width:640px; height:320px;"></canvas>
+        </div>
+    </body> 
+</html>
+```
+```
+py -m http.server 8000
+```
+```
+http://localhost:8000/
+```
+---
+
+
+
+
 E512Array<uint8_t> numtostr (int v)  
 E512Array<uint8_t> numtostr (float v, uint8_t n = 4)  
 uint16_t color565 (uint16_t r, uint16_t g, uint16_t b)  

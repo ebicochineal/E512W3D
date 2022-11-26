@@ -100,6 +100,17 @@ void loop();
         }
         return msg.wParam;
     }
+#elif __EMSCRIPTEN__
+    bool keydown (char c) { return false; }
+    int main () {
+        setup();
+        CanvasSetup(e512w3d.width, e512w3d.height);
+        while (true) {
+            loop();
+            emscripten_sleep(1);
+        }
+        return 0;
+    }
 #else
     #if __has_include(<curses.h>) && defined(USENCURSES)
         E512Array<bool> keys = E512Array<bool>(128, false);
