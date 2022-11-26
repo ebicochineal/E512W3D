@@ -99,7 +99,7 @@ g++ -std=c++1z -static-libstdc++ -static -lstdc++ -mwindows ***.cpp -o ***.exe
 bool keydown (char c)  
 
 ---
-## emscriptem
+## emscripten
 .ino -> .cpp  
 ```
 em++ ./***.cpp -o ./e512w3d.js -s ASYNCIFY
