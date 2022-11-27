@@ -63,7 +63,7 @@ Arduino IDEで書き込み
 
 mingw, gcc  
 windowsのコマンドプロンプトだとカラー表示できないためlinuxかwsl  
-ncurses導入済みでこっちを使う場合はE512W3DUtilsXの#define USENCURSESヲコメントアウト  
+ncurses導入済みでこっちを使う場合はE512W3DUtilsXの#define USENCURSESをコメントアウト  
 ```
 g++ -std=c++1z ***.cpp -o ***.out
 ```
@@ -105,9 +105,9 @@ bool keydown (char c)
 em++ ./***.cpp -o ./e512w3d.js -s ASYNCIFY
 ```
 index.html
-```
+```html
 <!DOCTYPE html>
-    <html lang="ja">
+<html lang="ja">
     <head>
         <meta charset="utf-8">
         <meta name="description" content="emscripten-e512w3d">
