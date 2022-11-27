@@ -5,10 +5,17 @@
         <meta name="description" content="emscripten-e512w3d">
         <title>emscripten-e512w3d</title>
         <script src="e512w3d.js"></script>
+        <script>
+            function CanvasStyleResize () {
+                var tcv = document.getElementById('e512w3d-canvas');
+                tcv.style.width = document.documentElement.clientWidth + "px";
+                tcv.style.height = document.documentElement.clientWidth/2 + "px";
+            }
+            window.onresize = CanvasStyleResize;
+            window.onload = CanvasStyleResize;
+        </script>
     </head>
-    <body>
-        <div style="width:640px; height:320px; margin:0 auto; background-color:rgb(0, 0, 0);">
-            <canvas id="e512w3d-canvas" style="width:640px; height:320px;"></canvas>
-        </div>
-    </body> 
+    <body style="margin:0">
+        <canvas id="e512w3d-canvas"></canvas>
+    </body>
 </html>
