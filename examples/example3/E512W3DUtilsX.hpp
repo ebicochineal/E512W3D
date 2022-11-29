@@ -65,9 +65,27 @@
         #include <windows.h>
     #elif __EMSCRIPTEN__
         #include <emscripten.h>
-        EM_JS(void, CanvasSetup, (int width, int height), { canvas = document.getElementById('e512w3d-canvas'); ctx = canvas.getContext('2d'); buff = ctx.createImageData(width, height); canvas.width = width; canvas.height = height; });
-        EM_JS(void, CanvasPut, (int x, int y, int r, int g, int b), { var p = (y*canvas.width+x)*4; buff.data[p] = r; buff.data[p+1] = g; buff.data[p+2] = b; buff.data[p+3] = 255; });
-        EM_JS(void, CanvasPush, (), { ctx.putImageData(buff, 0, 0); });
+        
+        EM_JS(void, CanvasSetup, (int width, int height), {
+            e512w3d_canvas = document.getElementById('e512w3d-canvas');
+            e512w3d_ctx = e512w3d_canvas.getContext('2d');
+            e512w3d_buff = e512w3d_ctx.createImageData(width, height);
+            e512w3d_canvas.width = width;
+            e512w3d_canvas.height = height;
+            e512w3d_canvas.addEventListener("mousemove", (e) => {
+                var rect = e.target.getBoundingClientRect();
+                e512w3d_mouse_position_x = ((e.clientX - rect.left) / parseFloat(e512w3d_canvas.style.width)) * e512w3d_canvas.width;
+                e512w3d_mouse_position_y = ((e.clientY - rect.top) / parseFloat(e512w3d_canvas.style.height)) * e512w3d_canvas.height;
+            });
+        });
+        EM_JS(void, CanvasPut, (int x, int y, int r, int g, int b), {
+            var p = (y*e512w3d_canvas.width+x)*4;
+            e512w3d_buff.data[p] = r;
+            e512w3d_buff.data[p+1] = g;
+            e512w3d_buff.data[p+2] = b;
+            e512w3d_buff.data[p+3] = 255; });
+        EM_JS(void, CanvasPush, (), { e512w3d_ctx.putImageData(e512w3d_buff, 0, 0); });
+        EM_JS(bool, GetKey, (int n), { return e512w3d_keys[n]; });
     #else
         // float abs (double v) { return std::abs(v); }
         // float abs (float v) { return std::abs(v); }

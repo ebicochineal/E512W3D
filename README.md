@@ -97,7 +97,12 @@ g++ -std=c++1z -static-libstdc++ -static -lstdc++ -mwindows ***.cpp -o ***.exe
 
 #### キー入力  
 bool keydown (char c)  
-
+#### マウス入力  
+int cursor_x  
+int cursor_y  
+bool cursor_l  
+bool cursor_m  
+bool cursor_r  
 ---
 ## emscripten
 .ino -> .cpp  
@@ -115,9 +120,11 @@ index.html
         <script src="e512w3d.js"></script>
         <script>
             function CanvasStyleResize () {
-                var tcv = document.getElementById('e512w3d-canvas');
-                tcv.style.width = document.documentElement.clientWidth + "px";
-                tcv.style.height = document.documentElement.clientWidth/2 + "px";
+                e512w3d_canvas = document.getElementById('e512w3d-canvas');
+                e512w3d_ctx = e512w3d_canvas.getContext('2d');
+                e512w3d_canvas.style.width = document.documentElement.clientWidth + "px";
+                e512w3d_canvas.style.height = document.documentElement.clientWidth/2 + "px";
+                e512w3d_canvas.style.imageRendering = "pixelated";
             }
             window.onresize = CanvasStyleResize;
             window.onload = CanvasStyleResize;
@@ -134,6 +141,16 @@ py -m http.server 8000
 ```
 http://localhost:8000/
 ```
+#### キー入力  
+bool keydown (char c)  
+#### マウス入力  
+int cursor_x  
+int cursor_y  
+bool cursor_l  
+bool cursor_m  
+bool cursor_r  
+
+
 ---
 
 

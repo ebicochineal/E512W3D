@@ -1233,11 +1233,19 @@ var tempI64;
 // === Body ===
 
 var ASM_CONSTS = {
-  
+  5331113: () => { e512w3d_mouse_l = false; e512w3d_mouse_m = false; e512w3d_mouse_r = false; e512w3d_mouse_position_x = 0; e512w3d_mouse_position_y = 0; e512w3d_buff = null; e512w3d_canvas = null; e512w3d_ctx = null; e512w3d_keys = Array(128); window.addEventListener("mousedown", (e) => { if (e.button == 0) { e512w3d_mouse_l = true; } if (e.button == 1) { e512w3d_mouse_m = true; } if (e.button == 2) { e512w3d_mouse_r = true; } }); window.addEventListener("mouseup", (e) => { if (e.button == 0) { e512w3d_mouse_l = false; } if (e.button == 1) { e512w3d_mouse_m = false; } if (e.button == 2) { e512w3d_mouse_r = false; } }); window.addEventListener("mouseleave", (e) => { if (e.button == 0) { e512w3d_mouse_l = false; } if (e.button == 1) { e512w3d_mouse_m = false; } if (e.button == 2) { e512w3d_mouse_r = false; } }); window.addEventListener("keydown", (e) => { if (e.isComposing || e.keyCode >= 128) { return; } e512w3d_keys[e.keyCode] = true; }); window.addEventListener("keyup", (e) => { if (e.isComposing || e.keyCode >= 128) { return; } e512w3d_keys[e.keyCode] = false; }); },  
+ 5332178: () => { return e512w3d_mouse_position_x },  
+ 5332210: () => { return e512w3d_mouse_position_y },  
+ 5332242: () => { return e512w3d_mouse_l },  
+ 5332265: () => { return e512w3d_mouse_m },  
+ 5332288: () => { return e512w3d_mouse_r }
 };
-function CanvasSetup(width,height) { canvas = document.getElementById('e512w3d-canvas'); ctx = canvas.getContext('2d'); buff = ctx.createImageData(width, height); canvas.width = width; canvas.height = height; }
-function CanvasPut(x,y,r,g,b) { var p = (y*canvas.width+x)*4; buff.data[p] = r; buff.data[p+1] = g; buff.data[p+2] = b; buff.data[p+3] = 255; }
-function CanvasPush() { ctx.putImageData(buff, 0, 0); }
+function CanvasSetup(width,height) { e512w3d_canvas = document.getElementById('e512w3d-canvas'); e512w3d_ctx = e512w3d_canvas.getContext('2d'); e512w3d_buff = e512w3d_ctx.createImageData(width, height); e512w3d_canvas.width = width; e512w3d_canvas.height = height; e512w3d_canvas.addEventListener("mousemove", (e) => { var rect = e.target.getBoundingClientRect(); e512w3d_mouse_position_x = ((e.clientX - rect.left) / parseFloat(e512w3d_canvas.style.width)) * e512w3d_canvas.width; e512w3d_mouse_position_y = ((e.clientY - rect.top) / parseFloat(e512w3d_canvas.style.height)) * e512w3d_canvas.height; }); }
+function CanvasPut(x,y,r,g,b) { var p = (y*e512w3d_canvas.width+x)*4; e512w3d_buff.data[p] = r; e512w3d_buff.data[p+1] = g; e512w3d_buff.data[p+2] = b; e512w3d_buff.data[p+3] = 255; }
+function CanvasPush() { e512w3d_ctx.putImageData(e512w3d_buff, 0, 0); }
+function GetKey(n) { return e512w3d_keys[n]; }
+function GetX() { return e512w3d_mouse_position_x; }
+function GetY() { return e512w3d_mouse_position_y; }
 
 
 
@@ -1319,6 +1327,38 @@ function CanvasPush() { ctx.putImageData(buff, 0, 0); }
 
   function _abort() {
       abort('native code called abort()');
+    }
+
+  var readAsmConstArgsArray = [];
+  function readAsmConstArgs(sigPtr, buf) {
+      // Nobody should have mutated _readAsmConstArgsArray underneath us to be something else than an array.
+      assert(Array.isArray(readAsmConstArgsArray));
+      // The input buffer is allocated on the stack, so it must be stack-aligned.
+      assert(buf % 16 == 0);
+      readAsmConstArgsArray.length = 0;
+      var ch;
+      // Most arguments are i32s, so shift the buffer pointer so it is a plain
+      // index into HEAP32.
+      buf >>= 2;
+      while (ch = HEAPU8[sigPtr++]) {
+        var chr = String.fromCharCode(ch);
+        var validChars = ['d', 'f', 'i'];
+        assert(validChars.includes(chr), 'Invalid character ' + ch + '("' + chr + '") in readAsmConstArgs! Use only [' + validChars + '], and do not specify "v" for void return argument.');
+        // Floats are always passed as doubles, and doubles and int64s take up 8
+        // bytes (two 32-bit slots) in memory, align reads to these:
+        buf += (ch != 105/*i*/) & buf;
+        readAsmConstArgsArray.push(
+          ch == 105/*i*/ ? HEAP32[buf] :
+         HEAPF64[buf++ >> 1]
+        );
+        ++buf;
+      }
+      return readAsmConstArgsArray;
+    }
+  function _emscripten_asm_const_int(code, sigPtr, argbuf) {
+      var args = readAsmConstArgs(sigPtr, argbuf);
+      if (!ASM_CONSTS.hasOwnProperty(code)) abort('No EM_ASM constant found at address ' + code);
+      return ASM_CONSTS[code].apply(null, args);
     }
 
   function _emscripten_date_now() {
@@ -1739,8 +1779,12 @@ var asmLibraryArg = {
   "CanvasPush": CanvasPush,
   "CanvasPut": CanvasPut,
   "CanvasSetup": CanvasSetup,
+  "GetKey": GetKey,
+  "GetX": GetX,
+  "GetY": GetY,
   "_emscripten_get_now_is_monotonic": __emscripten_get_now_is_monotonic,
   "abort": _abort,
+  "emscripten_asm_const_int": _emscripten_asm_const_int,
   "emscripten_date_now": _emscripten_date_now,
   "emscripten_get_now": _emscripten_get_now,
   "emscripten_memcpy_big": _emscripten_memcpy_big,
@@ -1848,8 +1892,8 @@ var _asyncify_start_rewind = Module["_asyncify_start_rewind"] = createExportWrap
 /** @type {function(...*):?} */
 var _asyncify_stop_rewind = Module["_asyncify_stop_rewind"] = createExportWrapper("asyncify_stop_rewind");
 
-var ___start_em_js = Module['___start_em_js'] = 5330124;
-var ___stop_em_js = Module['___stop_em_js'] = 5330520;
+var ___start_em_js = Module['___start_em_js'] = 5330140;
+var ___stop_em_js = Module['___stop_em_js'] = 5331113;
 
 
 
@@ -2118,7 +2162,6 @@ var missingLibrarySymbols = [
   'getRandomDevice',
   'traverseStack',
   'convertPCtoSourceLocation',
-  'readAsmConstArgs',
   'mainThreadEM_ASM',
   'jstoi_q',
   'jstoi_s',

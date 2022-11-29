@@ -101,11 +101,59 @@ void loop();
         return msg.wParam;
     }
 #elif __EMSCRIPTEN__
-    bool keydown (char c) { return false; }
+    E512Array<bool> keys = E512Array<bool>(128, false);
+    bool keydown (char c) { return keys[c]; }
     int main () {
         setup();
+        
+        EM_ASM(
+            e512w3d_mouse_l = false;
+            e512w3d_mouse_m = false;
+            e512w3d_mouse_r = false;
+            e512w3d_mouse_position_x = 0;
+            e512w3d_mouse_position_y = 0;
+            e512w3d_buff = null;
+            e512w3d_canvas = null;
+            e512w3d_ctx = null;
+            e512w3d_keys = Array(128);
+            
+            window.addEventListener("mousedown", (e) => {
+                if (e.button == 0) { e512w3d_mouse_l = true; }
+                if (e.button == 1) { e512w3d_mouse_m = true; }
+                if (e.button == 2) { e512w3d_mouse_r = true; }
+            });
+            
+            window.addEventListener("mouseup", (e) => {
+                if (e.button == 0) { e512w3d_mouse_l = false; }
+                if (e.button == 1) { e512w3d_mouse_m = false; }
+                if (e.button == 2) { e512w3d_mouse_r = false; }
+            });
+            
+            window.addEventListener("mouseleave", (e) => {
+                if (e.button == 0) { e512w3d_mouse_l = false; }
+                if (e.button == 1) { e512w3d_mouse_m = false; }
+                if (e.button == 2) { e512w3d_mouse_r = false; }
+            });
+            
+            window.addEventListener("keydown", (e) => {
+                if (e.isComposing || e.keyCode >= 128) { return; }
+                e512w3d_keys[e.keyCode] = true;
+            });
+            
+            window.addEventListener("keyup", (e) => {
+                if (e.isComposing || e.keyCode >= 128) { return; }
+                e512w3d_keys[e.keyCode] = false;
+            });
+        );
+        
         CanvasSetup(e512w3d.width, e512w3d.height);
         while (true) {
+            cursor_x = EM_ASM_INT(return e512w3d_mouse_position_x);
+            cursor_y = EM_ASM_INT(return e512w3d_mouse_position_y);
+            cursor_l = EM_ASM_INT(return e512w3d_mouse_l);
+            cursor_m = EM_ASM_INT(return e512w3d_mouse_m);
+            cursor_r = EM_ASM_INT(return e512w3d_mouse_r);
+            for (int i=0; i < 128; ++i) { keys[i] = GetKey(i); }
             loop();
             emscripten_sleep(1);
         }
