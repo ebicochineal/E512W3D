@@ -96,13 +96,16 @@ g++ -std=c++1z -static-libstdc++ -static -lstdc++ -mwindows ***.cpp -o ***.exe
 ```
 
 #### キー入力  
+
 bool keydown (char c)  
 #### マウス入力  
+
 int cursor_x  
 int cursor_y  
 bool cursor_l  
 bool cursor_m  
 bool cursor_r  
+
 ---
 ## emscripten
 .ino -> .cpp  
@@ -142,8 +145,11 @@ py -m http.server 8000
 http://localhost:8000/
 ```
 #### キー入力  
+
 bool keydown (char c)  
+
 #### マウス入力  
+
 int cursor_x  
 int cursor_y  
 bool cursor_l  
