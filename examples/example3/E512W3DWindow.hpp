@@ -153,9 +153,7 @@ public:
                         for (int mx = 0; mx < this->text_size; ++mx) {
                             int wx = px + x * this->text_size + mx;
                             int wy = py + y * this->text_size + my;
-                            if (wx >= this->width || wx < 0) { continue; }
-                            if (wy >= this->height || wy < 0) { continue; }
-                            this->buff->drawPixel(this->sx + wx, this->sy + wy, this->text_color);
+                            if (this->inSide2(wx, wy)) { this->buff->drawPixel(wx + this->sx, wy + this->sy, this->text_color); }
                         }
                     }
                 }
