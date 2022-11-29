@@ -7,9 +7,11 @@
         <script src="e512w3d.js"></script>
         <script>
             function CanvasStyleResize () {
-                var tcv = document.getElementById('e512w3d-canvas');
-                tcv.style.width = document.documentElement.clientWidth + "px";
-                tcv.style.height = document.documentElement.clientWidth/2 + "px";
+                e512w3d_canvas = document.getElementById('e512w3d-canvas');
+                e512w3d_ctx = e512w3d_canvas.getContext('2d');
+                e512w3d_canvas.style.width = document.documentElement.clientWidth + "px";
+                e512w3d_canvas.style.height = document.documentElement.clientWidth/2 + "px";
+                e512w3d_canvas.style.imageRendering = "pixelated";
             }
             window.onresize = CanvasStyleResize;
             window.onload = CanvasStyleResize;
