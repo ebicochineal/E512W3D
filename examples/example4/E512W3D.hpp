@@ -117,6 +117,12 @@ void loop();
             e512w3d_ctx = null;
             e512w3d_keys = Array(128);
             
+            window.addEventListener("mousemove", (e) => {
+                var rect = e512w3d_canvas.getBoundingClientRect();
+                e512w3d_mouse_position_x = ((e.clientX - rect.left) / parseFloat(e512w3d_canvas.style.width)) * e512w3d_canvas.width;
+                e512w3d_mouse_position_y = ((e.clientY - rect.top) / parseFloat(e512w3d_canvas.style.height)) * e512w3d_canvas.height;
+            });
+            
             window.addEventListener("mousedown", (e) => {
                 if (e.button == 0) { e512w3d_mouse_l = true; }
                 if (e.button == 1) { e512w3d_mouse_m = true; }
@@ -134,6 +140,45 @@ void loop();
                 if (e.button == 1) { e512w3d_mouse_m = false; }
                 if (e.button == 2) { e512w3d_mouse_r = false; }
             });
+            
+            window.addEventListener("touchstart", (e) => {
+                e512w3d_mouse_l = true;
+                var x = 0;
+                var y = 0;
+                if (e.touches && e.touches[0]) {
+                    x = e.touches[0].clientX;
+                    y = e.touches[0].clientY;
+                } else if (e.clientX && e.clientY) {
+                    x = e.clientX;
+                    y = e.clientY;
+                } else {
+                    return;
+                }
+                var rect = e512w3d_canvas.getBoundingClientRect();
+                e512w3d_mouse_position_x = ((x - rect.left) / parseFloat(e512w3d_canvas.style.width)) * e512w3d_canvas.width;
+                e512w3d_mouse_position_y = ((y - rect.top) / parseFloat(e512w3d_canvas.style.height)) * e512w3d_canvas.height;
+            });
+            window.addEventListener("touchmove", (e) => {
+                e512w3d_mouse_l = true;
+                var x = 0;
+                var y = 0;
+                if (e.touches && e.touches[0]) {
+                    x = e.touches[0].clientX;
+                    y = e.touches[0].clientY;
+                } else if (e.clientX && e.clientY) {
+                    x = e.clientX;
+                    y = e.clientY;
+                } else {
+                    return;
+                }
+                var rect = e512w3d_canvas.getBoundingClientRect();
+                e512w3d_mouse_position_x = ((x - rect.left) / parseFloat(e512w3d_canvas.style.width)) * e512w3d_canvas.width;
+                e512w3d_mouse_position_y = ((y - rect.top) / parseFloat(e512w3d_canvas.style.height)) * e512w3d_canvas.height;
+            });
+            window.addEventListener("touchend", (e) => {
+                e512w3d_mouse_l = false;
+            });
+            
             
             window.addEventListener("keydown", (e) => {
                 if (e.isComposing || e.keyCode >= 128) { return; }
