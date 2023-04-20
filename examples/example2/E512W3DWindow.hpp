@@ -1,6 +1,91 @@
 #pragma once
 #include "E512W3DUtils.hpp"
 
+int cursor_x = 0;
+int cursor_y = 0;
+bool cursor_l = false;
+bool cursor_m = false;
+bool cursor_r = false;
+
+E512Array<bool> keys = E512Array<bool>(128, false);
+
+bool readkey = false;// ncurses
+bool keydown (char c) {
+    readkey = true;// ncurses
+    return keys[c];
+}
+void clearkeyarray () {// ncurses
+    if (!readkey) { return; }
+    readkey = false;
+    for (int i=0; i < 128; ++i) { keys[i] = false; }
+}
+class E512W3DInput {
+private:
+    static E512Array<bool> tmp, prev;
+    static E512Array<bool> mtmp, mprev;
+public:
+    static int16_t width, height;
+    static void update () {
+#if defined(ARDUINO_M5Stick_C) || defined(ARDUINO_M5Stick_C_PLUS) || defined(ARDUINO_M5Stack_Core_ESP32) || defined(ARDUINO_M5STACK_FIRE) || defined(ARDUINO_M5STACK_Core2)
+        float ax, ay, az;
+        M5.update();
+        M5.MPU6886.getAccelData(&ax, &ay, &az);
+        
+        E512W3DInput::mprev[0] = E512W3DInput::mtmp[0];
+        E512W3DInput::mprev[1] = E512W3DInput::mtmp[1];
+        // E512W3DInput::mprev[2] = E512W3DInput::mtmp[2];
+        E512W3DInput::mtmp[0] = M5.BtnA.isPressed();
+        E512W3DInput::mtmp[1] = M5.BtnB.isPressed();
+        // E512W3DInput::mtmp[2] = M5.BtnC.isPressed();
+        
+        if (abs(ay) > 0.4) { cursor_x += ay * 5; }
+        if (abs(ax) > 0.4) { cursor_y += ax * 5; }
+        
+        cursor_x = max(min(cursor_x, E512W3DInput::width-1), 0);
+        cursor_y = max(min(cursor_y, E512W3DInput::height-1), 0);
+#else
+        for (int i = 0; i < 128; ++i) {
+            E512W3DInput::prev[i] = E512W3DInput::tmp[i];
+            E512W3DInput::tmp[i] = keydown(i);
+        }
+        E512W3DInput::mprev[0] = E512W3DInput::mtmp[0];
+        E512W3DInput::mprev[1] = E512W3DInput::mtmp[1];
+        E512W3DInput::mprev[2] = E512W3DInput::mtmp[2];
+        E512W3DInput::mtmp[0] = cursor_l;
+        E512W3DInput::mtmp[1] = cursor_m;
+        E512W3DInput::mtmp[2] = cursor_r;
+#endif
+    }
+    static bool getKey (uint8_t c) { return E512W3DInput::tmp[c]; }
+    
+    // doesn't work with ncurses
+    static bool getKeyUp (uint8_t c) { return !E512W3DInput::tmp[c] && E512W3DInput::tmp[c] != E512W3DInput::prev[c]; }
+    
+    // doesn't work with ncurses
+    static bool getKeyDown (uint8_t c) { return E512W3DInput::tmp[c] && E512W3DInput::tmp[c] != E512W3DInput::prev[c]; }
+    
+    static bool getButton (uint8_t c) {
+        if (c < 3) { return E512W3DInput::mtmp[c]; }
+        return false;
+    }
+    static bool getButtonUp (uint8_t c) {
+        if (c < 3) { return !E512W3DInput::mtmp[c] && E512W3DInput::mtmp[c] != E512W3DInput::mprev[c]; }
+        return false;
+    }
+    static bool getButtonDown (uint8_t c) {
+        if (c < 3) { return E512W3DInput::mtmp[c] && E512W3DInput::mtmp[c] != E512W3DInput::mprev[c]; }
+        return false;
+    }
+    static Vector2 cursorPosition () { return Vector2(cursor_x, cursor_y); }
+    
+};
+E512Array<bool> E512W3DInput::tmp = E512Array<bool>(128, false);
+E512Array<bool> E512W3DInput::prev = E512Array<bool>(128, false);
+E512Array<bool> E512W3DInput::mtmp = E512Array<bool>(3, false);
+E512Array<bool> E512W3DInput::mprev = E512Array<bool>(3, false);
+int16_t E512W3DInput::width = 160;
+int16_t E512W3DInput::height = 80;
+
 class E512W3DWindow {
 public:
     E512Font* font;
@@ -374,14 +459,14 @@ public:
     int16_t getCursorY () { return cursor_y - this->sy; }
     
     
+    Matrix4x4 view;
+    Matrix4x4 projescreen;
     
 private:
     Object3D* camera = NULL;
     E512Array<Object3D*> child;
     Vector3 light;
     Vector3 light_vector;
-    Matrix4x4 view;
-    Matrix4x4 projescreen;
     int16_t dsy, dsx, dey, dex;
     
     void drawChild (E512Array<Object3D*>& child, Matrix4x4 pmat) {
@@ -435,9 +520,13 @@ private:
             if (!((v1.x >= 0 && v1.x < this->width) || (v2.x >= 0 && v2.x < this->width) || (v3.x >= 0 && v3.x < this->width))) { continue; }
             if (!((v1.y >= 0 && v1.y < this->height) || (v2.y >= 0 && v2.y < this->height) || (v3.y >= 0 && v3.y < this->height))) { continue; }
             
-            this->drawBuffLine(v1.x, v1.y, v2.x, v2.y, o->color);
-            this->drawBuffLine(v2.x, v2.y, v3.x, v3.y, o->color);
-            this->drawBuffLine(v3.x, v3.y, v1.x, v1.y, o->color);
+            // this->drawBuffLine(v1.x, v1.y, v2.x, v2.y, o->color);
+            // this->drawBuffLine(v2.x, v2.y, v3.x, v3.y, o->color);
+            // this->drawBuffLine(v3.x, v3.y, v1.x, v1.y, o->color);
+            
+            this->drawBuffLine(v1, v2, v1.x, v1.y, v2.x, v2.y, o->color);
+            this->drawBuffLine(v2, v3, v2.x, v2.y, v3.x, v3.y, o->color);
+            this->drawBuffLine(v3, v1, v3.x, v3.y, v1.x, v1.y, o->color);
         }
     }
     
@@ -474,7 +563,9 @@ private:
             
             uint16_t color = color565(min(r*d, 255.0f), min(g*d, 255.0f), min(b*d, 255.0f));
             uint16_t z = (1.0f-(v1.z+v2.z+v3.z)*0.333f) * 32767;
-            this->fillTriangleColor(v1.x, v1.y, v2.x, v2.y, v3.x, v3.y, z, color);
+            // this->fillTriangleColor(v1.x, v1.y, v2.x, v2.y, v3.x, v3.y, z, color);
+            
+            this->fillTriangleColor(v1, v2, v3, color);
         }
     }
     
@@ -508,7 +599,12 @@ private:
             Vector3 hn = (n * 0.5f + 0.5f) * 255.0f;
             uint16_t color = color565(hn.x, hn.y, hn.z);
             uint16_t z = (1.0f-(v1.z+v2.z+v3.z)*0.333f) * 32767;
-            this->fillTriangleColor(v1.x, v1.y, v2.x, v2.y, v3.x, v3.y, z, color);
+            // this->fillTriangleColor(v1.x, v1.y, v2.x, v2.y, v3.x, v3.y, z, color);
+            
+            this->fillTriangleColor(v1, v2, v3, color);
+            
+            
+            
         }
     }
     
@@ -714,6 +810,9 @@ private:
         return !(x < this->dsx || x >= this->dex || y < this->dsy || y >= this->dey);
     }
     inline void swap (int16_t& a, int16_t& b) { int16_t c = a; a = b; b = c; }
+    inline float distance (const float& ax, const float& ay, const float& bx, const float& by) {
+        return sqrt((ax - bx) * (ax - bx) + (ay - by) * (ay - by));
+    }
     
 /*
 Software License Agreement (BSD License)
@@ -776,6 +875,58 @@ POSSIBILITY OF SUCH DAMAGE.
             }
         }
     }
+    
+    // Adafruit_GFX::drawLine modification
+    inline void drawBuffLine (Vector3& v1, Vector3& v2, int16_t x1, int16_t y1, int16_t x2, int16_t y2, uint16_t color) {
+        
+        float d12 = max(this->distance(v1.x, v1.y, v2.x, v2.y), 1.0f);
+        
+        if (abs(y2 - y1) > abs(x2 - x1)) {
+            this->swap(x1, y1); this->swap(x2, y2);
+            if (x1 > x2) { this->swap(x1, x2); this->swap(y1, y2); }
+            int16_t dx = x2 - x1;
+            int16_t dy = abs(y2 - y1);
+            // int16_t err = dx / 2;
+            int16_t err = dx >> 1;
+            int16_t ystep = y1 < y2 ? 1 : -1;
+            for (; x1<=x2; ++x1) {
+                float d = this->distance(v2.x, v2.y, y1, x1) / d12;
+                float fz = v1.z * d + v2.z * (1.0f-d);
+                uint16_t z = (1.0f-fz) * 32767;
+                if (this->inSide2(y1, x1) && z >= this->zbuff->readPixel((y1+this->sx)+this->sx, x1+this->sy)) {
+                    this->buff->drawPixel(y1+this->sx, x1+this->sy, color);
+                    this->zbuff->drawPixel(y1+this->sx, x1+this->sy, z);
+                }
+                err -= dy;
+                if (err < 0) {
+                    y1 += ystep;
+                    err += dx;
+                }
+            }
+        } else {
+            if (x1 > x2) { this->swap(x1, x2); this->swap(y1, y2); }
+            int16_t dx = x2 - x1;
+            int16_t dy = abs(y2 - y1);
+            // int16_t err = dx / 2;
+            int16_t err = dx >> 1;
+            int16_t ystep = y1 < y2 ? 1 : -1;
+            for (; x1<=x2; ++x1) {
+                float d = this->distance(v2.x, v2.y, x1, y1) / d12;
+                float fz = v1.z * d + v2.z * (1.0f-d);
+                uint16_t z = (1.0f-fz) * 32767;
+                if (this->inSide2(x1, y1) && z >= this->zbuff->readPixel((x1+this->sx)+this->sx, y1+this->sy)) {
+                    this->buff->drawPixel(x1+this->sx, y1+this->sy, color);
+                    this->zbuff->drawPixel(x1+this->sx, y1+this->sy, z);
+                }
+                err -= dy;
+                if (err < 0) {
+                    y1 += ystep;
+                    err += dx;
+                }
+            }
+        }
+    }
+    
     // GFXcanvas8::writeFastHLine modification
     inline void drawBuffLineH (int16_t sx, int16_t y, int16_t w, int16_t z, uint16_t color) {
         if (sx >= this->width || y < 0 || y >= this->height) { return; }
@@ -973,6 +1124,109 @@ POSSIBILITY OF SUCH DAMAGE.
             sb += dx31;
             if(a > b) { this->swap(a, b); }
             this->drawBuffLineH(a, y, b-a+1, z, color);
+        }
+    }
+    
+    
+    // Adafruit_GFX::fillTriangle modification
+    inline void fillTriangleColor (Vector3& v1, Vector3& v2, Vector3& v3, uint16_t color) {
+        int16_t x1 = v1.x;
+        int16_t y1 = v1.y;
+        int16_t x2 = v2.x;
+        int16_t y2 = v2.y;
+        int16_t x3 = v3.x;
+        int16_t y3 = v3.y;
+        
+        int16_t za = (1.0f-v1.z) * 32767;
+        int16_t zb = (1.0f-v2.z) * 32767;
+        int16_t zc = (1.0f-v3.z) * 32767;
+        int16_t zba = zb - za;
+        int16_t zca = zc - za;
+        
+        if (y1 > y2) { this->swap(y1, y2); this->swap(x1, x2); }
+        if (y2 > y3) { this->swap(y3, y2); this->swap(x3, x2); }
+        if (y1 > y2) { this->swap(y1, y2); this->swap(x1, x2); }
+        
+        int16_t a, b, y;
+        if (y1 == y3) {
+            a = b = x1;
+            if (x2 < a) {
+                a = x2;
+            } else if(x2 > b) {
+                b = x2;
+            }
+            if (x3 < a) {
+                a = x3;
+            } else if (x3 > b) {
+                b = x3;
+            }
+            this->drawBuffLineHColor(a, y1, b-a+1, za, zba, zca, v1, v2, v3, color);
+            return;
+        }
+        
+        int32_t dx21 = x2 - x1;
+        int32_t dy21 = y2 - y1;
+        int32_t dx31 = x3 - x1;
+        int32_t dy31 = y3 - y1;
+        int32_t dx32 = x3 - x2;
+        int32_t dy32 = y3 - y2;
+        int32_t sa = 0;
+        int32_t sb = 0;
+        int16_t last = y2 == y3 ? y2 : y2-1;
+        
+        for(y=y1; y<=last; ++y) {
+            a = x1 + sa / dy21;
+            b = x1 + sb / dy31;
+            sa += dx21;
+            sb += dx31;
+            if(a > b) { this->swap(a, b); }
+            this->drawBuffLineHColor(a, y, b-a+1, za, zba, zca, v1, v2, v3, color);
+        }
+        
+        sa = dx32 * (y - y2);
+        sb = dx31 * (y - y1);
+        for(; y<=y3; ++y) {
+            a = x2 + sa / dy32;
+            b = x1 + sb / dy31;
+            sa += dx32;
+            sb += dx31;
+            if(a > b) { this->swap(a, b); }
+            this->drawBuffLineHColor(a, y, b-a+1, za, zba, zca, v1, v2, v3, color);
+        }
+    }
+    // GFXcanvas8::writeFastHLine modification
+    inline void drawBuffLineHColor (int16_t sx, int16_t y, int16_t w, int16_t za, int16_t zba, int16_t zca, Vector3& v1, Vector3& v2, Vector3& v3, uint16_t color) {
+        if (sx >= this->width || y < 0 || y >= this->height) { return; }
+        int16_t ex = sx + w - 1;
+        if (ex < 0) { return; }
+        sx = max(sx, (int16_t)0);
+        ex = min(ex, (int16_t)(this->width - 1));
+        
+        
+        const int16_t v1x = v1.x;
+        const int16_t v1y = v1.y;
+        const int16_t v2x = v2.x;
+        const int16_t v2y = v2.y;
+        const int16_t v3x = v3.x;
+        const int16_t v3y = v3.y;
+        
+        float ab = 0;
+        float ac = 0;
+        float t = abs((v2x-v1x) * (v3y-v1y) - (v2y-v1y) * (v3x-v1x));
+        for (int16_t x = sx; x < ex; ++x) {
+            if (!this->inSide2(x, y)) { continue; }
+            
+            if (t > 0) {
+                ab = abs((v1x-x) * (v2y-y) - (v1y-y) * (v2x-x)) / t;
+                ac = abs((v1x-x) * (v3y-y) - (v1y-y) * (v3x-x)) / t;
+            }
+            
+            uint16_t z = zba*ac+zca*ab+za;
+            
+            if (z > this->zbuff->readPixel(x+this->sx, y+this->sy)) {
+                this->zbuff->drawPixel(x+this->sx, y+this->sy, z);
+                this->buff->drawPixel(x+this->sx, y+this->sy, color);
+            }
         }
     }
     
@@ -1197,6 +1451,9 @@ public:
             this->ws[i]->screen_height = this->height;
             this->ws[i]->font = this->font;
         }
+        
+        E512W3DInput::width = this->width;
+        E512W3DInput::height = this->height;
     }
     
     void setFont (E512Font* font) {

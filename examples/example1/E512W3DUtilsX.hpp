@@ -166,7 +166,9 @@
     
     class DammyMPU6886 {
     public:
-        void Init () {};
+        void Init () {}
+        void getAccelData(float* ax, float* ay, float* az) {}
+        void getGyroData(float* gx, float* gy, float* gz) {}
     };
 
     class DammyLcd {
@@ -218,6 +220,7 @@
         DammyAxp Axp;
         DammyMPU6886 MPU6886;
         void begin () {}
+        void update () {}
     #ifdef _WIN32
         HWND hwnd;
         uint16_t width;

@@ -4,11 +4,12 @@
 - テクスチャパース補正  
 - Directional Light  
 - Ambient  
-- テクスチャなしなら8000ポリゴンくらいまで  
+- テクスチャなしなら8000ポリゴンくらいまで(m5stickc)  
 - コンソール、ウィンドウアプリ化できる  
 
 ![Gif](./img/anim.gif)  
 ![Gif](./img/animc.gif)  
+
   
 example1  
 ![Image](./img/1.jpg)  
@@ -84,8 +85,6 @@ Escで終了
 Escで終了しないと色がおかしくなる  
 color_content, pair_contentで色情報保存して最後に戻しているつもり  
 
-#### キー入力  
-bool keydown (char c)  
 
 ---
 ## windows-app
@@ -94,17 +93,6 @@ windows mingw
 ```
 g++ -std=c++1z -static-libstdc++ -static -lstdc++ -mwindows ***.cpp -o ***.exe
 ```
-
-#### キー入力  
-
-bool keydown (char c)  
-#### マウス入力  
-
-int cursor_x  
-int cursor_y  
-bool cursor_l  
-bool cursor_m  
-bool cursor_r  
 
 ---
 ## emscripten
@@ -144,22 +132,70 @@ py -m http.server 8000
 ```
 http://localhost:8000/
 ```
-#### キー入力  
+
+---
+
+#### キー入力, マウス入力  
 
 bool keydown (char c)  
-
-#### マウス入力  
-
 int cursor_x  
 int cursor_y  
 bool cursor_l  
 bool cursor_m  
 bool cursor_r  
 
+or  
 
+#### E512W3DInput  
+|  | m5stickc | console | ncurses | windows | emscripten |  
+| -              | - | - | - | - | - |  
+| getKey         | no      | no      | yes     | yes      | yes      |  
+| getKeyUp       | no      | no      | no      | yes      | yes      |  
+| getKeyDown     | no      | no      | no      | yes      | yes      |  
+| getButton      | partial | no      | no      | yes      | yes      |  
+| getButtonUp    | partial | no      | no      | yes      | yes      |  
+| getButtonDown  | partial | no      | no      | yes      | yes      |  
+| cursorPosition | partial | no      | no      | yes      | yes      |  
+
+```cpp
+void loop() {
+    if (e512w3d.isFixedTime()) {
+        E512W3DInput::update();
+        if (E512W3DInput::getButtonDown(0)) { /**/ }
+    }
+}
+```
+
+
+m5stickc  
+M5.updateはE512W3DInput::updateで呼ばれます  
+getButtonはBtnA=0, BtnB=1のみ使えます  
+M5.Lcd.setRotation(1)で画面を上にした状態を初期状態とし、カーソルは加速度センサーで動かしています  
+
+カーソル位置の確認
+```cpp
+void loop () {
+    if (e512w3d.isFixedTime()) {
+        E512W3DInput::update();
+        e512w3d.clear();
+        w.begin();
+        w.drawLine(0, c.y, e512w3d.width-1, c.y, color565(255, 255, 255));
+        w.drawLine(c.x, 0, c.x, e512w3d.height-1, color565(255, 255, 255));
+        e512w3d.pushScreen();
+    }
+}
+```
 ---
 
-
+#### E512W3DInput
+static void update ()  
+static bool getKey (uint8_t c)  
+static bool getKeyUp (uint8_t c)  
+static bool getKeyDown (uint8_t c)  
+static bool getButton (uint8_t c)  
+static bool getButtonUp (uint8_t c)  
+static bool getButtonDown (uint8_t c)  
+static Vector2 cursorPosition ()  
 
 
 E512Array<uint8_t> numtostr (int v)  
@@ -237,6 +273,8 @@ void print (const char* cp, bool wordwrap = true)
 void println (const char* cp, bool wordwrap = true)  
 void print (const uint8_t c, bool wordwrap = true)  
 void println (const uint8_t c, bool wordwrap = true)  
+Matrix4x4 view
+Matrix4x4 projescreen
 
   
 #### Object3D  
@@ -257,8 +295,21 @@ Vector3 up ()
 Vector3 down ()  
 Vector3 right ()  
 Vector3 left ()  
+RaycastHit raycast (Ray r)  
 
-
+#### Ray
+Vector3 position  
+Vector3 direction  
+float distance  
+Ray ()  
+Ray (Vector3 s, Vector3 e)  
+Ray (int x, int y, Matrix4x4 view, Matrix4x4 proj)  
+float raytriangle (Vector3 v1, Vector3 v2, Vector3 v3)
+float raytriangle (Vector3 v1, Vector3 v2, Vector3 v3, float& u, float& v)
+#### RaycastHit
+Vector3 point  
+float u, v, distance  
+uint32_t triangleindex  
     
 #### Mesh
 void addVertex (float x, float y, float z)  
@@ -287,5 +338,3 @@ PolygonTexturePerspectiveCorrect
 PolygonTexturePerspectiveCorrectDoubleFace  
 Hide  
 None  
-
-

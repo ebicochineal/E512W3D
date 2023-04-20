@@ -1,5 +1,4 @@
 #pragma once
-
 #include "E512W3DUtilsX.hpp"
 
 const float DEGREE_TO_RADIAN_F = 0.01745329251f;
@@ -7,11 +6,7 @@ inline float toRadianF (float d) { return d *DEGREE_TO_RADIAN_F; }
 uint16_t color565 (uint16_t r, uint16_t g, uint16_t b) { return ((r>>3)<<11) | ((g>>2)<<5) | (b>>3); }
 // uint16_t color555 (uint16_t r, uint16_t g, uint16_t b) { return ((r>>3)<<10) | ((g>>3)<<5) | (b>>3); 
 
-int cursor_x = 0;
-int cursor_y = 0;
-bool cursor_l = false;
-bool cursor_m = false;
-bool cursor_r = false;
+
 
 // max size uint16_t
 // template <class T>
@@ -269,6 +264,7 @@ public:
     Vector2 (float t) { this->x = t; this->y = t; }
     Vector2 (float x, float y) { this->x = x; this->y = y; }
     //Vector2 (Vector3 v) { this->x = v.x; this->y = v.y; }
+    static float distance (const Vector2 a, const Vector2 b) { return sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y)); }
     Vector2 operator + (const Vector2& t) const { return Vector2(this->x + t.x, this->y + t.y); }
     Vector2 operator - (const Vector2& t) const { return Vector2(this->x - t.x, this->y - t.y); }
     Vector2 operator * (const Vector2& t) const { return Vector2(this->x * t.x, this->y * t.y); }
@@ -294,6 +290,7 @@ public:
     }
     static Vector3 cross (const Vector3 a, const Vector3 b) { return Vector3(a.y * b.z - a.z * b.y, a.z * b.x - a.x * b.z, a.x * b.y - a.y * b.x); }
     static float dot (Vector3 a, Vector3 b) { return a.x * b.x + a.y * b.y + a.z * b.z; }
+    static float distance (const Vector3 a, const Vector3 b) { return sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y) + (a.z - b.z) * (a.z - b.z)); }
     Vector3 operator + (const Vector3& t) const { return Vector3(this->x + t.x, this->y + t.y, this->z + t.z); }
     Vector3 operator - (const Vector3& t) const { return Vector3(this->x - t.x, this->y - t.y, this->z - t.z); }
     Vector3 operator * (const Vector3& t) const { return Vector3(this->x * t.x, this->y * t.y, this->z * t.z); }
@@ -608,7 +605,121 @@ public:
         
         return r;
     }
+    
+    static Matrix4x4 inverse (Matrix4x4 a) {
+        Matrix4x4 b;
+        float d = a.m[0][0] * a.m[1][1] * a.m[2][2] * a.m[3][3] + a.m[0][0] * a.m[1][2] * a.m[2][3] * a.m[3][1] + a.m[0][0] * a.m[1][3] * a.m[2][1] * a.m[3][2]
+                + a.m[0][1] * a.m[1][0] * a.m[2][3] * a.m[3][2] + a.m[0][1] * a.m[1][2] * a.m[2][0] * a.m[3][3] + a.m[0][1] * a.m[1][3] * a.m[2][2] * a.m[3][0]
+                + a.m[0][2] * a.m[1][0] * a.m[2][1] * a.m[3][3] + a.m[0][2] * a.m[1][1] * a.m[2][3] * a.m[3][0] + a.m[0][2] * a.m[1][3] * a.m[2][0] * a.m[3][1]
+                + a.m[0][3] * a.m[1][0] * a.m[2][2] * a.m[3][1] + a.m[0][3] * a.m[1][1] * a.m[2][0] * a.m[3][2] + a.m[0][3] * a.m[1][2] * a.m[2][1] * a.m[3][0]
+                - a.m[0][0] * a.m[1][1] * a.m[2][3] * a.m[3][2] - a.m[0][0] * a.m[1][2] * a.m[2][1] * a.m[3][3] - a.m[0][0] * a.m[1][3] * a.m[2][2] * a.m[3][1]
+                - a.m[0][1] * a.m[1][0] * a.m[2][2] * a.m[3][3] - a.m[0][1] * a.m[1][2] * a.m[2][3] * a.m[3][0] - a.m[0][1] * a.m[1][3] * a.m[2][0] * a.m[3][2]
+                - a.m[0][2] * a.m[1][0] * a.m[2][3] * a.m[3][1] - a.m[0][2] * a.m[1][1] * a.m[2][0] * a.m[3][3] - a.m[0][2] * a.m[1][3] * a.m[2][1] * a.m[3][0]
+                - a.m[0][3] * a.m[1][0] * a.m[2][1] * a.m[3][2] - a.m[0][3] * a.m[1][1] * a.m[2][2] * a.m[3][0] - a.m[0][3] * a.m[1][2] * a.m[2][0] * a.m[3][1];
+        if (d == 0.0f) { return a; }
+        
+        b.m[0][0] = a.m[1][1] * a.m[2][2] * a.m[3][3] + a.m[1][2] * a.m[2][3] * a.m[3][1] + a.m[1][3] * a.m[2][1] * a.m[3][2] - a.m[1][1] * a.m[2][3] * a.m[3][2] - a.m[1][2] * a.m[2][1] * a.m[3][3] - a.m[1][3] * a.m[2][2] * a.m[3][1];
+        b.m[0][1] = a.m[0][1] * a.m[2][3] * a.m[3][2] + a.m[0][2] * a.m[2][1] * a.m[3][3] + a.m[0][3] * a.m[2][2] * a.m[3][1] - a.m[0][1] * a.m[2][2] * a.m[3][3] - a.m[0][2] * a.m[2][3] * a.m[3][1] - a.m[0][3] * a.m[2][1] * a.m[3][2];
+        b.m[0][2] = a.m[0][1] * a.m[1][2] * a.m[3][3] + a.m[0][2] * a.m[1][3] * a.m[3][1] + a.m[0][3] * a.m[1][1] * a.m[3][2] - a.m[0][1] * a.m[1][3] * a.m[3][2] - a.m[0][2] * a.m[1][1] * a.m[3][3] - a.m[0][3] * a.m[1][2] * a.m[3][1];
+        b.m[0][3] = a.m[0][1] * a.m[1][3] * a.m[2][2] + a.m[0][2] * a.m[1][1] * a.m[2][3] + a.m[0][3] * a.m[1][2] * a.m[2][1] - a.m[0][1] * a.m[1][2] * a.m[2][3] - a.m[0][2] * a.m[1][3] * a.m[2][1] - a.m[0][3] * a.m[1][1] * a.m[2][2];
+
+        b.m[1][0] = a.m[1][0] * a.m[2][3] * a.m[3][2] + a.m[1][2] * a.m[2][0] * a.m[3][3] + a.m[1][3] * a.m[2][2] * a.m[3][0] - a.m[1][0] * a.m[2][2] * a.m[3][3] - a.m[1][2] * a.m[2][3] * a.m[3][0] - a.m[1][3] * a.m[2][0] * a.m[3][2];
+        b.m[1][1] = a.m[0][0] * a.m[2][2] * a.m[3][3] + a.m[0][2] * a.m[2][3] * a.m[3][0] + a.m[0][3] * a.m[2][0] * a.m[3][2] - a.m[0][0] * a.m[2][3] * a.m[3][2] - a.m[0][2] * a.m[2][0] * a.m[3][3] - a.m[0][3] * a.m[2][2] * a.m[3][0];
+        b.m[1][2] = a.m[0][0] * a.m[1][3] * a.m[3][2] + a.m[0][2] * a.m[1][0] * a.m[3][3] + a.m[0][3] * a.m[1][2] * a.m[3][0] - a.m[0][0] * a.m[1][2] * a.m[3][3] - a.m[0][2] * a.m[1][3] * a.m[3][0] - a.m[0][3] * a.m[1][0] * a.m[3][2];
+        b.m[1][3] = a.m[0][0] * a.m[1][2] * a.m[2][3] + a.m[0][2] * a.m[1][3] * a.m[2][0] + a.m[0][3] * a.m[1][0] * a.m[2][2] - a.m[0][0] * a.m[1][3] * a.m[2][2] - a.m[0][2] * a.m[1][0] * a.m[2][3] - a.m[0][3] * a.m[1][2] * a.m[2][0];
+
+        b.m[2][0] = a.m[1][0] * a.m[2][1] * a.m[3][3] + a.m[1][1] * a.m[2][3] * a.m[3][0] + a.m[1][3] * a.m[2][0] * a.m[3][1] - a.m[1][0] * a.m[2][3] * a.m[3][1] - a.m[1][1] * a.m[2][0] * a.m[3][3] - a.m[1][3] * a.m[2][1] * a.m[3][0];
+        b.m[2][1] = a.m[0][0] * a.m[2][3] * a.m[3][1] + a.m[0][1] * a.m[2][0] * a.m[3][3] + a.m[0][3] * a.m[2][1] * a.m[3][0] - a.m[0][0] * a.m[2][1] * a.m[3][3] - a.m[0][1] * a.m[2][3] * a.m[3][0] - a.m[0][3] * a.m[2][0] * a.m[3][1];
+        b.m[2][2] = a.m[0][0] * a.m[1][1] * a.m[3][3] + a.m[0][1] * a.m[1][3] * a.m[3][0] + a.m[0][3] * a.m[1][0] * a.m[3][1] - a.m[0][0] * a.m[1][3] * a.m[3][1] - a.m[0][1] * a.m[1][0] * a.m[3][3] - a.m[0][3] * a.m[1][1] * a.m[3][0];
+        b.m[2][3] = a.m[0][0] * a.m[1][3] * a.m[2][1] + a.m[0][1] * a.m[1][0] * a.m[2][3] + a.m[0][3] * a.m[1][1] * a.m[2][0] - a.m[0][0] * a.m[1][1] * a.m[2][3] - a.m[0][1] * a.m[1][3] * a.m[2][0] - a.m[0][3] * a.m[1][0] * a.m[2][1];
+
+        b.m[3][0] = a.m[1][0] * a.m[2][2] * a.m[3][1] + a.m[1][1] * a.m[2][0] * a.m[3][2] + a.m[1][2] * a.m[2][1] * a.m[3][0] - a.m[1][0] * a.m[2][1] * a.m[3][2] - a.m[1][1] * a.m[2][2] * a.m[3][0] - a.m[1][2] * a.m[2][0] * a.m[3][1];
+        b.m[3][1] = a.m[0][0] * a.m[2][1] * a.m[3][2] + a.m[0][1] * a.m[2][2] * a.m[3][0] + a.m[0][2] * a.m[2][0] * a.m[3][1] - a.m[0][0] * a.m[2][2] * a.m[3][1] - a.m[0][1] * a.m[2][0] * a.m[3][2] - a.m[0][2] * a.m[2][1] * a.m[3][0];
+        b.m[3][2] = a.m[0][0] * a.m[1][2] * a.m[3][1] + a.m[0][1] * a.m[1][0] * a.m[3][2] + a.m[0][2] * a.m[1][1] * a.m[3][0] - a.m[0][0] * a.m[1][1] * a.m[3][2] - a.m[0][1] * a.m[1][2] * a.m[3][0] - a.m[0][2] * a.m[1][0] * a.m[3][1];
+        b.m[3][3] = a.m[0][0] * a.m[1][1] * a.m[2][2] + a.m[0][1] * a.m[1][2] * a.m[2][0] + a.m[0][2] * a.m[1][0] * a.m[2][1] - a.m[0][0] * a.m[1][2] * a.m[2][1] - a.m[0][1] * a.m[1][0] * a.m[2][2] - a.m[0][2] * a.m[1][1] * a.m[2][0];
+        float t[] = {b.m[0][0] / d, b.m[0][1] / d, b.m[0][2] / d, b.m[0][3] / d,
+                     b.m[1][0] / d, b.m[1][1] / d, b.m[1][2] / d, b.m[1][3] / d,
+                     b.m[2][0] / d, b.m[2][1] / d, b.m[2][2] / d, b.m[2][3] / d,
+                     b.m[3][0] / d, b.m[3][1] / d, b.m[3][2] / d, b.m[3][3] / d};
+        return Matrix4x4(t);
+    }
 };
+
+struct Ray {
+public:
+    Vector3 position = Vector3(0, 0, 0);
+    Vector3 direction = Vector3(0, -1, 0);
+    float distance = 0.0f;
+    Ray () {}
+    Ray (Vector3 s, Vector3 e) {
+        this->position = s;
+        this->direction = Vector3::normalize(e-s);
+        this->distance = Vector3::distance(s, e);
+    }
+    
+    Ray (int x, int y, Matrix4x4 view, Matrix4x4 proj) {
+        Vector4 s(x, y, 0, 1);
+        Vector4 e(x, y, 1, 1);
+        Matrix4x4 invm = Matrix4x4::inverse(Matrix4x4::mul(view, proj));
+        s = Matrix4x4::muld(s, invm);
+        e = Matrix4x4::muld(e, invm);
+        this->position = Vector3(s.x, s.y, s.z);
+        this->direction = Vector3::normalize(Vector3(e.x-s.x, e.y-s.y, e.z-s.z));
+        this->distance = 1000.0f;
+    }
+    
+    float raytriangle (Vector3 v1, Vector3 v2, Vector3 v3) {
+        float dist = -1.0f;
+        Vector3 e1 = v2 - v1;
+        Vector3 e2 = v3 - v1;
+        Vector3 p = Vector3::cross(this->direction, e2);
+        float d = Vector3::dot(e1, p);
+        if (d < 0.0001f) { return dist; }
+        Vector3 t = this->position - v1;
+        float u = Vector3::dot(t, p);
+        if (u < 0.0f || u > d) { return dist; }
+        Vector3 q = Vector3::cross(t, e1);
+        float v = Vector3::dot(this->direction, q);
+        if (v < 0.0f || u + v > d) { return dist; }
+        dist = Vector3::dot(e2, q);
+        float f = 1.0f / d;
+        dist *= f;
+        u *= f;
+        v *= f;
+        dist = dist <= this->distance ? dist : -1.0f;
+        return dist;
+    }
+    
+    float raytriangle (Vector3 v1, Vector3 v2, Vector3 v3, float& u, float& v) {
+        float dist = -1.0f;
+        Vector3 e1 = v2 - v1;
+        Vector3 e2 = v3 - v1;
+        Vector3 p = Vector3::cross(this->direction, e2);
+        float d = Vector3::dot(e1, p);
+        if (d < 0.0001f) { return dist; }
+        Vector3 t = this->position - v1;
+        u = Vector3::dot(t, p);
+        if (u < 0.0f || u > d) { return dist; }
+        Vector3 q = Vector3::cross(t, e1);
+        v = Vector3::dot(this->direction, q);
+        if (v < 0.0f || u + v > d) { return dist; }
+        dist = Vector3::dot(e2, q);
+        float f = 1.0f / d;
+        dist *= f;
+        u *= f;
+        v *= f;
+        dist = dist <= this->distance ? dist : -1.0f;
+        return dist;
+    }
+};
+
+struct RaycastHit {
+    Vector3 point;
+    float u, v, distance;
+    uint32_t triangleindex;
+    operator bool () const { return this->distance > -1; }
+};
+
 
 struct Face {
     uint16_t a, b, c;
@@ -750,7 +861,47 @@ public:
         return mat;
     }
     
+    RaycastHit raycast (Ray r) {
+        RaycastHit hit;
+        Matrix4x4 mat = this->worldMatrix();
+        hit.distance = -1.0f;
+        hit.triangleindex = 0;
+        
+        float tu, tv;
+        float u, v, dist;
+        float bestdist = r.distance;
+        for (int i = 0; i < this->mesh->faces.size(); ++i) {
+            
+            Vector3 v1 = Matrix4x4::mul(this->mesh->vertexs[this->mesh->faces[i].a], mat);
+            Vector3 v2 = Matrix4x4::mul(this->mesh->vertexs[this->mesh->faces[i].b], mat);
+            Vector3 v3 = Matrix4x4::mul(this->mesh->vertexs[this->mesh->faces[i].c], mat);
+            
+            dist = r.raytriangle(v1, v2, v3, u, v);
+            if (dist > -1 && dist <= bestdist) {
+                hit.triangleindex = i;
+                bestdist = dist;
+                hit.distance = dist;
+                tu = u;
+                tv = v;
+            }
+        }
+        
+        if (hit.distance > -1) {
+            Vector2 uv1 = this->mesh->uv_vertexs[this->mesh->uv_faces[hit.triangleindex].a];
+            Vector2 uv2 = this->mesh->uv_vertexs[this->mesh->uv_faces[hit.triangleindex].b];
+            Vector2 uv3 = this->mesh->uv_vertexs[this->mesh->uv_faces[hit.triangleindex].c];
+            float dbx = uv2.x-uv1.x;
+            float dby = uv2.y-uv1.y;
+            float dcx = uv3.x-uv1.x;
+            float dcy = uv3.y-uv1.y;
+            hit.u = dbx*tu+dcx*tv+uv1.x;
+            hit.v = dby*tu+dcy*tv+uv1.y;
+            hit.point = r.position + Vector3::normalize(r.direction) * hit.distance;
+        }
+        return hit;
+    }
 };
+
 
 class E512Font {
 public:
@@ -1070,7 +1221,6 @@ E512Array<uint8_t> numtostr (int v) {
         dtostrf(v, 0, n, cp);
         return cptoe512array(cp, n);
     }
-    
 #else
     E512Array<uint8_t> numtostr (float v, uint8_t n = 4) {
         char cp[128];

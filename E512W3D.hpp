@@ -10,12 +10,6 @@ void loop();
 #ifdef _WIN32
     #define WC_NAME TEXT("e512w3d")
     #define WT_NAME TEXT("e512w3d")
-    
-    E512Array<bool> keys = E512Array<bool>(128, false);
-    
-    bool keydown (char c) { return keys[c]; }
-    
-    
     LRESULT CALLBACK proc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         switch (msg) {
             case WM_DESTROY:
@@ -101,8 +95,6 @@ void loop();
         return msg.wParam;
     }
 #elif __EMSCRIPTEN__
-    E512Array<bool> keys = E512Array<bool>(128, false);
-    bool keydown (char c) { return keys[c]; }
     int main () {
         setup();
         
@@ -206,18 +198,6 @@ void loop();
     }
 #else
     #if __has_include(<curses.h>) && defined(USENCURSES)
-        E512Array<bool> keys = E512Array<bool>(128, false);
-        bool readkey = false;
-        bool keydown (char c) {
-            readkey = true;
-            return keys[c];
-        }
-        void clearkeyarray () {
-            if (!readkey) { return; }
-            readkey = false;
-            for (int i=0; i < 128; ++i) { keys[i] = false; }
-        }
-        
         int main () {
             initscr();
             start_color();
@@ -274,7 +254,6 @@ void loop();
             return 0;
         }
     #else
-        bool keydown (char c) { return false; }
         int main () {
             setup();
             while (true) {
