@@ -187,6 +187,10 @@ void loop () {
 ```
 ---
 
+E512Array<uint8_t> numtostr (int v)  
+E512Array<uint8_t> numtostr (float v, uint8_t n = 4)  
+uint16_t color565 (uint16_t r, uint16_t g, uint16_t b)  
+
 #### E512W3DInput
 static void update ()  
 static bool getKey (uint8_t c)  
@@ -196,12 +200,6 @@ static bool getButton (uint8_t c)
 static bool getButtonUp (uint8_t c)  
 static bool getButtonDown (uint8_t c)  
 static Vector2 cursorPosition ()  
-
-
-E512Array<uint8_t> numtostr (int v)  
-E512Array<uint8_t> numtostr (float v, uint8_t n = 4)  
-uint16_t color565 (uint16_t r, uint16_t g, uint16_t b)  
-
 
 #### E512Array
 uint32_t size ()  
@@ -273,8 +271,8 @@ void print (const char* cp, bool wordwrap = true)
 void println (const char* cp, bool wordwrap = true)  
 void print (const uint8_t c, bool wordwrap = true)  
 void println (const uint8_t c, bool wordwrap = true)  
-Matrix4x4 view
-Matrix4x4 projescreen
+Matrix4x4 view  
+Matrix4x4 projescreen  
 
   
 #### Object3D  
@@ -304,13 +302,14 @@ float distance
 Ray ()  
 Ray (Vector3 s, Vector3 e)  
 Ray (int x, int y, Matrix4x4 view, Matrix4x4 proj)  
-float raytriangle (Vector3 v1, Vector3 v2, Vector3 v3)
-float raytriangle (Vector3 v1, Vector3 v2, Vector3 v3, float& u, float& v)
+float raytriangle (Vector3 v1, Vector3 v2, Vector3 v3)  
+float raytriangle (Vector3 v1, Vector3 v2, Vector3 v3, float& u, float& v)  
+
 #### RaycastHit
 Vector3 point  
 float u, v, distance  
 uint32_t triangleindex  
-    
+
 #### Mesh
 void addVertex (float x, float y, float z)  
 void addVertex (Vector3 v)  
