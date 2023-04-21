@@ -37,6 +37,7 @@ pngファイルをスクリプトでhppに変換
 
 ---
 ## M5StickC
+arduino ide  
 M5StickC以外ではテストしていませんが他のボードでも動くかもしれません  
 - M5StickCPlus
 - M5Stack
@@ -59,20 +60,21 @@ M5StickC インストール
 Arduino IDEで書き込み  
 
 ---
-## console-app
-.ino -> .cpp  
 
-mingw, gcc  
-windowsのコマンドプロンプトだとカラー表示できないためlinuxかwsl  
+Arduino以外の環境ではexampleの拡張子を.ino -> .cppにしてください  
+
+---
+## console-app
+  
+
+gcc  
 ncurses導入済みでこっちを使う場合はE512W3DUtilsXの#define USENCURSESをコメントアウト  
 ```
 g++ -std=c++1z ***.cpp -o ***.out
 ```
 ---
 ## ncurses
-.ino -> .cpp  
-
-mingw, gcc  
+gcc, ncurses  
 ncursesインストール  
 ```
 sudo apt-get install ncurses-dev
@@ -88,15 +90,14 @@ color_content, pair_contentで色情報保存して最後に戻しているつ�
 
 ---
 ## windows-app
-.ino -> .cpp  
-windows mingw  
+mingw  
 ```
 g++ -std=c++1z -static-libstdc++ -static -lstdc++ -mwindows ***.cpp -o ***.exe
 ```
 
 ---
 ## emscripten
-.ino -> .cpp  
+emscripten  
 ```
 em++ ./***.cpp -o ./e512w3d.js -s ASYNCIFY
 ```
