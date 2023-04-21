@@ -61,7 +61,7 @@ Arduino IDEで書き込み
 
 ---
 
-Arduino以外の環境ではexampleの拡張子を.ino -> .cppにしてください  
+Arduino以外の環境ではexampleの拡張子を.inoから.cppにしてください  
 
 ---
 ## console-app
