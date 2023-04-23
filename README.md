@@ -173,13 +173,14 @@ M5.updateはE512W3DInput::updateで呼ばれます
 getButtonはBtnA=0, BtnB=1のみ使えます  
 M5.Lcd.setRotation(1)で画面を上にした状態を初期状態とし、カーソルは加速度センサーで動かしています  
 
-カーソル位置の確認
+m5stickcでのカーソル位置の確認
 ```cpp
 void loop () {
     if (e512w3d.isFixedTime()) {
         E512W3DInput::update();
         e512w3d.clear();
         w.begin();
+        Vector2 c = E512W3DInput::cursorPosition();
         w.drawLine(0, c.y, e512w3d.width-1, c.y, color565(255, 255, 255));
         w.drawLine(c.x, 0, c.x, e512w3d.height-1, color565(255, 255, 255));
         e512w3d.pushScreen();
@@ -191,16 +192,6 @@ void loop () {
 E512Array<uint8_t> numtostr (int v)  
 E512Array<uint8_t> numtostr (float v, uint8_t n = 4)  
 uint16_t color565 (uint16_t r, uint16_t g, uint16_t b)  
-
-#### E512W3DInput
-static void update ()  
-static bool getKey (uint8_t c)  
-static bool getKeyUp (uint8_t c)  
-static bool getKeyDown (uint8_t c)  
-static bool getButton (uint8_t c)  
-static bool getButtonUp (uint8_t c)  
-static bool getButtonDown (uint8_t c)  
-static Vector2 cursorPosition ()  
 
 #### E512Array
 uint32_t size ()  
@@ -216,6 +207,16 @@ void erase_value (T t)
 void clear ()  
 T& front ()  
 T& back ()  
+
+#### E512W3DInput
+static void update ()  
+static bool getKey (uint8_t c)  
+static bool getKeyUp (uint8_t c)  
+static bool getKeyDown (uint8_t c)  
+static bool getButton (uint8_t c)  
+static bool getButtonUp (uint8_t c)  
+static bool getButtonDown (uint8_t c)  
+static Vector2 cursorPosition ()  
 
 #### E512W3DWindowManager
 E512W3DWindowManager ()  
@@ -275,7 +276,6 @@ void println (const uint8_t c, bool wordwrap = true)
 Matrix4x4 view  
 Matrix4x4 projescreen  
 
-  
 #### Object3D  
 Vector3 position  
 Quaternion rotation  
