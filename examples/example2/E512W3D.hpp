@@ -198,6 +198,10 @@ void loop();
     }
 #else
     #if __has_include(<curses.h>) && defined(USENCURSES)
+        #include <csignal>
+        bool floop = true;
+        void signal_handler(int sig) { floop = false; }
+        
         int main () {
             initscr();
             start_color();
@@ -209,8 +213,13 @@ void loop();
             ncc.init_colors();
             setup();
             
+            signal(SIGINT, signal_handler);
+            signal(SIGQUIT, signal_handler);
+            signal(SIGTERM, signal_handler);
+            signal(SIGHUP, signal_handler);
+            
             char c = -1;
-            while (true) {
+            while (floop) {
                 loop();
                 
                 clearkeyarray();
@@ -230,24 +239,6 @@ void loop();
                 if (keys[0x1b]) { break; }
                 delay(1);
             }
-            
-            // while (true) {
-            //     char c = getch();
-            //     if (c >= 'a' && c <= 'z') { keys['A'+c-'a'] = true; }
-            //     if (c >= 0 && c < 128) { keys[c] = true; }
-            //     if (keys[0x1b]) { break; }
-            //     loop();
-            //     clearkeyarray();
-            //     flushinp();
-            //     delay(16);
-            // }
-            
-            // while (true) {
-            //     char c = getch();
-            //     if (c == 0x1b) { break; }
-            //     loop();
-            //     delay(16);
-            // }
             
             ncc.end_colors();
             endwin();

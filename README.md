@@ -83,10 +83,6 @@ sudo apt-get install ncurses-dev
 ```
 g++ -std=c++1z ***.cpp -o ***.out -lncurses
 ```
-Escで終了  
-Escで終了しないと色がおかしくなる  
-color_content, pair_contentで色情報保存して最後に戻しているつもり  
-
 
 ---
 ## windows-app
