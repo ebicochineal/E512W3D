@@ -214,9 +214,6 @@ void loop();
             setup();
             
             signal(SIGINT, signal_handler);
-            signal(SIGQUIT, signal_handler);
-            signal(SIGTERM, signal_handler);
-            signal(SIGHUP, signal_handler);
             
             char c = -1;
             while (floop) {
