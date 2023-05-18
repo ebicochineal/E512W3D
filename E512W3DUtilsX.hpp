@@ -12,6 +12,110 @@
     #include "M5Stack.h"
 #elif ARDUINO_M5STACK_Core2
     #include "M5Core2.h"
+#elif defined(ARDUINO_ARCH_RP2040)
+    #include <Adafruit_GFX.h>
+    #include <Adafruit_ST7735.h>
+    #include <SPI.h>
+    
+    #define TFT_CS   17
+    #define TFT_RST  22
+    #define TFT_DC   28
+    Adafruit_ST7735 tft = Adafruit_ST7735(&SPI, TFT_CS, TFT_DC, TFT_RST);
+    #define TFT_MOSI 19
+    #define TFT_SCLK 18
+    
+    class DammyMPU6886 {
+    public:
+        void Init () {}
+        void getAccelData(float* ax, float* ay, float* az) {}
+        void getGyroData(float* gx, float* gy, float* gz) {}
+    };
+
+    class DammyLcd {
+    public:
+        uint16_t height = 80;
+        uint16_t width = 160;
+        uint16_t x = 0;
+        uint16_t y = 0;
+        void setRotation (int x) {}
+        uint16_t color565 (uint16_t r, uint16_t g, uint16_t b) { return ((r>>3)<<11) | ((g>>2)<<5) | (b>>3); }
+        void setCursor (int x, int y) { this->x = x; this->y = y; }
+        
+        
+    };
+    class DammyAxp {
+    public:
+        void ScreenBreath (int x) {}
+        double GetVapsData () { return 0; }
+    };
+
+    class M5StickC {
+    public:
+        DammyLcd Lcd;
+        DammyAxp Axp;
+        DammyMPU6886 MPU6886;
+        
+        void begin () {
+            tft.initR(INITR_MINI160x80);
+            tft.invertDisplay(true);
+            tft.fillScreen(ST77XX_BLACK);
+            
+            // Screen edge noise countermeasures
+            delay(100);
+            tft.setRotation(0);
+            tft.fillScreen(ST77XX_BLACK);
+            tft.setRotation(1);
+            tft.fillScreen(ST77XX_BLACK);
+            tft.setRotation(2);
+            tft.fillScreen(ST77XX_BLACK);
+            tft.setRotation(3);
+            tft.fillScreen(ST77XX_BLACK);
+            tft.setRotation(0);
+            tft.fillScreen(ST77XX_BLACK);
+            tft.setRotation(3);
+            tft.fillScreen(ST77XX_BLACK);
+        }
+        void update () {}
+    
+    };
+
+    M5StickC M5;
+
+    class TFT_eSprite {
+    public:
+        int colordepth = 24;
+        int width = 160;
+        int height = 80;
+        uint16_t* buff;
+        DammyLcd* lcd;
+        TFT_eSprite (DammyLcd* lcd) { this->lcd = lcd; }
+        void setColorDepth (int v) {}
+        void createSprite (int width, int height) {
+            this->width = width;
+            this->height = height;
+            this->buff = new uint16_t[height * width];
+        }
+        void pushSprite (int px, int py) {
+            // RGB -> BGR
+            for (int y = 0; y < this->height; y += 1) {
+                for (int x = 0; x < this->width; x += 1) {
+                    uint32_t c = this->buff[y*this->width+x];
+                    uint16_t r = c & 0xF800;
+                    uint16_t g = c & 0x07E0;
+                    uint16_t b = c & 0x001F;
+                    c = (b<<11) | g | (r>>11);
+                    this->buff[y*this->width+x] = c;
+                }
+            }
+            tft.drawRGBBitmap(0, 0, this->buff, this->width, this->height);
+        }
+        
+        void fillSprite (uint16_t color) {
+            for (int i = 0; i < this->height*this->width; ++i) { this->buff[i] = color; }
+        }
+        void drawPixel (uint16_t x, uint16_t y, uint16_t color) { this->buff[y*this->width+x] = color; }
+        uint16_t readPixel (uint16_t x, uint16_t y) { return this->buff[y*this->width+x]; }
+    };
 #else
     #include <cmath>
     #include <chrono>

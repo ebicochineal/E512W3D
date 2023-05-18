@@ -1,4 +1,4 @@
-## 3d-software-renderer m5stickc/m5stack/console-app/windows-app/ncurses/emscripten  
+## 3d-software-renderer m5stickc/m5stack/console-app/windows-app/ncurses/emscripten/raspberry-pi-pico  
 - 複数のウィンドウ  
 - ワイヤーフレーム、ポリゴン、法線カラー、半透明、テクスチャ  
 - テクスチャパース補正  
@@ -129,6 +129,48 @@ py -m http.server 8000
 ```
 http://localhost:8000/
 ```
+---
+## raspberry-pi-pico
+ArduinoIDEで動作します  
+ST7735を搭載した解像度160x80ディスプレイを使用します  
+必要に応じて変更すれば他のディスプレイを使うことができるかもしれませんE512W3DUtilsX.cppの16~118行のコードを変更してください  
+ライブラリにバグがあるらしく青と赤が反転しているためE512W3DUtilsX.cppの100行目からの処理で再び反転させています  
+色が反転する場合はコメントアウトしてください  
+
+ボードマネージャで追加してください  
+どちらでも動作します  
+```
+Arduino Mbed OS RP2040 Boards
+Raspberry Pi Pico/RP2040 (earlephilhower)
+```
+オーバークロックする場合はearlephilhower版で簡単にできます  
+300Mhzでは動作しませんでした250Mhzでは動作しました  
+
+<!-- 
+|display |pico  |
+|-       |-     |
+|GND     |GND   |
+|VCC     |3.3V  |
+|SCK     |GPIO18|
+|SDA     |GPIO19|
+|RES     |GPIO22|
+|DC      |GPIO28|
+|CS      |GPIO17|
+-->
+
+|pin    |      |      |      |      |      |      |      |
+|-      |-     |-     |-     |-     |-     |-     |-     |
+|pico   |GND   |3.3V  |GPIO18|GPIO19|GPIO22|GPIO28|GPIO17|
+|display|GND   |VCC   |SCK   |SDA   |RES   |DC    |CS    |
+  
+ライブラリマネージャで追加してください  
+```
+Adafruit_GFX  
+Adafruit_ST7735  
+```
+
+
+
 
 ---
 
@@ -144,15 +186,15 @@ bool cursor_r
 or  
 
 #### E512W3DInput  
-|  | m5stickc | console | ncurses | windows | emscripten |  
-| -              | - | - | - | - | - |  
-| getKey         | no      | no      | yes     | yes      | yes      |  
-| getKeyUp       | no      | no      | no      | yes      | yes      |  
-| getKeyDown     | no      | no      | no      | yes      | yes      |  
-| getButton      | partial | no      | no      | yes      | yes      |  
-| getButtonUp    | partial | no      | no      | yes      | yes      |  
-| getButtonDown  | partial | no      | no      | yes      | yes      |  
-| cursorPosition | partial | no      | no      | yes      | yes      |  
+|                | m5stickc | console | ncurses | windows | emscripten | pico |
+| -              | -        | -       | -       | -       | -          | -    |
+| getKey         | no       | no      | yes     | yes     | yes        | no   |
+| getKeyUp       | no       | no      | no      | yes     | yes        | no   |
+| getKeyDown     | no       | no      | no      | yes     | yes        | no   |
+| getButton      | partial  | no      | no      | yes     | yes        | no   |
+| getButtonUp    | partial  | no      | no      | yes     | yes        | no   |
+| getButtonDown  | partial  | no      | no      | yes     | yes        | no   |
+| cursorPosition | partial  | no      | no      | yes     | yes        | no   |
 
 ```cpp
 void loop() {

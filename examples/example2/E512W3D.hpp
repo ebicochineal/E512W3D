@@ -196,6 +196,8 @@ void loop();
         }
         return 0;
     }
+#elif defined(ARDUINO_ARCH_RP2040)
+    // raspberry pi pico
 #else
     #if __has_include(<curses.h>) && defined(USENCURSES)
         #include <csignal>

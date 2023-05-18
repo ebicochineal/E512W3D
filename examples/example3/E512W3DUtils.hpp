@@ -1221,6 +1221,14 @@ E512Array<uint8_t> numtostr (int v) {
         dtostrf(v, 0, n, cp);
         return cptoe512array(cp, n);
     }
+#elif  defined(ARDUINO_ARCH_RP2040)
+    #include <avr/dtostrf.h>
+    E512Array<uint8_t> numtostr (float v, uint8_t n = 4) {
+        char cp[128];
+        n = n > 64 ? 64 : n;
+        dtostrf(v, 0, n, cp);
+        return cptoe512array(cp, n);
+    }
 #else
     E512Array<uint8_t> numtostr (float v, uint8_t n = 4) {
         char cp[128];
