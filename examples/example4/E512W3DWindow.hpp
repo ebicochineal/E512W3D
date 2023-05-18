@@ -145,7 +145,8 @@ public:
     void draw (Object3D& obj, bool child = false) {
         if (this->dsy == this->dey || this->dsx == this->dex) { return; }
         
-        Matrix4x4 mat = obj.parent->worldMatrix();
+        Matrix4x4 mat = Matrix4x4::identity();
+        if (obj.parent != NULL) { mat = obj.parent->worldMatrix(); }
         
         if (child) {
             E512Array<Object3D*> objs;
