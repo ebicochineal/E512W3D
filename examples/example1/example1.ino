@@ -6,7 +6,7 @@ E512W3DWindow w(color565(20, 20, 20));
 Object3D a, b, c, d, e, f;
 Object3D camera;
 
-void setup() {
+void setup () {
     M5.begin();
     M5.Lcd.setRotation(1);
     M5.Axp.ScreenBreath(9);
@@ -62,7 +62,7 @@ void setup() {
     e512w3d.begin();
 }
 
-void loop() {
+void loop () {
     static float v = 0;
     if (e512w3d.isFixedTime()) {
         a.rotation *= Quaternion::angleAxis(6 , Vector3(0, 1, 0));

@@ -7,7 +7,7 @@ Object3D camera;
 
 const uint8_t gsize = 16;
 
-void setup() {
+void setup () {
     M5.begin();
     M5.Lcd.setRotation(1);
     M5.Axp.ScreenBreath(9);
@@ -39,7 +39,7 @@ void setup() {
     e512w3d.begin();
 }
 
-void loop() {
+void loop () {
     static float v = 0;
     if (e512w3d.isFixedTime()) {
         v += 0.2;

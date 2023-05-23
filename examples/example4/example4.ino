@@ -7,7 +7,7 @@ E512W3DWindow w;
 Object3D a;
 Object3D camera;
 
-void setup() {
+void setup () {
     M5.begin();
     M5.Lcd.setRotation(1);
     M5.Axp.ScreenBreath(9);

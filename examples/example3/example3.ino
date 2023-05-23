@@ -6,7 +6,7 @@ E512W3DWindow w0, w1, w2, w3;
 Object3D a0, a;
 Object3D o, c0, c1, c2, c3;
 
-void setup() {
+void setup () {
     M5.begin();
     M5.Lcd.setRotation(1);
     M5.Axp.ScreenBreath(9);
@@ -88,7 +88,7 @@ void setup() {
     e512w3d.begin();
 }
 
-void loop() {
+void loop () {
     if (e512w3d.isFixedTime()) {
         o.rotation *= Quaternion::angleAxis(1, Vector3(0, 1, 0));
         e512w3d.draw();

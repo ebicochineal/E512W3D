@@ -2,15 +2,15 @@
 
 #define USENCURSES
 
-#ifdef ARDUINO_M5Stick_C
+#if defined(ARDUINO_M5Stick_C)
     #include "M5StickC.h"
-#elif ARDUINO_M5Stick_C_PLUS
+#elif defined(ARDUINO_M5Stick_C_PLUS)
     #include "M5StickCPlus.h"
-#elif ARDUINO_M5Stack_Core_ESP32
+#elif defined(ARDUINO_M5Stack_Core_ESP32)
     #include "M5Stack.h"
-#elif ARDUINO_M5STACK_FIRE
+#elif defined(ARDUINO_M5STACK_FIRE)
     #include "M5Stack.h"
-#elif ARDUINO_M5STACK_Core2
+#elif defined(ARDUINO_M5STACK_Core2)
     #include "M5Core2.h"
 #elif defined(ARDUINO_ARCH_RP2040)
     #include <Adafruit_GFX.h>
@@ -40,8 +40,6 @@
         void setRotation (int x) {}
         uint16_t color565 (uint16_t r, uint16_t g, uint16_t b) { return ((r>>3)<<11) | ((g>>2)<<5) | (b>>3); }
         void setCursor (int x, int y) { this->x = x; this->y = y; }
-        
-        
     };
     class DammyAxp {
     public:
@@ -76,7 +74,6 @@
             tft.fillScreen(ST77XX_BLACK);
         }
         void update () {}
-    
     };
 
     M5StickC M5;
@@ -165,9 +162,9 @@
         static StopWatchChrono swc;
         return swc.get_milli_time();
     }
-    #ifdef _WIN32
+    #if defined(_WIN32)
         #include <windows.h>
-    #elif __EMSCRIPTEN__
+    #elif defined(__EMSCRIPTEN__)
         #include <emscripten.h>
         
         EM_JS(void, CanvasSetup, (int width, int height), {
@@ -286,7 +283,7 @@
         void setCursor (int x, int y) { this->x = x; this->y = y; }
         
         
-    #ifdef _WIN32
+    #if defined(_WIN32)
         HWND hwnd;
         void print (std::string s) {
             HDC hdc = GetDC(hwnd);
@@ -325,7 +322,7 @@
         DammyMPU6886 MPU6886;
         void begin () {}
         void update () {}
-    #ifdef _WIN32
+    #if defined(_WIN32)
         HWND hwnd;
         uint16_t width;
         uint16_t height;
@@ -359,7 +356,7 @@
             this->buff = new uint16_t[height * width];
         }
         
-    #ifdef _WIN32
+    #if defined(_WIN32)
         void pushSprite (int px, int py) {
             for (int y = 0; y < M5.height; y += 1) {
                 for (int x = 0; x < M5.width; x += 1) {

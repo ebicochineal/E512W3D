@@ -4,10 +4,15 @@
 #include "E512W3DWindow.hpp"
 E512W3DWindowManager e512w3d;
 
-void setup();
-void loop();
 
-#ifdef _WIN32
+
+#if !(defined(ARDUINO_M5Stick_C) || defined(ARDUINO_M5Stick_C_PLUS) || defined(ARDUINO_M5Stack_Core_ESP32) || defined(ARDUINO_M5STACK_FIRE) || defined(ARDUINO_M5STACK_Core2) || defined(ARDUINO_ARCH_RP2040))
+    void setup();
+    void loop();
+#endif
+
+
+#if defined(_WIN32)
     #define WC_NAME TEXT("e512w3d")
     #define WT_NAME TEXT("e512w3d")
     LRESULT CALLBACK proc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
@@ -94,7 +99,7 @@ void loop();
         }
         return msg.wParam;
     }
-#elif __EMSCRIPTEN__
+#elif defined(__EMSCRIPTEN__)
     int main () {
         setup();
         
@@ -196,9 +201,7 @@ void loop();
         }
         return 0;
     }
-#elif defined(ARDUINO_ARCH_RP2040)
-    // raspberry pi pico
-#else
+#elif !(defined(ARDUINO_M5Stick_C) || defined(ARDUINO_M5Stick_C_PLUS) || defined(ARDUINO_M5Stack_Core_ESP32) || defined(ARDUINO_M5STACK_FIRE) || defined(ARDUINO_M5STACK_Core2) || defined(ARDUINO_ARCH_RP2040))
     #if __has_include(<curses.h>) && defined(USENCURSES)
         #include <csignal>
         bool floop = true;
