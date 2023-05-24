@@ -5,11 +5,115 @@
 E512W3DWindowManager e512w3d;
 
 
-
 #if !(defined(ARDUINO_M5Stick_C) || defined(ARDUINO_M5Stick_C_PLUS) || defined(ARDUINO_M5Stack_Core_ESP32) || defined(ARDUINO_M5STACK_FIRE) || defined(ARDUINO_M5STACK_Core2) || defined(ARDUINO_ARCH_RP2040))
     void setup();
     void loop();
 #endif
+
+
+#if defined(ARDUINO_M5Stick_C) || defined(ARDUINO_ARCH_RP2040)
+    inline void delay1 () { delay(1); }
+#else
+    inline void delay1 () { usleep(10); }
+#endif
+
+E512W3DWindow* rendertargetwindow;
+Object3D* rendertargetobject;
+bool rendertargetchild = false;
+bool render1 = false;
+bool isrunning = true;
+
+void loop1 () {
+    if (render1 && rendertargetwindow != NULL) {
+        if (rendertargetobject == NULL) {
+            for (auto&& i : rendertargetwindow->child) { rendertargetwindow->draw(*i, 1, 2, rendertargetchild); }
+        } else {
+            rendertargetwindow->draw(*rendertargetobject, 1, 2, rendertargetchild);
+        }
+        render1 = false;
+    }
+}
+
+#if defined(_WIN32)
+    #include <thread>
+    bool rnf0 = false;
+    void threadLoop0 () {
+        while (isrunning) {
+            if (rnf0) {
+                loop();
+                rnf0 = false;
+            }
+            delay1();
+        }
+    }
+
+    bool rnf1 = false;
+    void threadLoop1 () {
+        while (isrunning) {
+            if (rnf1) {
+                loop1();
+                rnf1 = false;
+            }
+            delay1();
+        }
+    }
+#endif
+
+#if defined(ARDUINO_M5Stick_C)
+    bool multicorebegin = true;
+    bool rnf1 = false;
+    void threadLoop1 (void* param) {
+        while (isrunning) {
+            loop1();
+            delay1();
+        }
+    }
+    void multiCoreDraw (E512W3DWindow& w) {
+        if (multicorebegin) {
+            xTaskCreatePinnedToCore(threadLoop1, "Core0", 4096, NULL, 1, NULL, 0);
+            multicorebegin = false;
+        }
+        rendertargetwindow = &w;
+        rendertargetobject = NULL;
+        rendertargetchild = true;
+        w.begin();
+        render1 = true;
+        for (auto&& i : w.child) { w.draw(*i, 0, 2, rendertargetchild); }
+        while (render1 && isrunning) { delay1(); }
+    }
+    void multiCoreDraw (E512W3DWindow& w, Object3D& o, bool child = false) {
+        if (multicorebegin) {
+            xTaskCreatePinnedToCore(threadLoop1, "Core0", 4096, NULL, 1, NULL, 0);
+            multicorebegin = false;
+        }
+        rendertargetwindow = &w;
+        rendertargetobject = &o;
+        rendertargetchild = child;
+        render1 = true;
+        w.draw(o, 0, 2, child);
+        while (render1 && isrunning) { delay1(); }
+    }
+#else
+    void multiCoreDraw (E512W3DWindow& w) {
+        rendertargetwindow = &w;
+        rendertargetobject = NULL;
+        rendertargetchild = true;
+        w.begin();
+        render1 = true;
+        for (auto&& i : w.child) { w.draw(*i, 0, 2, rendertargetchild); }
+        while (render1 && isrunning) { delay1(); }
+    }
+    void multiCoreDraw (E512W3DWindow& w, Object3D& o, bool child = false) {
+        rendertargetwindow = &w;
+        rendertargetobject = &o;
+        rendertargetchild = child;
+        render1 = true;
+        w.draw(o, 0, 2, child);
+        while (render1 && isrunning) { delay1(); }
+    }
+#endif
+
+
 
 
 #if defined(_WIN32)
@@ -79,6 +183,9 @@ E512W3DWindowManager e512w3d;
         if (hwnd == NULL) { return 0; }
         M5.window_app(hwnd, e512w3d.width, e512w3d.height);
         POINT pos;
+        
+        std::thread th0(threadLoop0);
+        std::thread th1(threadLoop1);
         while (true) {
             GetCursorPos(&pos);
             ScreenToClient(hwnd, &pos);
@@ -93,10 +200,14 @@ E512W3DWindowManager e512w3d;
                 if(msg.message == WM_QUIT) { break; }
                 DispatchMessage(&msg);
             } else {
-                loop();
-                Sleep(1);
+                rnf0 = true;
+                rnf1 = true;
+                delay1();
             }
         }
+        isrunning = false;
+        th0.join();
+        th1.join();
         return msg.wParam;
     }
 #elif defined(__EMSCRIPTEN__)
