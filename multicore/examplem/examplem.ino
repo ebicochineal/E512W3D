@@ -3,9 +3,35 @@
 #include "ebi.hpp"
 #include "ebi_64_32.hpp"
 
+class FPSCnt {
+private:
+    int tcnt = 0;
+    int cnt = 0;
+    int sumtime = 0;
+    int prevtime = 0;
+public:
+    FPSCnt () {
+        this->sumtime = millis();
+        this->prevtime = this->sumtime;
+    }
+    int getCnt () {
+        int time = millis();
+        this->sumtime += time-this->prevtime;
+        this->prevtime = time;
+        this->tcnt += 1;
+        if (this->sumtime >= 1000) {
+            this->sumtime = this->sumtime%1000;
+            this->cnt = this->tcnt;
+            this->tcnt = 0;
+        }
+        return cnt;
+    }
+};
+
 E512W3DWindow w;
 Object3D a;
 Object3D camera;
+FPSCnt fps;
 
 void setup () {
     M5.begin();
@@ -40,7 +66,7 @@ void loop () {
     
     // if (e512w3d.isFixedTime()) {
         a.rotation *= Quaternion::angleAxis(5.0, Vector3(0, 1, 0));
-        if ((cnt / 60) % 2 == 0) {
+        if ((cnt / 120) % 2 == 0) {
             // e512w3d.clear();
             // w.draw();// window all object draw
             
@@ -48,7 +74,7 @@ void loop () {
             w.begin();
             w.draw(a);// window object draw
             
-            w.print("core 1");
+            w.println("core 1");
         } else {
             // e512w3d.clear();
             // multiCoreDraw(w);// window all object draw multicore
@@ -57,8 +83,10 @@ void loop () {
             w.begin();
             multiCoreDraw(w, a);// window object draw multicore
             
-            w.print("core 2");
+            w.println("core 2");
         }
+        w.print("FPS:");
+        w.println(numtostr(fps.getCnt()));
         e512w3d.pushScreen();
 
         cnt += 1;

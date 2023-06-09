@@ -94,7 +94,7 @@ E512W3DWindowManager e512w3d;
                 DispatchMessage(&msg);
             } else {
                 loop();
-                Sleep(1);
+                usleep(100);
             }
         }
         return msg.wParam;

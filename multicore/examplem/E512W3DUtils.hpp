@@ -309,6 +309,10 @@ public:
     Vector4 (Vector3 v) { this->x = v.x; this->y = v.y; this->z = v.z; this->w = 1; }
     Vector4 (float x, float y, float z, float w) { this->x = x; this->y = y; this->z = z; this->w = w; }
     Vector3 xyz() { return Vector3(this->x, this->y, this->z); }
+    Vector4 operator + (const Vector4& t) const { return Vector4(this->x + t.x, this->y + t.y, this->z + t.z, this->w + t.w); }
+    
+    
+    Vector4 operator * (const float& t) const { return Vector4(this->x * t, this->y * t, this->z * t, this->w * t); }
 };
 
 struct Quaternion {
@@ -465,7 +469,7 @@ public:
         Matrix4x4 r;
         float aspect =  w / h;
         float cfov = 45.0 * DEGREE_TO_RADIAN_F;
-        float cnear = 4.0f;
+        float cnear = 0.5f;
         float cfar = 1000.0f;
         float y = 1.0f / tan(cfov * 0.5f);
         float x = y / aspect;
@@ -486,7 +490,7 @@ public:
         float top = h * size;
         float bottom = -h * size;
         
-        float cnear = 4.0f;
+        float cnear = 0.5f;
         float cfar = 1000.0f;
         r.m[0][0] = 4.0f / (right - left);
         r.m[1][1] = 4.0f / (top - bottom);
