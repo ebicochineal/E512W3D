@@ -1558,7 +1558,6 @@ public:
         }
     }
     
-    
     void add (E512W3DWindow& w) {
         if (this->wsize < 32) {
             this->ws[this->wsize] = &w;
@@ -1566,35 +1565,31 @@ public:
         }
     }
     
+    void fixedWait () {
+        while (!this->isFixedTime()) { delay(1); }
+    }
+    
     void fixedDrawWait () {
-        while (millis() - this->prev_time < this->fixed_milli_time) { delay(1); }
-        this->prev_time = millis();
-        this->colorBufferClear();
-        this->allWindowDraw();
-        this->pushScreen();
+        this->fixedWait();
+        this->draw();
     }
     
     void fixedDraw () {
-        uint64_t t = millis();
-        if (t - this->prev_time >= this->fixed_milli_time) {
-            this->colorBufferClear();
-            this->allWindowDraw();
-            this->pushScreen();
-            this->prev_time = t;
-        }
+        if (this->isFixedTime()) { this->draw(); }
     }
     
     void draw () {
-        this->prev_time = millis();
-        this->colorBufferClear();
+        this->clear();
         this->allWindowDraw();
         this->pushScreen();
     }
     
     bool isFixedTime () {
-        return millis() - this->prev_time >= this->fixed_milli_time;
+        return millis() - this->prev_time >= this->fixed_milli_time - this->over_time;
     }
     void clear (uint16_t color = 0) {
+        this->over_time = (millis() - this->prev_time) - (this->fixed_milli_time - this->over_time);
+        this->over_time = min(this->over_time, this->fixed_milli_time);
         this->prev_time = millis();
         this->colorBufferClear(color);
     }
@@ -1603,6 +1598,7 @@ public:
     }
     uint64_t prev_time = 0;
 private:
+    uint16_t over_time = 0;
     void colorBufferClear (uint16_t color = 0) { this->tft_es_buff->fillSprite(color); }
     
     void allWindowDraw () {

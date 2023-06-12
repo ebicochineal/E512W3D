@@ -97,6 +97,9 @@ emscripten
 ```
 em++ ./***.cpp -o ./e512w3d.js -s ASYNCIFY
 ```
+e512w3d.jsとe512w3d.wasmが作成されるかと思います  
+以下のindex.htmlをテキストエディタなどで作成し  
+pythonなどでローカルwebサーバを立ち上げwebブラウザでアクセスしてください  
 index.html
 ```html
 <!DOCTYPE html>
@@ -123,6 +126,7 @@ index.html
     </body>
 </html>
 ```
+
 ```
 py -m http.server 8000
 ```
@@ -133,7 +137,7 @@ http://localhost:8000/
 ## raspberry-pi-pico
 ArduinoIDEで動作します  
 ST7735を搭載した解像度160x80ディスプレイを使用します  
-必要に応じて変更すれば他のディスプレイを使うことができるかもしれませんE512W3DUtilsX.cppの16~118行のコードを変更してください  
+必要に応じて変更すれば他のディスプレイを使うことができるかもしれませんE512W3DUtilsX.cppの16~115行のコードを変更してください  
 ライブラリにバグがあるらしく青と赤が反転しているためE512W3DUtilsX.cppの100行目からの処理で再び反転させています  
 色が反転する場合はコメントアウトしてください  
 
@@ -174,7 +178,7 @@ Adafruit_ST7735
 
 ---
 
-#### キー入力, マウス入力  
+## キー入力, マウス入力  
 
 bool keydown (char c)  
 int cursor_x  
@@ -185,7 +189,7 @@ bool cursor_r
 
 or  
 
-#### E512W3DInput  
+E512W3DInput  
 |                | m5stickc | console | ncurses | windows | emscripten | pico |
 | -              | -        | -       | -       | -       | -          | -    |
 | getKey         | no       | no      | yes     | yes     | yes        | no   |
@@ -206,7 +210,7 @@ void loop() {
 ```
 
 
-m5stickc  
+#### m5stickc  
 M5.updateはE512W3DInput::updateで呼ばれます  
 getButtonはBtnA=0, BtnB=1のみ使えます  
 M5.Lcd.setRotation(1)で画面を上にした状態を初期状態とし、カーソルは加速度センサーで動かしています  
@@ -226,7 +230,104 @@ void loop () {
 }
 ```
 ---
+## Draw
 
+- Drawにはスクリーン全体、ウィンドウ全体、オブジェクトごとの3種類があります  
+- e512w3dのDraw系メソッドはどれもスクリーン全体描画で次のフレームまで処理を止めるか、すぐに描画するかなどがあります  
+- windowのdrawメソッドはオブジェクトを指定しなければwindow全体となります  
+オブジェクトを指定のdrawであれば同じオブジェクトを位置をずらして描画したりすることができdrawLineやテキストの表示などもできます  
+  - 始めにe512w3d.clearしてください  
+  - オブジェクトごとのdrawならw.beginもしてください  
+  - 最後にpushScreenしてください  
+
+
+```cpp
+E512W3DWindow w;
+Object3D a;
+
+void loop () {
+    //
+    e512w3d.draw();
+}
+
+void loop () {
+    //
+    e512w3d.fixedDrawWait();
+}
+
+void loop () {
+    //
+    e512w3d.fixedDraw();
+}
+void loop () {
+    //
+    e512w3d.fixedWait();
+    e512w3d.draw();
+}
+
+void loop () {
+    //
+    e512w3d.fixedWait();
+    e512w3d.clear();
+    w.begin();
+    w.draw(a);
+    w.println("text");
+    e512w3d.pushScreen();
+}
+void loop () {
+    //
+    e512w3d.fixedWait();
+    e512w3d.clear();
+    w.draw();
+    e512w3d.pushScreen();
+}
+void loop () {
+    //
+    if (e512w3d.isFixedTime()) {
+        e512w3d.draw();
+    }
+}
+void loop () {
+    //
+    if (e512w3d.isFixedTime()) {
+        //
+        e512w3d.clear();
+        w.draw();
+        e512w3d.pushScreen();
+    }
+}
+void loop () {
+    //
+    if (e512w3d.isFixedTime()) {
+        //
+        e512w3d.clear();
+        w.begin();
+        w.draw(a);
+        w.println("text");
+        e512w3d.pushScreen();
+    }
+}
+```
+---
+## E512Array
+Arduino環境では可変長配列が無かったため可変長配列を作りました  
+std::vectorと大体同じように使えるかと思います  
+
+---
+## おまじない
+最初にM5StickC向けに作りました  
+そのコードを他の環境でも変更することなく動くように作りました  
+そのため以下のコードは他の環境では不要に思えますがとりあえず消さないでください  
+とくにpicoではM5.begin()でlcdの初期化をしています  
+M5環境では普通に機能すると思うのでバックライトの明るさは変更しても構いません  
+```cpp
+M5.begin();
+M5.Lcd.setRotation(1);
+M5.Axp.ScreenBreath(9);
+M5.MPU6886.Init();
+```
+
+---
 E512Array<uint8_t> numtostr (int v)  
 E512Array<uint8_t> numtostr (float v, uint8_t n = 4)  
 uint16_t color565 (uint16_t r, uint16_t g, uint16_t b)  
@@ -261,6 +362,7 @@ E512W3DWindowManager ()
 void begin ()  
 void add (E512W3DWindow& w)  
 void draw ()  
+void fixedWait ()  
 void fixedDraw ()  
 void fixedDrawWait ()  
 bool isFixedTime ()  
