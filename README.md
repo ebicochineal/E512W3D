@@ -259,10 +259,19 @@ void loop () {
     //
     e512w3d.fixedDraw();
 }
+
 void loop () {
     //
     e512w3d.fixedWait();
     e512w3d.draw();
+}
+
+void loop () {
+    //
+    e512w3d.fixedWait();
+    e512w3d.clear();
+    w.draw();
+    e512w3d.pushScreen();
 }
 
 void loop () {
@@ -274,19 +283,14 @@ void loop () {
     w.println("text");
     e512w3d.pushScreen();
 }
-void loop () {
-    //
-    e512w3d.fixedWait();
-    e512w3d.clear();
-    w.draw();
-    e512w3d.pushScreen();
-}
+
 void loop () {
     //
     if (e512w3d.isFixedTime()) {
         e512w3d.draw();
     }
 }
+
 void loop () {
     //
     if (e512w3d.isFixedTime()) {
@@ -296,6 +300,7 @@ void loop () {
         e512w3d.pushScreen();
     }
 }
+
 void loop () {
     //
     if (e512w3d.isFixedTime()) {
