@@ -175,7 +175,6 @@ Adafruit_ST7735
 
 
 
-
 ---
 
 ## キー入力, マウス入力  
@@ -314,6 +313,56 @@ void loop () {
 }
 ```
 ---
+## 文字出力
+e512w3dのdrawメソッドで画面全体の描画を行わないのであれば文字の出力ができます  
+出力できるのはchar, const char[], E512Array<uint8_t>です  
+表示用の文字列はstd::stringなどを使用せずE512Array<uint8_t>を使ってください  
+```cpp
+E512Array<uint8_t> str = cptou8a("hello world");
+```
+
+drawCharメソッドで任意の位置に文字を出力できます  
+#### printメソッド  
+- 文字列出力を行えます  
+- printlnメソッドで文字列の出力と改行を行えます  
+- wardwrapを指定することで折り返しの制御を行えます  
+- 位置を指定するにはsetTextCursorメソッドを使用してください  
+
+フォントは幅6高さ12ピクセルの物を用意しています  
+サイズは2倍3倍などの拡大も可能です  
+atok関数で日本式ローマ字文字列をを半角カタカナ文字列に変換することができますが、そこそこ重いので毎フレーム同じ文字列を変換して表示するのは避けた方が良いです  
+```cpp
+void loop () {
+    if (e512w3d.isFixedTime()) {
+        e512w3d.clear();
+        w.begin();
+        w.draw();// window 3d object draw
+        w.println("text");
+        w.println(atok("haro-wa-rudo"));
+        w.println(numtostr(1234));
+        w.println(1234);
+        w.println(0.1234);
+        e512w3d.pushScreen();
+    }
+}
+```
+
+画面上のオブジェクトの位置にテキストを表示したい場合はscreenPositionで座標を取得できます  
+```cpp
+Vector3 p = w.screenPosition(a);
+w.setTextCursor(p.x, p.y);
+w.print('text');
+```
+printメソッドで背景色を使用するにはtext_use_bgcolorをtrueにしてください  
+```cpp
+w.text_use_bgcolor = true;
+w.text_bgcolor = color565(255,0,0);
+```
+
+
+
+
+---
 ## E512Array
 Arduino環境では可変長配列が無かったため可変長配列を作りました  
 std::vectorと大体同じように使えるかと思います  
@@ -418,6 +467,21 @@ void print (const char* cp, bool wordwrap = true)
 void println (const char* cp, bool wordwrap = true)  
 void print (const uint8_t c, bool wordwrap = true)  
 void println (const uint8_t c, bool wordwrap = true)  
+void print (const char c, bool wordwrap = true)  
+void println (const char c, bool wordwrap = true)  
+void print (const int n, bool wordwrap = true)  
+void println (const int n, bool wordwrap = true)  
+void print (const size_t n, bool wordwrap = true)  
+void println (const size_t n, bool wordwrap = true)  
+void print (const double n, bool wordwrap = true)  
+void println (const double n, bool wordwrap = true)  
+void print (const float n, bool wordwrap = true)  
+void println (const float n, bool wordwrap = true)  
+    
+
+
+
+
 Matrix4x4 view  
 Matrix4x4 projescreen  
 

@@ -376,6 +376,28 @@ public:
         this->text_sub_cursor_x = 0;
     }
     
+    void print (const char c, bool wordwrap = true) {
+        E512Array<uint8_t> v;
+        v.emplace_back(c);
+        this->print(v, wordwrap);
+    }
+    void println (const char c, bool wordwrap = true) {
+        E512Array<uint8_t> v;
+        v.emplace_back(c);
+        this->print(v, wordwrap);
+        this->text_sub_cursor_y += this->font->getHeight(0) * this->text_size;
+        this->text_sub_cursor_x = 0;
+    }
+    
+    void print (const int n, bool wordwrap = true) { this->print(numtostr(n), wordwrap); }
+    void println (const int n, bool wordwrap = true) { this->println(numtostr(n), wordwrap); }
+    void print (const size_t n, bool wordwrap = true) { this->print(numtostr((int)n), wordwrap); }
+    void println (const size_t n, bool wordwrap = true) { this->println(numtostr((int)n), wordwrap); }
+    void print (const double n, bool wordwrap = true) { this->print(numtostr((float)n), wordwrap); }
+    void println (const double n, bool wordwrap = true) { this->println(numtostr((float)n), wordwrap); }
+    void print (const float n, bool wordwrap = true) { this->print(numtostr(n), wordwrap); }
+    void println (const float n, bool wordwrap = true) { this->println(numtostr(n), wordwrap); }
+    
     
     Matrix4x4 objectWorldViewMatrix (Object3D& obj) {
         return Matrix4x4::mul(obj.worldMatrix(), this->view);
