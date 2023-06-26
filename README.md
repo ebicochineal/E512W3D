@@ -312,6 +312,13 @@ void loop () {
     }
 }
 ```
+
+---
+## E512Array
+Arduino環境では可変長配列が無かったため可変長配列を作りました  
+std::vectorと大体同じように使えるかと思います  
+
+
 ---
 ## 文字出力
 e512w3dのdrawメソッドで画面全体の描画を行わないのであれば文字の出力ができます  
@@ -358,16 +365,53 @@ printメソッドで背景色を使用するにはtext_use_bgcolorをtrueにし�
 w.text_use_bgcolor = true;
 w.text_bgcolor = color565(255,0,0);
 ```
+---
+## RayCast
+Rayを作成しオブジェクトとのRay判定ができます  
 
+- スクリーン座標からのRayの作成  
+```Ray (int x, int y, Matrix4x4 view, Matrix4x4 proj)```  
+- 座標sから座標eへのRayの作成  
+```Ray (Vector3 s, Vector3 e)```  
+- オブジェクトとのHit判定  
+```RaycastHit hit = obj.raycast(ray)```  
+- RaycastHit構造体
+  - hit.distance Hitした距離 Hitしなかった場合は-1
+  - hit.u, hit.v テクスチャUV座標
+  - hit.point RayがHitしたワールド座標
+  - hit.triangleindex Meshのfacesのインデックス
+
+
+#### ３Dペイント例  
+example4のloop関数を書き換えます  
+このモデルはテクスチャの一部を複数のポリゴンと共有しているため右を塗ると左のテクスチャも変わります  
+テクスチャのカラーはcolor1555を渡してください  
+RenderTypeはPolygonTexturePerspectiveCorrectを指定します  
+
+```cpp
+// example4 loop
+void loop () {
+    if (e512w3d.isFixedTime()) {
+        a.rotation *= Quaternion::angleAxis(5.0, Vector3(0, 1, 0));
+        Vector2 m = E512W3DInput::cursorPosition();
+        // m.x -= w.sx;// screen position -> window position
+        // m.y -= w.sy;// screen position -> window position
+        Ray r(m.x, m.y, w.view, w.projescreen);
+        RaycastHit hit = a.raycast(r);
+        if (hit.distance > -1) {
+            // color1555 texture color A1 R5 G5 B5
+            ebi_64_32_texture.setColor(hit.u, hit.v, color1555(0, 255, 255, 255));
+        }
+        a.render_type = RenderType::PolygonTexturePerspectiveCorrect;
+        e512w3d.draw();
+    }
+}
+```
 
 
 
 ---
-## E512Array
-Arduino環境では可変長配列が無かったため可変長配列を作りました  
-std::vectorと大体同じように使えるかと思います  
 
----
 ## おまじない
 最初にM5StickC向けに作りました  
 そのコードを他の環境でも変更することなく動くように作りました  
@@ -385,6 +429,10 @@ M5.MPU6886.Init();
 E512Array<uint8_t> numtostr (int v)  
 E512Array<uint8_t> numtostr (float v, uint8_t n = 4)  
 uint16_t color565 (uint16_t r, uint16_t g, uint16_t b)  
+uint16_t color1555 (uint16_t a, uint16_t r, uint16_t g, uint16_t b)  
+E512Array<uint8_t> cptou8a (const char* cp)  
+E512Array<uint8_t> atok (E512Array<uint8_t>& u8a)  
+E512Array<uint8_t> atok (const char* cp)  
 
 #### E512Array
 uint32_t size ()  
