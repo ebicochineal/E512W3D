@@ -384,6 +384,7 @@ Rayを作成しオブジェクトとのRay判定ができます
 
 #### ３Dペイント例  
 example4のloop関数を書き換えます  
+動作確認する際はカーソルの移動が可能なwindows-app, emscripten, M5StickCなどで実行してください  
 このモデルはテクスチャの一部を複数のポリゴンと共有しているため右を塗ると左のテクスチャも変わります  
 テクスチャのカラーはcolor1555を渡してください  
 RenderTypeはPolygonTexturePerspectiveCorrectを指定します  
@@ -393,17 +394,27 @@ RenderTypeはPolygonTexturePerspectiveCorrectを指定します
 void loop () {
     if (e512w3d.isFixedTime()) {
         a.rotation *= Quaternion::angleAxis(5.0, Vector3(0, 1, 0));
-        Vector2 m = E512W3DInput::cursorPosition();
-        // m.x -= w.sx;// screen position -> window position
-        // m.y -= w.sy;// screen position -> window position
-        Ray r(m.x, m.y, w.view, w.projescreen);
+        e512w3d.clear();
+        w.begin();
+        
+        Vector2 c = E512W3DInput::cursorPosition();
+        // c.x -= w.sx;// screen position -> window position
+        // c.y -= w.sy;// screen position -> window position
+        Ray r(c.x, c.y, w.view, w.projescreen);
         RaycastHit hit = a.raycast(r);
         if (hit.distance > -1) {
             // color1555 texture color A1 R5 G5 B5
             ebi_64_32_texture.setColor(hit.u, hit.v, color1555(0, 255, 255, 255));
         }
+        
+        w.draw();
+        
+        // cursor line
+        w.drawLine(0, c.y, e512w3d.width-1, c.y, color565(255, 255, 255));
+        w.drawLine(c.x, 0, c.x, e512w3d.height-1, color565(255, 255, 255));
         a.render_type = RenderType::PolygonTexturePerspectiveCorrect;
-        e512w3d.draw();
+        
+        e512w3d.pushScreen();
     }
 }
 ```
