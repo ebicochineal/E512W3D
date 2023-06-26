@@ -22,7 +22,7 @@ void setup () {
     a.mesh = &ebi;
     a.texture = &ebi_64_32_texture;
     a.render_type = RenderType::PolygonTexture;
-    a.color = M5.Lcd.color565(255, 255, 255);
+    a.color = color565(255, 255, 255);
     
     camera.position.z = 15;
     camera.position.y = 1;
