@@ -428,7 +428,7 @@ void loop () {
 そのコードを他の環境でも変更することなく動くように作りました  
 そのため以下のコードは他の環境では不要に思えますがとりあえず消さないでください  
 とくにpicoではM5.begin()でlcdの初期化をしています  
-M5環境では普通に機能すると思うのでバックライトの明るさは変更しても構いません  
+M5環境では普通に機能すると思うのでバックライトの明るさや画面の回転は変更できます  
 ```cpp
 M5.begin();
 M5.Lcd.setRotation(1);
@@ -511,6 +511,9 @@ void drawLine (uint16_t sx, uint16_t sy, uint16_t ex, uint16_t ey, uint16_t colo
 void drawPoint (Object3D& obj, uint16_t size = 1, uint16_t color = 0xFFFF)  
 void drawPoint (Vector3 p, uint16_t size = 1, uint16_t color = 0xFFFF)  
 void drawPoint (int16_t px, int16_t py, uint16_t size = 1, uint16_t color = 0xFFFF)  
+void drawCircle (int16_t sx, int16_t sy, int16_t ex, int16_t ey, uint16_t color = 0xFFFF)  
+void drawRect (int16_t sx, int16_t sy, int16_t ex, int16_t ey, uint16_t color = 0xFFFF)  
+
 void begin (bool color_buffer_clear = true, bool z_buffer_clear = true)  
 Vector3 screenPosition (Object3D& obj)  
 Vector3 screenPosition (Vector3 p)  

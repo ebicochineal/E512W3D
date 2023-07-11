@@ -229,6 +229,61 @@ public:
         }
     }
     
+    void drawCircle (int16_t sx, int16_t sy, int16_t ex, int16_t ey, uint16_t color = 0xFFFF) {
+        if (this->dsy == this->dey || this->dsx == this->dex) { return; }
+        
+        if (sx > ex) { this->swap(sx, ex); }
+        if (sy > ey) { this->swap(sy, ey); }
+        
+        sx += this->sx;
+        sy += this->sy;
+        ex += this->sx;
+        ey += this->sy;
+        
+        float width = (ex - sx);
+        float height = (ey - sy);
+        float aspectratio = width / height;
+        
+        float dw = (ex - sx) % 2 ? 0 : 0.5;
+        float dh = (ey - sy) % 2 ? 0 : 0.5;
+        float px = ((sx + ex) >> 1) - dw;
+        float py = ((sy + ey) >> 1) - dh;
+        float size = (ex-sx) * 0.5;
+        ex = min(ex, this->dex);
+        ey = min(ey, this->dey);
+        sx = max(sx, this->dsx);
+        sy = max(sy, this->dsy);
+        float ss = size * size;
+        for (int16_t y = sy; y < ey; ++y) {
+            for (int16_t x = sx; x < ex; ++x) {
+                float d = (x - px) * (x - px) + (y - py) * aspectratio * (y - py) * aspectratio; 
+                if (d <= ss) { this->buff->drawPixel(x, y, color); }
+            }
+        }
+    }
+    void drawRect (int16_t sx, int16_t sy, int16_t ex, int16_t ey, uint16_t color = 0xFFFF) {
+        if (this->dsy == this->dey || this->dsx == this->dex) { return; }
+        
+        if (sx > ex) { this->swap(sx, ex); }
+        if (sy > ey) { this->swap(sy, ey); }
+        
+        sx += this->sx;
+        sy += this->sy;
+        ex += this->sx;
+        ey += this->sy;
+        
+        int16_t size = ex-sx;
+        ex = min(ex, dex);
+        ey = min(ey, dey);
+        sx = max(sx, dsx);
+        sy = max(sy, dsy);
+        for (int16_t y = sy; y < ey; ++y) {
+            for (int16_t x = sx; x < ex; ++x) {
+                this->buff->drawPixel(x, y, color);
+            }
+        }
+    }
+    
     void drawChar (uint8_t c, int16_t px, int16_t py) {
         if (px >= this->width || px + this->font->getWidth(c) * this->text_size < 0) { return; }
         if (py >= this->height || py + this->font->getHeight(c) * this->text_size < 0) { return; }
