@@ -1,12 +1,12 @@
 E512W3Dで使用できるGUIです  
 現在スライダーのみです  
 - スライダーの幅は8ピクセルです  
-- つまみを操作するにはE512W3DInput::updateの後にdragUpdateをしてください
+- つまみを操作するにはE512W3DInput::updateの後にguiUpdateをしてください
 - 表示するにはguiDrawしてください
 - マウスオーバー中ポップアップで値を表示するにはguiDrawの後にpopupDrawをしてください
 - getValue01で値を0.0~1.0の範囲で取得できます
 - drawLineやdrawCharなどと同じくスクリーン全体のdrawには対応していません
-
+----
 ```cpp 
 #include "E512W3D.hpp"
 #include "E512W3DGUI.hpp"
@@ -34,9 +34,9 @@ E512W3DGUISlider b( 0, 16, 160, 0, 0, 255,   0);
 void loop () {
     if (e512w3d.isFixedTime()) {
         E512W3DInput::update();
-        r.updateDrag(w);
-        g.updateDrag(w);
-        b.updateDrag(w);
+        r.guiUpdate(w);
+        g.guiUpdate(w);
+        b.guiUpdate(w);
         w.bgcolor = color565(r.getValue(), g.getValue(), b.getValue());
         e512w3d.clear();
         w.begin();
@@ -50,7 +50,7 @@ void loop () {
     }
 }
 ```
-
+----
 
 
 #### E512W3DGUISlider
@@ -63,6 +63,6 @@ void setMaxValue (int value)
 int getMaxValue ()  
 void setSize (int size)  
 int getSize ()  
-void updateDrag (E512W3DWindow& w)  
+void guiUpdate (E512W3DWindow& w)  
 void guiDraw (E512W3DWindow& w)  
 void popupDraw (E512W3DWindow& w)  

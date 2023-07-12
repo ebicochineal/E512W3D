@@ -81,7 +81,7 @@ public:
     int getSize () { return this->size; }
     
     
-    void updateDrag (E512W3DWindow& w) {
+    void guiUpdate (E512W3DWindow& w) {
         int px = w.getCursorX();
         int py = w.getCursorY();
         
