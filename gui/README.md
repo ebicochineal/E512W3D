@@ -54,9 +54,9 @@ void loop () {
 #### ボタン E512W3DGUIButton 
 - E512W3DInput::updateの後にguiUpdateをしてください  
 - ishover ボタン上にカーソルがある  
-- isdrag ボタンを押したまま（移動してボタン上にカーソルが無くてもtrue）  
+- isdrag ボタンを押したまま（ボタンを押したまま移動中でボタン上にカーソルが無くてもtrue）  
 - isdown ボタンを押したフレームにtrue  
-- isup ボタンを押してボタン上で離された（移動した後にボタン上に戻って話した場合もtrue、移動後ボタン上にカーソルが無い場合はfalse）  
+- isup ボタンを押してボタン上で離された（移動した後にボタン上に戻って離した場合もtrue、移動後ボタン上にカーソルが無い場合はfalse）  
 
 ----
 #### E512W3DGUISlider
