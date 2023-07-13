@@ -791,19 +791,21 @@ struct Texture {
     }
 };
 
-enum RenderType {
-    WireFrame,
-    PolygonColor,
-    PolygonNormal,
-    PolygonTranslucent,
-    PolygonTexture,
-    PolygonTextureDoubleFace,
-    PolygonTexturePerspectiveCorrect,
-    PolygonTexturePerspectiveCorrectDoubleFace,
-    Hide,
-    None,
-    // Line,
-};
+namespace RenderType {
+    enum Type {
+        WireFrame,
+        PolygonColor,
+        PolygonNormal,
+        PolygonTranslucent,
+        PolygonTexture,
+        PolygonTextureDoubleFace,
+        PolygonTexturePerspectiveCorrect,
+        PolygonTexturePerspectiveCorrectDoubleFace,
+        Hide,
+        None,
+        // Line,
+    };
+}
 
 struct Object3D {
 public:
