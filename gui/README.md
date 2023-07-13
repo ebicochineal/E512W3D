@@ -1,5 +1,5 @@
 E512W3Dで使用できるGUIです  
-現在スライダーのみです  
+#### スライダー E512W3DGUISlider  
 - スライダーの幅は8ピクセルです  
 - つまみを操作するにはE512W3DInput::updateの後にguiUpdateをしてください
 - 表示するにはguiDrawしてください
@@ -51,8 +51,14 @@ void loop () {
 }
 ```
 ----
+#### ボタン E512W3DGUIButton 
+- E512W3DInput::updateの後にguiUpdateをしてください  
+- ishover ボタン上にカーソルがある  
+- isdrag ボタンを押したまま（移動してボタン上にカーソルが無くてもtrue）  
+- isdown ボタンを押したフレームにtrue  
+- isup ボタンを押してボタン上で離された（移動した後にボタン上に戻って話した場合もtrue、移動後ボタン上にカーソルが無い場合はfalse）  
 
-
+----
 #### E512W3DGUISlider
 E512W3DGUISlider (int16_t x, int16_t y, uint16_t size, uint16_t hv = 0, uint16_t type = 0, int maxvalue = 1, int value = 0, uint16_t color = 42260, uint16_t bgcolor = 21130)  
 void setValue (int value)  
@@ -66,3 +72,28 @@ int getSize ()
 void guiUpdate (E512W3DWindow& w)  
 void guiDraw (E512W3DWindow& w)  
 void popupDraw (E512W3DWindow& w)  
+
+----
+#### enum ButtonHoverAnim
+None  
+Light  
+Dark  
+
+#### enum ButtonDownAnim
+None  
+Right  
+Left  
+Down  
+Up  
+
+#### E512W3DGUIButton
+bool ishover  
+bool isdown  
+bool isup  
+bool isdrag  
+uint16_t hoveranim = ButtonHoverAnim::Light  
+uint16_t downanim = ButtonDownAnim::Right  
+E512W3DGUIButton (int16_t x, int16_t y, uint16_t width, uint16_t height, E512Array<uint8_t> text, uint16_t color = 42260, uint16_t text_color = 0xFFFF)  
+E512W3DGUIButton (int16_t x, int16_t y, uint16_t width, uint16_t height, const char* text, uint16_t color = 42260, uint16_t text_color = 0xFFFF)  
+void guiUpdate (E512W3DWindow& w)
+void guiDraw (E512W3DWindow& w)

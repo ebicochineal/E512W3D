@@ -46,9 +46,10 @@ public:
     int m = 3;
     int n = 2;
     
-    bool ismouseover = false;
+    bool ishover = false;
     bool isdrag = false;
     
+    E512W3DGUISlider () {}
     E512W3DGUISlider (int16_t x, int16_t y, uint16_t size, uint16_t hv = 0, uint16_t type = 0, int maxvalue = 1, int value = 0, uint16_t color = 42260, uint16_t bgcolor = 21130) {
         this->x = x;
         this->y = y;
@@ -113,9 +114,9 @@ public:
             }
         }
         
-        this->ismouseover = this->inside(w, sx, sy, ex, ey);
+        this->ishover = this->inside(w, sx, sy, ex, ey);
         
-        if (this->ismouseover && E512W3DInput::getButtonDown(0)) {
+        if (this->ishover && E512W3DInput::getButtonDown(0)) {
             this->isdrag = true;
         } else if (this->isdrag && E512W3DInput::getButton(0)) {
             this->isdrag = true;
@@ -182,8 +183,8 @@ public:
         }
     }
     void popupDraw (E512W3DWindow& w) {
-        if (!(this->ismouseover || this->isdrag)) { return; }
-        if (this->ismouseover && !this->isdrag && E512W3DInput::getButton(0)) { return; }
+        if (!(this->ishover || this->isdrag)) { return; }
+        if (this->ishover && !this->isdrag && E512W3DInput::getButton(0)) { return; }
         int px = w.getCursorX();
         int py = w.getCursorY();
         E512W3DWindowTextCursor c(w);
@@ -229,3 +230,146 @@ private:
         return px >= sx && px < ex && py >= sy && py < ey;
     }
 };
+
+namespace ButtonHoverAnim {
+    enum Type {
+        None,
+        Light,
+        Dark,
+    };
+}
+namespace ButtonDownAnim {
+    enum Type {
+        None,
+        Right,
+        Left,
+        Down,
+        Up,
+    };
+}
+
+class E512W3DGUIButton {
+public:
+    int16_t x, y;
+    uint16_t width, height;
+    uint16_t color;
+    uint16_t text_color;
+    E512Array<uint8_t> text;
+    uint16_t text_size = 1;
+    bool wordwrap = true;
+    int m = 0;
+    
+    int16_t hoveranimframe = 0;
+    
+    bool ishover = false;
+    bool isdown = false;
+    bool isup = false;
+    bool isdrag = false;
+    
+    uint16_t hoveranim = ButtonHoverAnim::Light;
+    uint16_t downanim = ButtonDownAnim::Right;
+    
+    E512W3DGUIButton () {}
+    E512W3DGUIButton (int16_t x, int16_t y, uint16_t width, uint16_t height, E512Array<uint8_t> text, uint16_t color = 42260, uint16_t text_color = 0xFFFF) {
+        this->x = x;
+        this->y = y;
+        this->width = max(width, 2);
+        this->height = max(height, 2);
+        this->text = text;
+        this->color = color;
+        this->text_color = text_color;
+    }
+    E512W3DGUIButton (int16_t x, int16_t y, uint16_t width, uint16_t height, const char* text, uint16_t color = 42260, uint16_t text_color = 0xFFFF) {
+        this->x = x;
+        this->y = y;
+        this->width = width;
+        this->height = height;
+        this->text = cptou8a(text);
+        this->color = color;
+        this->text_color = text_color;
+    }
+    
+    void guiUpdate (E512W3DWindow& w) {
+        this->isdown = false;
+        this->isup = false;
+        this->ishover = false;
+        if (this->inside(w, this->x, this->y, this->x+this->width, this->y+this->height)) {
+            this->ishover = true;
+            if (E512W3DInput::getButtonDown(0)) {
+                this->isdown = true;
+                this->isdrag = true;
+            }
+            if (E512W3DInput::getButtonUp(0) && this->isdrag) { this->isup = true; }
+        }
+        this->isdrag = E512W3DInput::getButton(0) && this->isdrag;
+        
+        if (this->ishover) {
+            this->hoveranimframe = 8;
+        } else {
+            this->hoveranimframe = max(this->hoveranimframe-1, 0);
+        }
+    }
+    
+    void guiDraw (E512W3DWindow& w) {
+        uint16_t color = this->color;
+        if (this->hoveranim != ButtonHoverAnim::None) {
+            float f = this->hoveranim == ButtonHoverAnim::Light ? 1.0f : -1.0f;
+            float r = ((this->color  >> 11 & 0b11111) << 3) * (1.0f + this->hoveranimframe * 0.0125f * f);
+            float g = ((this->color  >>  6 & 0b11111) << 3) * (1.0f + this->hoveranimframe * 0.0125f * f);
+            float b = ((this->color  >>  0 & 0b11111) << 3) * (1.0f + this->hoveranimframe * 0.0125f * f);
+            r = max(min(r, 255.0f), 0.0f);
+            g = max(min(g, 255.0f), 0.0f);
+            b = max(min(b, 255.0f), 0.0f);
+            color = color565(r, g, b);
+        }
+        
+        int16_t l = this->x;
+        int16_t u = this->y;
+        if (this->downanim != ButtonDownAnim::None && (this->isdown || this->isdrag)) {
+            if (this->downanim == ButtonDownAnim::Right) { l += 1; }
+            if (this->downanim == ButtonDownAnim::Left) { l -= 1; }
+            if (this->downanim == ButtonDownAnim::Down) { u += 1; }
+            if (this->downanim == ButtonDownAnim::Up) { u -= 1; }
+        }
+        w.drawRect(l, u, l+this->width, u+this->height, color);
+        
+        E512W3DWindowTextCursor c(w);
+        w.text_size = this->text_size;
+        w.text_color = this->text_color;
+        
+        int16_t tl = l + this->m;
+        int16_t tu = u + this->m;
+        int16_t tr = l + this->width - this->m;
+        int16_t td = u + this->height - this->m;
+        int16_t cx = tl;
+        int16_t cy = tu;
+        for (auto&& i : this->text) {
+            uint16_t tw = w.font->getWidth(i) * w.text_size;
+            uint16_t th = w.font->getHeight(i) * w.text_size;
+            if (i == '\n') {
+                cx = tl;
+                cy += th;
+                continue;
+            }
+            if (wordwrap && cx + tw > tr) {
+                cx = tl;
+                cy += th;
+            }
+            if (cx + tw <= tr && cy + th <= td) {
+                w.drawChar(i, cx, cy);
+                cx += tw;
+            }
+        }
+        
+        c.load(w);
+    }
+    
+    
+private:
+    bool inside (E512W3DWindow& w, int16_t sx, int16_t sy, int16_t ex, int16_t ey) {
+        int px = w.getCursorX();
+        int py = w.getCursorY();
+        return px >= sx && px < ex && py >= sy && py < ey;
+    }
+};
+
