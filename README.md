@@ -513,6 +513,7 @@ void drawPoint (Vector3 p, uint16_t size = 1, uint16_t color = 0xFFFF)
 void drawPoint (int16_t px, int16_t py, uint16_t size = 1, uint16_t color = 0xFFFF)  
 void drawCircle (int16_t sx, int16_t sy, int16_t ex, int16_t ey, uint16_t color = 0xFFFF)  
 void drawRect (int16_t sx, int16_t sy, int16_t ex, int16_t ey, uint16_t color = 0xFFFF)  
+void drawTexture (int16_t sx, int16_t sy, Texture& tex, bool flipx = false)
 
 void begin (bool color_buffer_clear = true, bool z_buffer_clear = true)  
 Vector3 screenPosition (Object3D& obj)  
