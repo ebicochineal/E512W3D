@@ -284,6 +284,42 @@ public:
         }
     }
     
+    
+    void drawTexture (int16_t sx, int16_t sy, int16_t ex, int16_t ey, Texture& tex, bool flipx = false) {
+        if (this->dsy == this->dey || this->dsx == this->dex) { return; }
+        
+        if (sx > ex) { this->swap(sx, ex); }
+        if (sy > ey) { this->swap(sy, ey); }
+        
+        sx += this->sx;
+        sy += this->sy;
+        ex += this->sx;
+        ey += this->sy;
+        
+        const float w = ex-sx;
+        const float h = ey-sy;
+        if (w*h < 1) { return; }
+        
+        int16_t isx = max(sx, this->dsx);
+        int16_t isy = max(sy, this->dsy);
+        ex = min(ex, this->dex);
+        ey = min(ey, this->dey);
+        
+        float fx = flipx ? -1.0f : 1.0f;
+        
+        for (int16_t y = isy; y < ey; ++y) {
+            const float v = 1.0f-float(y-sy)/h;
+            for (int16_t x = isx; x < ex; ++x) {
+                const float u = ((float(x-sx)/w)-0.5f)*fx+0.5f;
+                const uint16_t c1555 = tex.getColor(u, v);
+                const uint16_t r = ((c1555 >> 10) & 0b11111) << 11;
+                const uint16_t g = ((c1555 >>  5) & 0b11111) <<  6;
+                const uint16_t b = ((c1555      ) & 0b11111)      ;
+                if ((c1555 >> 15 & 1) == 0) { this->buff->drawPixel(x, y, r|g|b); }
+            }
+        }
+    }
+    
     void drawTexture (int16_t sx, int16_t sy, Texture& tex, bool flipx = false) {
         if (this->dsy == this->dey || this->dsx == this->dex) { return; }
         
@@ -292,12 +328,12 @@ public:
         int16_t ex = sx + tex.width;
         int16_t ey = sy + tex.height;
         
-        ex = min(ex, dex);
-        ey = min(ey, dey);
-        int16_t isx = max(sx, dsx);
-        int16_t isy = max(sy, dsy);
-        int16_t itx = sx < dsx ? dsx - sx : 0;
-        int16_t ity = sy < dsy ? dsy - sy : 0;
+        ex = min(ex, this->dex);
+        ey = min(ey, this->dey);
+        int16_t isx = max(sx, this->dsx);
+        int16_t isy = max(sy, this->dsy);
+        int16_t itx = sx < this->dsx ? this->dsx - sx : 0;
+        int16_t ity = sy < this->dsy ? this->dsy - sy : 0;
         if (flipx) {
             for (int16_t y = isy, ty = ity; y < ey; ++y, ++ty) {
                 const size_t tyy = ty * tex.width;
