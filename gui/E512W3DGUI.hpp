@@ -53,7 +53,7 @@ public:
     E512W3DGUISlider (int16_t x, int16_t y, uint16_t size, uint16_t hv = 0, uint16_t type = 0, int maxvalue = 1, int value = 0, uint16_t color = 42260, uint16_t bgcolor = 21130) {
         this->x = x;
         this->y = y;
-        this->size = max(size, this->m*2+this->n);
+        this->size = max((int)size, this->m*2+this->n);
         this->color = color;
         this->bgcolor = bgcolor;
         this->hv = hv;
@@ -76,8 +76,8 @@ public:
     }
     int getMaxValue () { return this->maxvalue; }
     
-    void setSize (int size) {
-        this->size = max(size, this->m*2+this->n);
+    void setSize (uint16_t size) {
+        this->size = max((int)size, this->m*2+this->n);
     }
     int getSize () { return this->size; }
     
@@ -273,8 +273,8 @@ public:
     E512W3DGUIButton (int16_t x, int16_t y, uint16_t width, uint16_t height, E512Array<uint8_t> text, uint16_t color = 42260, uint16_t text_color = 0xFFFF) {
         this->x = x;
         this->y = y;
-        this->width = max(width, 2);
-        this->height = max(height, 2);
+        this->width = max((int)width, 2);
+        this->height = max((int)height, 2);
         this->text = text;
         this->color = color;
         this->text_color = text_color;
@@ -282,8 +282,8 @@ public:
     E512W3DGUIButton (int16_t x, int16_t y, uint16_t width, uint16_t height, const char* text, uint16_t color = 42260, uint16_t text_color = 0xFFFF) {
         this->x = x;
         this->y = y;
-        this->width = width;
-        this->height = height;
+        this->width = max((int)width, 2);
+        this->height = max((int)height, 2);
         this->text = cptou8a(text);
         this->color = color;
         this->text_color = text_color;
