@@ -1,11 +1,13 @@
-## 3d-software-renderer m5stickc/m5stack/console-app/windows-app/ncurses/emscripten/raspberry-pi-pico  
+## 3d-software-rendering m5stickc/m5stack/console-app/windows-app/ncurses/emscripten/raspberry-pi-pico  
+- C++で3Dモデルの表示やゲームなどを作成できます  
+- ソフトウェアレンダリングなのでマイコンボードなどでも動作します  
 - 複数のウィンドウ  
 - ワイヤーフレーム、ポリゴン、法線カラー、半透明、テクスチャ  
 - テクスチャパース補正  
 - Directional Light  
 - Ambient  
 - テクスチャなしなら8000ポリゴンくらいまで(m5stickc)  
-- コンソール、ウィンドウアプリ化できる  
+- シングルコアで動作しますが2コアで動作する[バージョン](https://github.com/ebicochineal/E512W3D/tree/master/multicore)もあります  
 
 ![Gif](./img/anim.gif)  
 ![Gif](./img/animc.gif)  

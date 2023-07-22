@@ -781,12 +781,12 @@ struct Texture {
     }
     uint16_t getColor (float u, float v) {
         const uint16_t u16i = (uint16_t)(this->width * u) % this->width;
-        const uint16_t v16i = (uint16_t)(this->height * (1.0-v)) % this->height;
+        const uint16_t v16i = (uint16_t)(this->height * (1.0f-v)) % this->height;
         return this->pixels[v16i*this->width+u16i];
     }
     void setColor (float u, float v, uint16_t color) {
         const uint16_t u16i = (uint16_t)(this->width * u) % this->width;
-        const uint16_t v16i = (uint16_t)(this->height * (1.0-v)) % this->height;
+        const uint16_t v16i = (uint16_t)(this->height * (1.0f-v)) % this->height;
         this->pixels[v16i*this->width+u16i] = color;
     }
 };

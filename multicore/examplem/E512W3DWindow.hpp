@@ -284,6 +284,63 @@ public:
         }
     }
     
+    
+    void drawTexture (int16_t sx, int16_t sy, int16_t ex, int16_t ey, Texture& tex, bool flipx = false) {
+        if (this->dsy == this->dey || this->dsx == this->dex) { return; }
+        
+        if (sx > ex) { this->swap(sx, ex); }
+        if (sy > ey) { this->swap(sy, ey); }
+        
+        sx += this->sx;
+        sy += this->sy;
+        ex += this->sx;
+        ey += this->sy;
+        
+        const float w = ex-sx;
+        const float h = ey-sy;
+        if (w*h < 1) { return; }
+        
+        int16_t isx = max(sx, this->dsx);
+        int16_t isy = max(sy, this->dsy);
+        int16_t iex = min(ex, this->dex);
+        int16_t iey = min(ey, this->dey);
+        
+        float fx = flipx ? -1.0f : 1.0f;
+        
+        static E512Array<uint16_t> ua, va;
+        ua.clear();
+        va.clear();
+        for (uint16_t y=isy; y < iey; ++y) {
+            const float v = float(y-sy)/h;
+            const uint16_t v16i = (uint16_t)(tex.height * v)*tex.width;
+            va.emplace_back(v16i);
+        }
+        if (flipx) {
+            for (uint16_t x=isx; x < iex; ++x) {
+                const float u = 0.999999f-float(x-sx)/w;
+                const uint16_t u16i = (uint16_t)(tex.width * u);
+                ua.emplace_back(u16i);
+            }
+        } else {
+            for (uint16_t x=isx; x < iex; ++x) {
+                const float u = float(x-sx)/w;
+                const uint16_t u16i = (uint16_t)(tex.width * u);
+                ua.emplace_back(u16i);
+            }
+        }
+        
+        
+        for (uint16_t y=isy, vi=0; y < iey; ++y, ++vi) {
+            for (uint16_t x=isx, ui=0; x < iex; ++x, ++ui) {
+                const uint16_t c1555 = tex.pixels[va[vi]+ua[ui]];
+                const uint16_t r = ((c1555 >> 10) & 0b11111) << 11;
+                const uint16_t g = ((c1555 >>  5) & 0b11111) <<  6;
+                const uint16_t b = ((c1555      ) & 0b11111)      ;
+                if ((c1555 >> 15 & 1) == 0) { this->buff->drawPixel(x, y, r|g|b); }
+            }
+        }
+    }
+    
     void drawTexture (int16_t sx, int16_t sy, Texture& tex, bool flipx = false) {
         if (this->dsy == this->dey || this->dsx == this->dex) { return; }
         
@@ -292,12 +349,12 @@ public:
         int16_t ex = sx + tex.width;
         int16_t ey = sy + tex.height;
         
-        ex = min(ex, dex);
-        ey = min(ey, dey);
-        int16_t isx = max(sx, dsx);
-        int16_t isy = max(sy, dsy);
-        int16_t itx = sx < dsx ? dsx - sx : 0;
-        int16_t ity = sy < dsy ? dsy - sy : 0;
+        ex = min(ex, this->dex);
+        ey = min(ey, this->dey);
+        int16_t isx = max(sx, this->dsx);
+        int16_t isy = max(sy, this->dsy);
+        int16_t itx = sx < this->dsx ? this->dsx - sx : 0;
+        int16_t ity = sy < this->dsy ? this->dsy - sy : 0;
         if (flipx) {
             for (int16_t y = isy, ty = ity; y < ey; ++y, ++ty) {
                 const size_t tyy = ty * tex.width;
@@ -322,6 +379,7 @@ public:
             }
         }
     }
+    
     
     void drawChar (uint8_t c, int16_t px, int16_t py) {
         if (px >= this->width || px + this->font->getWidth(c) * this->text_size < 0) { return; }

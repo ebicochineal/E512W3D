@@ -302,16 +302,37 @@ public:
         
         int16_t isx = max(sx, this->dsx);
         int16_t isy = max(sy, this->dsy);
-        ex = min(ex, this->dex);
-        ey = min(ey, this->dey);
+        int16_t iex = min(ex, this->dex);
+        int16_t iey = min(ey, this->dey);
         
         float fx = flipx ? -1.0f : 1.0f;
         
-        for (int16_t y = isy; y < ey; ++y) {
-            const float v = 1.0f-float(y-sy)/h;
-            for (int16_t x = isx; x < ex; ++x) {
-                const float u = ((float(x-sx)/w)-0.5f)*fx+0.5f;
-                const uint16_t c1555 = tex.getColor(u, v);
+        static E512Array<uint16_t> ua, va;
+        ua.clear();
+        va.clear();
+        for (uint16_t y=isy; y < iey; ++y) {
+            const float v = float(y-sy)/h;
+            const uint16_t v16i = (uint16_t)(tex.height * v)*tex.width;
+            va.emplace_back(v16i);
+        }
+        if (flipx) {
+            for (uint16_t x=isx; x < iex; ++x) {
+                const float u = 0.999999f-float(x-sx)/w;
+                const uint16_t u16i = (uint16_t)(tex.width * u);
+                ua.emplace_back(u16i);
+            }
+        } else {
+            for (uint16_t x=isx; x < iex; ++x) {
+                const float u = float(x-sx)/w;
+                const uint16_t u16i = (uint16_t)(tex.width * u);
+                ua.emplace_back(u16i);
+            }
+        }
+        
+        
+        for (uint16_t y=isy, vi=0; y < iey; ++y, ++vi) {
+            for (uint16_t x=isx, ui=0; x < iex; ++x, ++ui) {
+                const uint16_t c1555 = tex.pixels[va[vi]+ua[ui]];
                 const uint16_t r = ((c1555 >> 10) & 0b11111) << 11;
                 const uint16_t g = ((c1555 >>  5) & 0b11111) <<  6;
                 const uint16_t b = ((c1555      ) & 0b11111)      ;
