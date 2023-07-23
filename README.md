@@ -319,7 +319,7 @@ void loop () {
 ## E512Array
 Arduino環境では可変長配列が無かったため可変長配列を作りました  
 std::vectorと大体同じように使えるかと思います  
-
+クラスや構造体は引数無しコンストラクタが無い場合エラーになります  
 
 ---
 ## 文字出力
@@ -516,6 +516,7 @@ void drawPoint (int16_t px, int16_t py, uint16_t size = 1, uint16_t color = 0xFF
 void drawCircle (int16_t sx, int16_t sy, int16_t ex, int16_t ey, uint16_t color = 0xFFFF)  
 void drawRect (int16_t sx, int16_t sy, int16_t ex, int16_t ey, uint16_t color = 0xFFFF)  
 void drawTexture (int16_t sx, int16_t sy, Texture& tex, bool flipx = false)  
+void drawTexture (int16_t sx, int16_t sy, int16_t ex, int16_t ey, Texture& tex, bool flipx = false)  
 
 void begin (bool color_buffer_clear = true, bool z_buffer_clear = true)  
 Vector3 screenPosition (Object3D& obj)  
