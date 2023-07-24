@@ -549,7 +549,7 @@ void println (const float n, bool wordwrap = true)
 
 
 Matrix4x4 view  
-Matrix4x4 projescreen  
+Matrix4x4 projscreen  
 
 #### Object3D  
 Vector3 position  
