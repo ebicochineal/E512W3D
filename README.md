@@ -402,7 +402,7 @@ void loop () {
         Vector2 c = E512W3DInput::cursorPosition();
         // c.x -= w.sx;// screen position -> window position
         // c.y -= w.sy;// screen position -> window position
-        Ray r(c.x, c.y, w.view, w.projescreen);
+        Ray r(c.x, c.y, w.view, w.projscreen);
         RaycastHit hit = a.raycast(r);
         if (hit.distance > -1) {
             // color1555 texture color A1 R5 G5 B5
@@ -577,7 +577,7 @@ Vector3 direction
 float distance  
 Ray ()  
 Ray (Vector3 s, Vector3 e)  
-Ray (int x, int y, Matrix4x4 view, Matrix4x4 proj)  
+Ray (int x, int y, Matrix4x4 view, Matrix4x4 projscreen)  
 float raytriangle (Vector3 v1, Vector3 v2, Vector3 v3)  
 float raytriangle (Vector3 v1, Vector3 v2, Vector3 v3, float& u, float& v)  
 

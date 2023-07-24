@@ -171,10 +171,10 @@ public:
     void drawObjestAxis (Object3D& obj) {
         if (this->dsy == this->dey || this->dsx == this->dex) { return; }
         Matrix4x4 mat = this->objectWorldViewMatrix(obj);
-        Vector3 s = Matrix4x4::muld(Matrix4x4::mul(Vector3(), mat), this->projescreen);
-        Vector3 x = Matrix4x4::muld(Matrix4x4::mul(Vector3(2, 0, 0), mat), this->projescreen);
-        Vector3 y = Matrix4x4::muld(Matrix4x4::mul(Vector3(0, 2, 0), mat), this->projescreen);
-        Vector3 z = Matrix4x4::muld(Matrix4x4::mul(Vector3(0, 0, 2), mat), this->projescreen);
+        Vector3 s = Matrix4x4::muld(Matrix4x4::mul(Vector3(), mat), this->projscreen);
+        Vector3 x = Matrix4x4::muld(Matrix4x4::mul(Vector3(2, 0, 0), mat), this->projscreen);
+        Vector3 y = Matrix4x4::muld(Matrix4x4::mul(Vector3(0, 2, 0), mat), this->projscreen);
+        Vector3 z = Matrix4x4::muld(Matrix4x4::mul(Vector3(0, 0, 2), mat), this->projscreen);
         this->drawBuffLine(s.x, s.y, x.x, x.y, color565(255, 0, 0));
         this->drawBuffLine(s.x, s.y, y.x, y.y, color565(0, 255, 0));
         this->drawBuffLine(s.x, s.y, z.x, z.y, color565(0, 0, 255));
@@ -183,16 +183,16 @@ public:
     
     void drawLine (Object3D& start, Object3D& end, uint16_t color = 0xFFFF) {
         if (this->dsy == this->dey || this->dsx == this->dex) { return; }
-        Vector3 s = Matrix4x4::muld(Matrix4x4::mul(Vector3(), this->objectWorldViewMatrix(start)), this->projescreen);
-        Vector3 e = Matrix4x4::muld(Matrix4x4::mul(Vector3(), this->objectWorldViewMatrix(end)), this->projescreen);
+        Vector3 s = Matrix4x4::muld(Matrix4x4::mul(Vector3(), this->objectWorldViewMatrix(start)), this->projscreen);
+        Vector3 e = Matrix4x4::muld(Matrix4x4::mul(Vector3(), this->objectWorldViewMatrix(end)), this->projscreen);
         if (s.z < 0 || s.z > 1 || e.z < 0 || e.z > 1) { return; }
         this->drawBuffLine(s.x, s.y, e.x, e.y, color);
     }
     
     void drawLine (Vector3 start, Vector3 end, uint16_t color = 0xFFFF) {
         if (this->dsy == this->dey || this->dsx == this->dex) { return; }
-        Vector3 s = Matrix4x4::muld(Matrix4x4::mul(start, this->view), this->projescreen);
-        Vector3 e = Matrix4x4::muld(Matrix4x4::mul(end, this->view), this->projescreen);
+        Vector3 s = Matrix4x4::muld(Matrix4x4::mul(start, this->view), this->projscreen);
+        Vector3 e = Matrix4x4::muld(Matrix4x4::mul(end, this->view), this->projscreen);
         if (s.z < 0 || s.z > 1 || e.z < 0 || e.z > 1) { return; }
         this->drawBuffLine(s.x, s.y, e.x, e.y, color);
     }
@@ -203,13 +203,13 @@ public:
     
     void drawPoint (Object3D& obj, uint16_t size = 1, uint16_t color = 0xFFFF) {
         if (this->dsy == this->dey || this->dsx == this->dex) { return; }
-        Vector3 p = Matrix4x4::muld(Matrix4x4::mul(Vector3(), this->objectWorldViewMatrix(obj)), this->projescreen);
+        Vector3 p = Matrix4x4::muld(Matrix4x4::mul(Vector3(), this->objectWorldViewMatrix(obj)), this->projscreen);
         if (p.z < 0 || p.z > 1) { return; }
         this->drawPoint(p.x, p.y, size, color);
     }
     void drawPoint (Vector3 p, uint16_t size = 1, uint16_t color = 0xFFFF) {
         if (this->dsy == this->dey || this->dsx == this->dex) { return; }
-        p = Matrix4x4::muld(Matrix4x4::mul(p, this->view), this->projescreen);
+        p = Matrix4x4::muld(Matrix4x4::mul(p, this->view), this->projscreen);
         if (p.z < 0 || p.z > 1) { return; }
         this->drawPoint(p.x, p.y, size, color);
     }
@@ -430,10 +430,10 @@ public:
     }
     
     Vector3 screenPosition (Object3D& obj) {
-        return Matrix4x4::muld(Matrix4x4::mul(Vector3(), this->objectWorldViewMatrix(obj)), this->projescreen);
+        return Matrix4x4::muld(Matrix4x4::mul(Vector3(), this->objectWorldViewMatrix(obj)), this->projscreen);
     }
     Vector3 screenPosition (Vector3 p) {
-        return Matrix4x4::muld(Matrix4x4::mul(p, this->view), this->projescreen);
+        return Matrix4x4::muld(Matrix4x4::mul(p, this->view), this->projscreen);
     }
     
     
@@ -563,9 +563,9 @@ public:
         this->updateViewMatrix();
         this->updateLightVector();
         if (this->isortho) {
-            this->projescreen = Matrix4x4::orthoscreenMatrix(this->width, this->height, this->ortho_size);
+            this->projscreen = Matrix4x4::orthoscreenMatrix(this->width, this->height, this->ortho_size);
         } else {
-            this->projescreen = Matrix4x4::projscreenMatrix(this->width, this->height);
+            this->projscreen = Matrix4x4::projscreenMatrix(this->width, this->height);
         }
         
         if (color_buffer_clear) { this->clearCbuff(); }
@@ -635,7 +635,7 @@ public:
     
     
     Matrix4x4 view;
-    Matrix4x4 projescreen;
+    Matrix4x4 projscreen;
     
 private:
     Object3D* camera = NULL;
@@ -757,9 +757,9 @@ private:
         Vector3 v2 = Matrix4x4::mul(ov2, mat);
         Vector3 v3 = Matrix4x4::mul(ov3, mat);
         const Vector3 n = Vector3::normalize(Vector3::cross(v2-v1, v3-v1));
-        v1 = Matrix4x4::muld(v1, this->projescreen);
-        v2 = Matrix4x4::muld(v2, this->projescreen);
-        v3 = Matrix4x4::muld(v3, this->projescreen);
+        v1 = Matrix4x4::muld(v1, this->projscreen);
+        v2 = Matrix4x4::muld(v2, this->projscreen);
+        v3 = Matrix4x4::muld(v3, this->projscreen);
         if (this->notDraw(v1, v2, v3)) { return; }
         if (this->isDivide(v1, v2, v3)) {
             if (d < 1) { return; }
@@ -783,9 +783,9 @@ private:
         Vector3 v2 = Matrix4x4::mul(ov2, mat);
         Vector3 v3 = Matrix4x4::mul(ov3, mat);
         const Vector3 n = Vector3::normalize(Vector3::cross(v2-v1, v3-v1));
-        v1 = Matrix4x4::muld(v1, this->projescreen);
-        v2 = Matrix4x4::muld(v2, this->projescreen);
-        v3 = Matrix4x4::muld(v3, this->projescreen);
+        v1 = Matrix4x4::muld(v1, this->projscreen);
+        v2 = Matrix4x4::muld(v2, this->projscreen);
+        v3 = Matrix4x4::muld(v3, this->projscreen);
         if (this->notDraw(v1, v2, v3)) { return; }
         if (this->isDivide(v1, v2, v3)) {
             if (d < 1) { return; }
@@ -813,9 +813,9 @@ private:
         Vector3 v2 = Matrix4x4::mul(ov2, mat);
         Vector3 v3 = Matrix4x4::mul(ov3, mat);
         const Vector3 n = Vector3::normalize(Vector3::cross(v2-v1, v3-v1));
-        v1 = Matrix4x4::muld(v1, this->projescreen);
-        v2 = Matrix4x4::muld(v2, this->projescreen);
-        v3 = Matrix4x4::muld(v3, this->projescreen);
+        v1 = Matrix4x4::muld(v1, this->projscreen);
+        v2 = Matrix4x4::muld(v2, this->projscreen);
+        v3 = Matrix4x4::muld(v3, this->projscreen);
         if (this->notDraw(v1, v2, v3)) { return; }
         if (this->isDivide(v1, v2, v3)) {
             if (d < 1) { return; }
@@ -840,9 +840,9 @@ private:
         Vector3 v2 = Matrix4x4::mul(ov2, mat);
         Vector3 v3 = Matrix4x4::mul(ov3, mat);
         const Vector3 n = Vector3::normalize(Vector3::cross(v2-v1, v3-v1));
-        v1 = Matrix4x4::muld(v1, this->projescreen);
-        v2 = Matrix4x4::muld(v2, this->projescreen);
-        v3 = Matrix4x4::muld(v3, this->projescreen);
+        v1 = Matrix4x4::muld(v1, this->projscreen);
+        v2 = Matrix4x4::muld(v2, this->projscreen);
+        v3 = Matrix4x4::muld(v3, this->projscreen);
         if (this->notDraw(v1, v2, v3)) { return; }
         if (this->isDivide(v1, v2, v3)) {
             if (d < 1) { return; }
@@ -906,9 +906,9 @@ private:
         Vector3 v2 = Matrix4x4::mul(ov2, mat);
         Vector3 v3 = Matrix4x4::mul(ov3, mat);
         const Vector3 n = Vector3::normalize(Vector3::cross(v2-v1, v3-v1));
-        v1 = Matrix4x4::muld(v1, this->projescreen);
-        v2 = Matrix4x4::muld(v2, this->projescreen);
-        v3 = Matrix4x4::muld(v3, this->projescreen);
+        v1 = Matrix4x4::muld(v1, this->projscreen);
+        v2 = Matrix4x4::muld(v2, this->projscreen);
+        v3 = Matrix4x4::muld(v3, this->projscreen);
         if (this->notDraw(v1, v2, v3)) { return; }
         if (this->isDivide(v1, v2, v3)) {
             if (d < 1) { return; }
@@ -934,9 +934,9 @@ private:
         Vector3 v2 = Matrix4x4::mul(ov2, mat);
         Vector3 v3 = Matrix4x4::mul(ov3, mat);
         const Vector3 n = Vector3::normalize(Vector3::cross(v2-v1, v3-v1));
-        v1 = Matrix4x4::muld(v1, this->projescreen);
-        v2 = Matrix4x4::muld(v2, this->projescreen);
-        v3 = Matrix4x4::muld(v3, this->projescreen);
+        v1 = Matrix4x4::muld(v1, this->projscreen);
+        v2 = Matrix4x4::muld(v2, this->projscreen);
+        v3 = Matrix4x4::muld(v3, this->projscreen);
         if (this->notDraw(v1, v2, v3)) { return; }
         if (this->isDivide(v1, v2, v3)) {
             if (d < 1) { return; }
@@ -998,9 +998,9 @@ private:
         Vector4 v2 = Matrix4x4::mul(ov2, mat);
         Vector4 v3 = Matrix4x4::mul(ov3, mat);
         const Vector3 n = Vector3::normalize(Vector3::cross(v2.xyz()-v1.xyz(), v3.xyz()-v1.xyz()));
-        v1 = Matrix4x4::muld(v1, this->projescreen);
-        v2 = Matrix4x4::muld(v2, this->projescreen);
-        v3 = Matrix4x4::muld(v3, this->projescreen);
+        v1 = Matrix4x4::muld(v1, this->projscreen);
+        v2 = Matrix4x4::muld(v2, this->projscreen);
+        v3 = Matrix4x4::muld(v3, this->projscreen);
         if (this->notDraw(v1, v2, v3)) { return; }
         if (this->isDivide(v1, v2, v3)) {
             if (d < 1) { return; }
@@ -1031,9 +1031,9 @@ private:
         Vector4 v2 = Matrix4x4::mul(ov2, mat);
         Vector4 v3 = Matrix4x4::mul(ov3, mat);
         const Vector3 n = Vector3::normalize(Vector3::cross(v2.xyz()-v1.xyz(), v3.xyz()-v1.xyz()));
-        v1 = Matrix4x4::muld(v1, this->projescreen);
-        v2 = Matrix4x4::muld(v2, this->projescreen);
-        v3 = Matrix4x4::muld(v3, this->projescreen);
+        v1 = Matrix4x4::muld(v1, this->projscreen);
+        v2 = Matrix4x4::muld(v2, this->projscreen);
+        v3 = Matrix4x4::muld(v3, this->projscreen);
         if (this->notDraw(v1, v2, v3)) { return; }
         if (this->isDivide(v1, v2, v3)) {
             if (d < 1) { return; }

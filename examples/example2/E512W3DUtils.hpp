@@ -661,10 +661,10 @@ public:
         this->distance = Vector3::distance(s, e);
     }
     
-    Ray (int x, int y, Matrix4x4 view, Matrix4x4 proj) {
+    Ray (int x, int y, Matrix4x4 view, Matrix4x4 projscreen) {
         Vector4 s(x, y, 0, 1);
         Vector4 e(x, y, 1, 1);
-        Matrix4x4 invm = Matrix4x4::inverse(Matrix4x4::mul(view, proj));
+        Matrix4x4 invm = Matrix4x4::inverse(Matrix4x4::mul(view, projscreen));
         s = Matrix4x4::muld(s, invm);
         e = Matrix4x4::muld(e, invm);
         this->position = Vector3(s.x, s.y, s.z);
