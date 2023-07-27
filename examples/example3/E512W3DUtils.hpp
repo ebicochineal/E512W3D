@@ -882,7 +882,6 @@ public:
         float u, v, dist;
         float bestdist = r.distance;
         for (int i = 0; i < this->mesh->faces.size(); ++i) {
-            
             Vector3 v1 = Matrix4x4::mul(this->mesh->vertexs[this->mesh->faces[i].a], mat);
             Vector3 v2 = Matrix4x4::mul(this->mesh->vertexs[this->mesh->faces[i].b], mat);
             Vector3 v3 = Matrix4x4::mul(this->mesh->vertexs[this->mesh->faces[i].c], mat);
@@ -898,15 +897,18 @@ public:
         }
         
         if (hit.distance > -1) {
-            Vector2 uv1 = this->mesh->uv_vertexs[this->mesh->uv_faces[hit.triangleindex].a];
-            Vector2 uv2 = this->mesh->uv_vertexs[this->mesh->uv_faces[hit.triangleindex].b];
-            Vector2 uv3 = this->mesh->uv_vertexs[this->mesh->uv_faces[hit.triangleindex].c];
-            float dbx = uv2.x-uv1.x;
-            float dby = uv2.y-uv1.y;
-            float dcx = uv3.x-uv1.x;
-            float dcy = uv3.y-uv1.y;
-            hit.u = dbx*tu+dcx*tv+uv1.x;
-            hit.v = dby*tu+dcy*tv+uv1.y;
+            if (this->mesh->uv_faces.size() > hit.triangleindex) {
+                Vector2 uv1 = this->mesh->uv_vertexs[this->mesh->uv_faces[hit.triangleindex].a];
+                Vector2 uv2 = this->mesh->uv_vertexs[this->mesh->uv_faces[hit.triangleindex].b];
+                Vector2 uv3 = this->mesh->uv_vertexs[this->mesh->uv_faces[hit.triangleindex].c];
+                float dbx = uv2.x-uv1.x;
+                float dby = uv2.y-uv1.y;
+                float dcx = uv3.x-uv1.x;
+                float dcy = uv3.y-uv1.y;
+                hit.u = dbx*tu+dcx*tv+uv1.x;
+                hit.v = dby*tu+dcy*tv+uv1.y;
+            }
+            
             hit.point = r.position + Vector3::normalize(r.direction) * hit.distance;
         }
         return hit;
