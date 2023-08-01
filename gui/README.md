@@ -73,7 +73,18 @@ void guiUpdate (E512W3DWindow& w)
 void guiDraw (E512W3DWindow& w)  
 void popupDraw (E512W3DWindow& w)  
 
-----
+#### E512W3DGUIButton
+bool ishover  
+bool isdown  
+bool isup  
+bool isdrag  
+uint16_t hoveranim = ButtonHoverAnim::Light  
+uint16_t downanim = ButtonDownAnim::Right  
+E512W3DGUIButton (int16_t x, int16_t y, uint16_t width, uint16_t height, E512Array<uint8_t> text, uint16_t color = 42260, uint16_t text_color = 0xFFFF)  
+E512W3DGUIButton (int16_t x, int16_t y, uint16_t width, uint16_t height, const char* text, uint16_t color = 42260, uint16_t text_color = 0xFFFF)  
+void guiUpdate (E512W3DWindow& w)  
+void guiDraw (E512W3DWindow& w)  
+
 #### enum ButtonHoverAnim
 None  
 Light  
@@ -85,15 +96,3 @@ Right
 Left  
 Down  
 Up  
-
-#### E512W3DGUIButton
-bool ishover  
-bool isdown  
-bool isup  
-bool isdrag  
-uint16_t hoveranim = ButtonHoverAnim::Light  
-uint16_t downanim = ButtonDownAnim::Right  
-E512W3DGUIButton (int16_t x, int16_t y, uint16_t width, uint16_t height, E512Array<uint8_t> text, uint16_t color = 42260, uint16_t text_color = 0xFFFF)  
-E512W3DGUIButton (int16_t x, int16_t y, uint16_t width, uint16_t height, const char* text, uint16_t color = 42260, uint16_t text_color = 0xFFFF)  
-void guiUpdate (E512W3DWindow& w)
-void guiDraw (E512W3DWindow& w)
