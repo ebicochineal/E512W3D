@@ -24,14 +24,14 @@
     #define TFT_MOSI 19
     #define TFT_SCLK 18
     
-    class DammyMPU6886 {
+    class DummyMPU6886 {
     public:
         void Init () {}
         void getAccelData(float* ax, float* ay, float* az) {}
         void getGyroData(float* gx, float* gy, float* gz) {}
     };
 
-    class DammyLcd {
+    class DummyLcd {
     public:
         uint16_t height = 80;
         uint16_t width = 160;
@@ -41,7 +41,7 @@
         uint16_t color565 (uint16_t r, uint16_t g, uint16_t b) { return ((r>>3)<<11) | ((g>>2)<<5) | (b>>3); }
         void setCursor (int x, int y) { this->x = x; this->y = y; }
     };
-    class DammyAxp {
+    class DummyAxp {
     public:
         void ScreenBreath (int x) {}
         double GetVapsData () { return 0; }
@@ -49,9 +49,9 @@
 
     class M5StickC {
     public:
-        DammyLcd Lcd;
-        DammyAxp Axp;
-        DammyMPU6886 MPU6886;
+        DummyLcd Lcd;
+        DummyAxp Axp;
+        DummyMPU6886 MPU6886;
         
         void begin () {
             tft.initR(INITR_MINI160x80);
@@ -84,8 +84,8 @@
         int width = 160;
         int height = 80;
         uint16_t* buff;
-        DammyLcd* lcd;
-        TFT_eSprite (DammyLcd* lcd) { this->lcd = lcd; }
+        DummyLcd* lcd;
+        TFT_eSprite (DummyLcd* lcd) { this->lcd = lcd; }
         void setColorDepth (int v) {}
         void createSprite (int width, int height) {
             this->width = width;
@@ -265,14 +265,14 @@
         #endif
     #endif
     
-    class DammyMPU6886 {
+    class DummyMPU6886 {
     public:
         void Init () {}
         void getAccelData(float* ax, float* ay, float* az) {}
         void getGyroData(float* gx, float* gy, float* gz) {}
     };
 
-    class DammyLcd {
+    class DummyLcd {
     public:
         uint16_t height = 320;
         uint16_t width = 320;
@@ -309,7 +309,7 @@
         
     #endif
     };
-    class DammyAxp {
+    class DummyAxp {
     public:
         void ScreenBreath (int x) {}
         double GetVapsData () { return 0; }
@@ -317,9 +317,9 @@
 
     class M5StickC {
     public:
-        DammyLcd Lcd;
-        DammyAxp Axp;
-        DammyMPU6886 MPU6886;
+        DummyLcd Lcd;
+        DummyAxp Axp;
+        DummyMPU6886 MPU6886;
         void begin () {}
         void update () {}
     #if defined(_WIN32)
@@ -347,8 +347,8 @@
         int width = 160;
         int height = 80;
         uint16_t* buff;
-        DammyLcd* lcd;
-        TFT_eSprite (DammyLcd* lcd) { this->lcd = lcd; }
+        DummyLcd* lcd;
+        TFT_eSprite (DummyLcd* lcd) { this->lcd = lcd; }
         void setColorDepth (int v) {}
         void createSprite (int width, int height) {
             this->width = width;
