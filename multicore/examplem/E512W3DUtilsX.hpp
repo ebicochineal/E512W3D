@@ -135,12 +135,11 @@
     float min (float a, float b) { return std::min(a, b); }
     
     
-    void delay (int v) { usleep(v * 1000);  }
+    void delay (int v) { usleep(v * 1000); }
     void delayMicroseconds (int v) { usleep(v); }
     
-    
     int64_t map(int64_t x, int64_t in_min, int64_t in_max, int64_t out_min, int64_t out_max) {
-    return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+        return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
     }
     class StopWatchChrono {
     public:
@@ -189,6 +188,8 @@
             e512w3d_buff.data[p+3] = 255; });
         EM_JS(void, CanvasPush, (), { e512w3d_ctx.putImageData(e512w3d_buff, 0, 0); });
         EM_JS(bool, GetKey, (int n), { return e512w3d_keys[n]; });
+    #elif defined(__ANDROID_API__)
+        
     #else
         // float abs (double v) { return std::abs(v); }
         // float abs (float v) { return std::abs(v); }
@@ -338,6 +339,27 @@
             this->pixels = new uint32_t[width*height];
             this->Lcd.hwnd = hwnd;
         }
+    #elif defined(__ANDROID_API__)
+        int width;
+        int height;
+        int tw = 1;
+        int th = 1;
+        uint8_t* pixels = new uint8_t[1];
+        size_t buffer_size = 1;
+        void resize (int width, int height) {
+            this->width = width;
+            this->height = height;
+            this->tw = 1;
+            this->th = 1;
+            while (this->tw < width) { this->tw *= 2; }
+            while (this->th < height) { this->th *= 2; }
+            while (this->buffer_size < this->tw*this->th * 3) {
+                this->buffer_size *= 2;
+                delete[] this->pixels;
+                this->pixels = new uint8_t[this->buffer_size];
+            }
+        }
+        int textureSize () { return this->tw * this->th; }
     #endif
     };
 
@@ -357,12 +379,11 @@
             this->height = height;
             this->buff = new uint16_t[height * width];
         }
-        
     #if defined(_WIN32)
         void pushSprite (int px, int py) {
-            for (int y = 0; y < M5.height; y += 1) {
-                for (int x = 0; x < M5.width; x += 1) {
-                    uint32_t c1 = this->buff[y*M5.width+x];
+            for (int y = 0; y < this->height; y += 1) {
+                for (int x = 0; x < this->width; x += 1) {
+                    uint32_t c1 = this->buff[y*this->width+x];
                     
                     // color565
                     uint16_t r = (((c1 & 0xF800) >> 11) << 3);
@@ -382,7 +403,20 @@
             InvalidateRect(M5.hwnd, NULL, false);
             UpdateWindow(M5.hwnd);
         }
-    #elif __EMSCRIPTEN__
+    #elif defined(__ANDROID_API__)
+        void pushSprite (int px, int py) {
+            if (M5.textureSize() < this->width*this->height) { M5.resize(this->width, this->height); }
+            for (int y = 0; y < this->height; y += 1) {
+                for (int x = 0; x < this->width; x += 1) {
+                    uint32_t c = this->buff[y*this->width+x];
+                    M5.pixels[(y * M5.tw + x) * 3 + 0] = (((c & 0xF800) >> 11) << 3);
+                    M5.pixels[(y * M5.tw + x) * 3 + 1] = (((c & 0x07E0) >> 5) << 2);
+                    M5.pixels[(y * M5.tw + x) * 3 + 2] = (((c & 0x001F)) << 3);
+                    //M5.pixels[(y * M5.tw + x) * 4 + 3] = 255;
+                }
+            }
+        }
+    #elif defined(__EMSCRIPTEN__)
         void pushSprite (int px, int py) {
             for (int y = 0; y < this->height; y += 1) {
                 for (int x = 0; x < this->width; x += 1) {

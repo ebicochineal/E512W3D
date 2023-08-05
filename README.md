@@ -1,4 +1,4 @@
-## 3d-software-rendering m5stickc/m5stack/console-app/windows-app/ncurses/emscripten/raspberry-pi-pico  
+## 3d-software-rendering m5stickc/m5stack/console-app/windows-app/ncurses/emscripten/android/raspberry-pi-pico  
 - C++で3Dモデルの表示やゲームなどを作成できます  
 - ソフトウェアレンダリングなのでマイコンボードなどでも動作します  
 - 複数のウィンドウ  
@@ -136,6 +136,22 @@ py -m http.server 8000
 http://localhost:8000/
 ```
 ---
+## android
+Visual Studio 2019  
+Visual Studio 2019インストール デスクトップとモバイル C++によるモバイル開発  
+- テンプレート Native-Activity  
+- ソリューションのプラットフォームを切り替えるARM64など
+
+- プロジェクトのプロパティ 全般 未解決のシンボル参照の報告 はい -> いいえ  
+  
+- 画面の回転を横に固定する AndroidManifest.xml activityタグにandroid:screenOrientation="landscape"を追加  
+
+- main.cpp削除
+- E512W3Dのファイルを追加 ソリューション名/プロジェクト名/プロジェクト名.NativeActivity/ E512W3D.hpp, E512W3DUtils.hpp, E512W3DUtilsX.hpp, E512W3DWindow.hpp, ***.cpp
+- プロジェクト名.NativeActivity 追加 既存の項目で先ほどのファイルを追加
+
+
+---
 ## raspberry-pi-pico
 ArduinoIDEで動作します  
 ST7735を搭載した解像度160x80ディスプレイを使用します  
@@ -191,15 +207,15 @@ bool cursor_r
 or  
 
 E512W3DInput  
-|                | m5stickc | console | ncurses | windows | emscripten | pico |
-| -              | -        | -       | -       | -       | -          | -    |
-| getKey         | no       | no      | yes     | yes     | yes        | no   |
-| getKeyUp       | no       | no      | no      | yes     | yes        | no   |
-| getKeyDown     | no       | no      | no      | yes     | yes        | no   |
-| getButton      | partial  | no      | no      | yes     | yes        | no   |
-| getButtonUp    | partial  | no      | no      | yes     | yes        | no   |
-| getButtonDown  | partial  | no      | no      | yes     | yes        | no   |
-| cursorPosition | partial  | no      | no      | yes     | yes        | no   |
+|                | m5stickc | console | ncurses | windows | emscripten | android | pico |
+| -              | -        | -       | -       | -       | -          | -       | -    |
+| getKey         | no       | no      | yes     | yes     | yes        | no      | no   |
+| getKeyUp       | no       | no      | no      | yes     | yes        | no      | no   |
+| getKeyDown     | no       | no      | no      | yes     | yes        | no      | no   |
+| getButton      | partial  | no      | no      | yes     | yes        | partial | no   |
+| getButtonUp    | partial  | no      | no      | yes     | yes        | partial | no   |
+| getButtonDown  | partial  | no      | no      | yes     | yes        | partial | no   |
+| cursorPosition | partial  | no      | no      | yes     | yes        | yes     | no   |
 
 ```cpp
 void loop() {
