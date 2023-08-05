@@ -58,7 +58,7 @@ with open(p+obj_file_name+'.hpp', 'w') as f:
     f.write('    // %s.uv_faces '%obj_file_name + str(len(uvface)) + '\n')
     
     
-    f.write('#ifdef __EMSCRIPTEN__\n')
+    f.write('#if defined(__EMSCRIPTEN__) || defined(__ANDROID_API__)\n')
     
     f.write('    {\n')
     f.write('        %s.vertexs.reserve('%obj_file_name + str(len(vertex)) + ');\n')
