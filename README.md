@@ -142,7 +142,7 @@ Visual Studio 2019インストール デスクトップとモバイル C++によ
 - テンプレート Native-Activity  
 - ソリューションのプラットフォームを切り替えるARM64など
 
-- プロジェクトのプロパティ リンカー 全般 未解決のシンボル参照の報告 はい -> いいえ  
+- プロジェクトのプロパティ リンカー コマンドライン 追加のオプション -lm  
   
 - 画面の回転を横に固定する AndroidManifest.xml activityタグにandroid:screenOrientation="landscape"を追加  
 
