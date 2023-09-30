@@ -501,6 +501,7 @@ void pushScreen ()
 uint16_t fixed_milli_time = 33  
 void clear ()  
 #### E512W3DWindow  
+Object3D* camera;
 E512W3DWindow ()  
 E512W3DWindow (uint16_t bgcolor)  
 E512W3DWindow (int16_t sx, int16_t sy, uint16_t width, uint16_t height)  
@@ -560,8 +561,8 @@ void println (const double n, bool wordwrap = true)
 void print (const float n, bool wordwrap = true)  
 void println (const float n, bool wordwrap = true)  
     
-
-
+void drawTextureTXYWH (int16_t sx, int16_t sy, int16_t tex_x, int16_t tex_y, int16_t tex_w, int16_t tex_h, Texture& tex, bool flipx = false)  
+void drawTextureTXYWHZ (int16_t sx, int16_t sy, int16_t tex_x, int16_t tex_y, int16_t tex_w, int16_t tex_h, uint16_t z, Texture& tex, bool flipx = false)  
 
 
 Matrix4x4 view  

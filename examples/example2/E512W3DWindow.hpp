@@ -23,7 +23,9 @@ class E512W3DInput {
 private:
     static E512Array<bool> tmp, prev;
     static E512Array<bool> mtmp, mprev;
+    static Vector2 prev0, prev1, prev2;
 public:
+    static Vector2 delta0, delta1, delta2;
     static int16_t width, height;
     static void update () {
 #if defined(ARDUINO_M5Stick_C) || defined(ARDUINO_M5Stick_C_PLUS) || defined(ARDUINO_M5Stack_Core_ESP32) || defined(ARDUINO_M5STACK_FIRE) || defined(ARDUINO_M5STACK_Core2)
@@ -55,6 +57,31 @@ public:
         E512W3DInput::mtmp[1] = cursor_m;
         E512W3DInput::mtmp[2] = cursor_r;
 #endif
+        if (E512W3DInput::getButtonDown(0)) { E512W3DInput::prev0 = E512W3DInput::cursorPosition(); }
+        if (E512W3DInput::getButtonDown(1)) { E512W3DInput::prev1 = E512W3DInput::cursorPosition(); }
+        if (E512W3DInput::getButtonDown(2)) { E512W3DInput::prev2 = E512W3DInput::cursorPosition(); }
+        
+        
+        
+        E512W3DInput::delta0 = Vector2(0);
+        E512W3DInput::delta1 = Vector2(0);
+        E512W3DInput::delta2 = Vector2(0);
+        if (E512W3DInput::getButton(0)) {
+            E512W3DInput::delta0 = E512W3DInput::cursorPosition() - E512W3DInput::prev0;
+            E512W3DInput::prev0 = E512W3DInput::cursorPosition();
+        }
+        if (E512W3DInput::getButton(1)) {
+            E512W3DInput::delta1 = E512W3DInput::cursorPosition() - E512W3DInput::prev1;
+            E512W3DInput::prev1 = E512W3DInput::cursorPosition();
+        }
+        if (E512W3DInput::getButton(2)) {
+            E512W3DInput::delta2 = E512W3DInput::cursorPosition() - E512W3DInput::prev2;
+            E512W3DInput::prev2 = E512W3DInput::cursorPosition();
+        }
+        
+        
+        
+        
     }
     static bool getKey (uint8_t c) { return E512W3DInput::tmp[c]; }
     
@@ -85,9 +112,12 @@ E512Array<bool> E512W3DInput::mtmp = E512Array<bool>(3, false);
 E512Array<bool> E512W3DInput::mprev = E512Array<bool>(3, false);
 int16_t E512W3DInput::width = 160;
 int16_t E512W3DInput::height = 80;
+Vector2 E512W3DInput::prev0, E512W3DInput::prev1, E512W3DInput::prev2;
+Vector2 E512W3DInput::delta0, E512W3DInput::delta1, E512W3DInput::delta2;
 
 class E512W3DWindow {
 public:
+    Object3D* camera = NULL;
     E512Font* font;
     TFT_eSprite* buff;
     TFT_eSprite* zbuff;
@@ -307,31 +337,30 @@ public:
         
         float fx = flipx ? -1.0f : 1.0f;
         
-        static E512Array<uint16_t> ua, va;
+        static E512Array<int> ua, va;
         ua.clear();
         va.clear();
-        for (uint16_t y=isy; y < iey; ++y) {
+        for (int y=isy; y < iey; ++y) {
             const float v = float(y-sy)/h;
-            const uint16_t v16i = (uint16_t)(tex.height * v)*tex.width;
-            va.emplace_back(v16i);
+            const int t = (int)(tex.height * v)*tex.width;
+            va.emplace_back(t);
         }
         if (flipx) {
-            for (uint16_t x=isx; x < iex; ++x) {
+            for (int x=isx; x < iex; ++x) {
                 const float u = 0.999999f-float(x-sx)/w;
-                const uint16_t u16i = (uint16_t)(tex.width * u);
-                ua.emplace_back(u16i);
+                const int t = (int)(tex.width * u);
+                ua.emplace_back(t);
             }
         } else {
-            for (uint16_t x=isx; x < iex; ++x) {
+            for (int x=isx; x < iex; ++x) {
                 const float u = float(x-sx)/w;
-                const uint16_t u16i = (uint16_t)(tex.width * u);
-                ua.emplace_back(u16i);
+                const int t = (int)(tex.width * u);
+                ua.emplace_back(t);
             }
         }
         
-        
-        for (uint16_t y=isy, vi=0; y < iey; ++y, ++vi) {
-            for (uint16_t x=isx, ui=0; x < iex; ++x, ++ui) {
+        for (int y=isy, vi=0; y < iey; ++y, ++vi) {
+            for (int x=isx, ui=0; x < iex; ++x, ++ui) {
                 const uint16_t c1555 = tex.pixels[va[vi]+ua[ui]];
                 const uint16_t r = ((c1555 >> 10) & 0b11111) << 11;
                 const uint16_t g = ((c1555 >>  5) & 0b11111) <<  6;
@@ -356,9 +385,9 @@ public:
         int16_t itx = sx < this->dsx ? this->dsx - sx : 0;
         int16_t ity = sy < this->dsy ? this->dsy - sy : 0;
         if (flipx) {
-            for (int16_t y = isy, ty = ity; y < ey; ++y, ++ty) {
-                const size_t tyy = ty * tex.width;
-                for (int16_t x = isx, tx = itx; x < ex; ++x, ++tx) {
+            for (int y = isy, ty = ity; y < ey; ++y, ++ty) {
+                const int tyy = ty * tex.width;
+                for (int x = isx, tx = itx; x < ex; ++x, ++tx) {
                     const uint16_t c1555 = tex.pixels[tyy + tex.width-tx-1];
                     const uint16_t r = ((c1555 >> 10) & 0b11111) << 11;
                     const uint16_t g = ((c1555 >>  5) & 0b11111) <<  6;
@@ -367,9 +396,9 @@ public:
                 }
             }
         } else {
-            for (int16_t y = isy, ty = ity; y < ey; ++y, ++ty) {
-                const size_t tyy = ty * tex.width;
-                for (int16_t x = isx, tx = itx; x < ex; ++x, ++tx) {
+            for (int y = isy, ty = ity; y < ey; ++y, ++ty) {
+                const int tyy = ty * tex.width;
+                for (int x = isx, tx = itx; x < ex; ++x, ++tx) {
                     const uint16_t c1555 = tex.pixels[tyy + tx];
                     const uint16_t r = ((c1555 >> 10) & 0b11111) << 11;
                     const uint16_t g = ((c1555 >>  5) & 0b11111) <<  6;
@@ -379,6 +408,7 @@ public:
             }
         }
     }
+    
     
     void drawChar (uint8_t c, int16_t px, int16_t py) {
         if (px >= this->width || px + this->font->getWidth(c) * this->text_size < 0) { return; }
@@ -637,8 +667,91 @@ public:
     Matrix4x4 view;
     Matrix4x4 projscreen;
     
+    
+    void drawTextureTXYWH (int16_t sx, int16_t sy, int16_t tex_x, int16_t tex_y, int16_t tex_w, int16_t tex_h, Texture& tex, bool flipx = false) {
+        if (this->dsy == this->dey || this->dsx == this->dex) { return; }
+        
+        sx += this->sx;
+        sy += this->sy;
+        int16_t ex = sx + tex_w;
+        int16_t ey = sy + tex_h;
+        
+        ex = min(ex, this->dex);
+        ey = min(ey, this->dey);
+        int16_t isx = max(sx, this->dsx);
+        int16_t isy = max(sy, this->dsy);
+        int16_t itx = tex_x + (sx < this->dsx ? this->dsx - sx : 0);
+        int16_t ity = tex_y + (sy < this->dsy ? this->dsy - sy : 0);
+        if (flipx) {
+            for (int y = isy, ty = ity * tex.width; y < ey; ++y, ty+=tex.width) {
+                for (int x = isx, tx = itx; x < ex; ++x, ++tx) {
+                    const uint16_t c1555 = tex.pixels[ty + tex_x+tex_w-tx-1];
+                    const uint16_t r = ((c1555 >> 10) & 0b11111) << 11;
+                    const uint16_t g = ((c1555 >>  5) & 0b11111) <<  6;
+                    const uint16_t b = ((c1555      ) & 0b11111)      ;
+                    if ((c1555 >> 15 & 1) == 0) { this->buff->drawPixel(x, y, r|g|b); }
+                }
+            }
+        } else {
+            for (int y = isy, ty = ity * tex.width; y < ey; ++y, ty+=tex.width) {
+                for (int x = isx, tx = itx; x < ex; ++x, ++tx) {
+                    const uint16_t c1555 = tex.pixels[ty + tx];
+                    const uint16_t r = ((c1555 >> 10) & 0b11111) << 11;
+                    const uint16_t g = ((c1555 >>  5) & 0b11111) <<  6;
+                    const uint16_t b = ((c1555      ) & 0b11111)      ;
+                    if ((c1555 >> 15 & 1) == 0) { this->buff->drawPixel(x, y, r|g|b); }
+                }
+            }
+        }
+    }
+    void drawTextureTXYWHZ (int16_t sx, int16_t sy, int16_t tex_x, int16_t tex_y, int16_t tex_w, int16_t tex_h, uint16_t z, Texture& tex, bool flipx = false) {
+        if (this->dsy == this->dey || this->dsx == this->dex) { return; }
+        
+        sx += this->sx;
+        sy += this->sy;
+        int16_t ex = sx + tex_w;
+        int16_t ey = sy + tex_h;
+        
+        ex = min(ex, this->dex);
+        ey = min(ey, this->dey);
+        int16_t isx = max(sx, this->dsx);
+        int16_t isy = max(sy, this->dsy);
+        int16_t itx = tex_x + (sx < this->dsx ? this->dsx - sx : 0);
+        int16_t ity = tex_y + (sy < this->dsy ? this->dsy - sy : 0);
+        if (flipx) {
+            for (int y = isy, ty = ity * tex.width; y < ey; ++y, ty+=tex.width) {
+                for (int x = isx, tx = itx; x < ex; ++x, ++tx) {
+                    if (this->zbuff->readPixel(x, y) > z) { continue; }
+                    const uint16_t c1555 = tex.pixels[ty + tex_x+tex_w-tx-1];
+                    const uint16_t r = ((c1555 >> 10) & 0b11111) << 11;
+                    const uint16_t g = ((c1555 >>  5) & 0b11111) <<  6;
+                    const uint16_t b = ((c1555      ) & 0b11111)      ;
+                    if ((c1555 >> 15 & 1) == 0) {
+                        this->buff->drawPixel(x, y, r|g|b);
+                        this->zbuff->drawPixel(x, y, z);
+                    }
+                }
+            }
+        } else {
+            for (int y = isy, ty = ity * tex.width; y < ey; ++y, ty+=tex.width) {
+                for (int x = isx, tx = itx; x < ex; ++x, ++tx) {
+                    if (this->zbuff->readPixel(x, y) > z) { continue; }
+                    const uint16_t c1555 = tex.pixels[ty + tx];
+                    const uint16_t r = ((c1555 >> 10) & 0b11111) << 11;
+                    const uint16_t g = ((c1555 >>  5) & 0b11111) <<  6;
+                    const uint16_t b = ((c1555      ) & 0b11111)      ;
+                    if ((c1555 >> 15 & 1) == 0) {
+                        this->buff->drawPixel(x, y, r|g|b);
+                        this->zbuff->drawPixel(x, y, z);
+                    }
+                }
+            }
+        }
+    }
+    
+    
+    
 private:
-    Object3D* camera = NULL;
     E512Array<Object3D*> child;
     Vector3 light;
     Vector3 light_vector;
@@ -1081,6 +1194,7 @@ private:
     inline float distance (const float& ax, const float& ay, const float& bx, const float& by) {
         return sqrt((ax - bx) * (ax - bx) + (ay - by) * (ay - by));
     }
+    
     
 /*
 Software License Agreement (BSD License)
