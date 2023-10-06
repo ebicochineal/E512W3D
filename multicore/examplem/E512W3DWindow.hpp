@@ -166,14 +166,18 @@ public:
         this->height = height;
     }
     
-    void draw (int sindex = 0,int  nthread = 1) {
+    void draw () { this->drawmt(0, 1); }
+    
+    void draw (Object3D& obj, bool child = false) { this->drawmt(obj, 0, 1, child); }
+    
+    void drawmt (int sindex, int nthread) {
         this->begin();
         if (this->dsy == this->dey || this->dsx == this->dex) { return; }
         this->drawChild(this->child, Matrix4x4::identity(), sindex, nthread);
         this->drawChildT(this->child, Matrix4x4::identity(), sindex, nthread);
     }
     
-    void draw (Object3D& obj, int sindex = 0,int  nthread = 1, bool child = false) {
+    void drawmt (Object3D& obj, int sindex, int  nthread, bool child = false) {
         if (this->dsy == this->dey || this->dsx == this->dex) { return; }
         
         Matrix4x4 mat = Matrix4x4::identity();

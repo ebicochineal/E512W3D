@@ -26,9 +26,9 @@ bool isrunning = true;
 void loop1 () {
     if (render1 && rendertargetwindow != NULL) {
         if (rendertargetobject == NULL) {
-            for (auto&& i : rendertargetwindow->child) { rendertargetwindow->draw(*i, 1, 2, rendertargetchild); }
+            for (auto&& i : rendertargetwindow->child) { rendertargetwindow->drawmt(*i, 1, 2, rendertargetchild); }
         } else {
-            rendertargetwindow->draw(*rendertargetobject, 1, 2, rendertargetchild);
+            rendertargetwindow->drawmt(*rendertargetobject, 1, 2, rendertargetchild);
         }
         render1 = false;
     }
@@ -78,7 +78,7 @@ void loop1 () {
         rendertargetchild = true;
         w.begin();
         render1 = true;
-        for (auto&& i : w.child) { w.draw(*i, 0, 2, rendertargetchild); }
+        for (auto&& i : w.child) { w.drawmt(*i, 0, 2, rendertargetchild); }
         while (render1 && isrunning) { delay1(); }
     }
     void multiCoreDraw (E512W3DWindow& w, Object3D& o, bool child = false) {
@@ -90,7 +90,7 @@ void loop1 () {
         rendertargetobject = &o;
         rendertargetchild = child;
         render1 = true;
-        w.draw(o, 0, 2, child);
+        w.drawmt(o, 0, 2, child);
         while (render1 && isrunning) { delay1(); }
     }
 #else
@@ -100,7 +100,7 @@ void loop1 () {
         rendertargetchild = true;
         w.begin();
         render1 = true;
-        for (auto&& i : w.child) { w.draw(*i, 0, 2, rendertargetchild); }
+        for (auto&& i : w.child) { w.drawmt(*i, 0, 2, rendertargetchild); }
         while (render1 && isrunning) { delay1(); }
     }
     void multiCoreDraw (E512W3DWindow& w, Object3D& o, bool child = false) {
@@ -108,7 +108,7 @@ void loop1 () {
         rendertargetobject = &o;
         rendertargetchild = child;
         render1 = true;
-        w.draw(o, 0, 2, child);
+        w.drawmt(o, 0, 2, child);
         while (render1 && isrunning) { delay1(); }
     }
 #endif

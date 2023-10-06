@@ -132,6 +132,8 @@ public:
     float ambient = 0;// 0f - 1f
     float light_strength = 1.0f;
     int16_t maxdiv = 4;
+    E512Array<Object3D*> child;
+    
     E512W3DWindow () {
         this->init(0, 0, 160, 80, 0, Vector3(0, -1, 0));
     }
@@ -164,16 +166,18 @@ public:
         this->height = height;
     }
     
-    void draw () {
+    void draw () { this->drawmt(0, 1); }
+    
+    void draw (Object3D& obj, bool child = false) { this->drawmt(obj, 0, 1, child); }
+    
+    void drawmt (int sindex, int nthread) {
         this->begin();
         if (this->dsy == this->dey || this->dsx == this->dex) { return; }
-        this->drawChild(this->child, Matrix4x4::identity());
-        this->drawChildT(this->child, Matrix4x4::identity());
+        this->drawChild(this->child, Matrix4x4::identity(), sindex, nthread);
+        this->drawChildT(this->child, Matrix4x4::identity(), sindex, nthread);
     }
     
-    
-    
-    void draw (Object3D& obj, bool child = false) {
+    void drawmt (Object3D& obj, int sindex, int  nthread, bool child = false) {
         if (this->dsy == this->dey || this->dsx == this->dex) { return; }
         
         Matrix4x4 mat = Matrix4x4::identity();
@@ -182,19 +186,19 @@ public:
         if (child) {
             E512Array<Object3D*> objs;
             objs.emplace_back(&obj);
-            this->drawChild(objs, mat);
-            this->drawChildT(objs, mat);
+            this->drawChild(objs, mat, sindex, nthread);
+            this->drawChildT(objs, mat, sindex, nthread);
         } else {
             mat = this->worldMatrix(&obj, mat);
             if (obj.mesh == NULL) { return; }
-            if (obj.render_type == RenderType::WireFrame) { this->drawWireFrameObject(&obj, mat); }
-            if (obj.render_type == RenderType::PolygonColor) { this->drawPolygonColorObject(&obj, mat); }
-            if (obj.render_type == RenderType::PolygonNormal) { this->drawPolygonNormalObject(&obj, mat); }
-            if (obj.render_type == RenderType::PolygonTexture) { this->drawPolygonTextureObject(&obj, mat); }
-            if (obj.render_type == RenderType::PolygonTextureDoubleFace) { this->drawPolygonTextureDoubleFaceObject(&obj, mat); }
-            if (obj.render_type == RenderType::PolygonTexturePerspectiveCorrect) { this->drawPolygonTexturePerspectiveCorrectObject(&obj, mat); }
-            if (obj.render_type == RenderType::PolygonTexturePerspectiveCorrectDoubleFace) { this->drawPolygonTexturePerspectiveCorrectDoubleFaceObject(&obj, mat); }
-            if (obj.render_type == RenderType::PolygonTranslucent) { this->drawPolygonTranslucentObject(&obj, mat); }
+            if (obj.render_type == RenderType::WireFrame) { this->drawWireFrameObject(&obj, mat, sindex, nthread); }
+            if (obj.render_type == RenderType::PolygonColor) { this->drawPolygonColorObject(&obj, mat, sindex, nthread); }
+            if (obj.render_type == RenderType::PolygonNormal) { this->drawPolygonNormalObject(&obj, mat, sindex, nthread); }
+            if (obj.render_type == RenderType::PolygonTexture) { this->drawPolygonTextureObject(&obj, mat, sindex, nthread); }
+            if (obj.render_type == RenderType::PolygonTextureDoubleFace) { this->drawPolygonTextureDoubleFaceObject(&obj, mat, sindex, nthread); }
+            if (obj.render_type == RenderType::PolygonTexturePerspectiveCorrect) { this->drawPolygonTexturePerspectiveCorrectObject(&obj, mat, sindex, nthread); }
+            if (obj.render_type == RenderType::PolygonTexturePerspectiveCorrectDoubleFace) { this->drawPolygonTexturePerspectiveCorrectDoubleFaceObject(&obj, mat, sindex, nthread); }
+            if (obj.render_type == RenderType::PolygonTranslucent) { this->drawPolygonTranslucentObject(&obj, mat, sindex, nthread); }
         }
     }
     
@@ -664,10 +668,6 @@ public:
     int16_t getCursorY () { return cursor_y - this->sy; }
     
     
-    Matrix4x4 view;
-    Matrix4x4 projscreen;
-    
-    
     void drawTextureTXYWH (int16_t sx, int16_t sy, int16_t tex_x, int16_t tex_y, int16_t tex_w, int16_t tex_h, Texture& tex, bool flipx = false) {
         if (this->dsy == this->dey || this->dsx == this->dex) { return; }
         
@@ -750,42 +750,42 @@ public:
     }
     
     
+    Matrix4x4 view;
+    Matrix4x4 projscreen;
     
 private:
-    E512Array<Object3D*> child;
     Vector3 light;
     Vector3 light_vector;
     int16_t dsy, dsx, dey, dex;
     
-    void drawChild (E512Array<Object3D*>& child, Matrix4x4 pmat) {
+    void drawChild (E512Array<Object3D*>& child, Matrix4x4 pmat, int sindex = 0, int nthread = 1) {
         for (auto&& c : child) {
             if (c->render_type == RenderType::Hide) { continue; }
             
             Matrix4x4 mat = this->worldMatrix(c, pmat);
             
             if (c->mesh != NULL) {
-                
-                if (c->render_type == RenderType::WireFrame) { this->drawWireFrameObject(c, mat); }
-                if (c->render_type == RenderType::PolygonColor) { this->drawPolygonColorObject(c, mat); }
-                if (c->render_type == RenderType::PolygonNormal) { this->drawPolygonNormalObject(c, mat); }
-                if (c->render_type == RenderType::PolygonTexture) { this->drawPolygonTextureObject(c, mat); }
-                if (c->render_type == RenderType::PolygonTextureDoubleFace) { this->drawPolygonTextureDoubleFaceObject(c, mat); }
-                if (c->render_type == RenderType::PolygonTexturePerspectiveCorrect) { this->drawPolygonTexturePerspectiveCorrectObject(c, mat); }
-                if (c->render_type == RenderType::PolygonTexturePerspectiveCorrectDoubleFace) { this->drawPolygonTexturePerspectiveCorrectDoubleFaceObject(c, mat); }
+                if (c->render_type == RenderType::WireFrame) { this->drawWireFrameObject(c, mat, sindex, nthread); }
+                if (c->render_type == RenderType::PolygonColor) { this->drawPolygonColorObject(c, mat, sindex, nthread); }
+                if (c->render_type == RenderType::PolygonNormal) { this->drawPolygonNormalObject(c, mat, sindex, nthread); }
+                if (c->render_type == RenderType::PolygonTexture) { this->drawPolygonTextureObject(c, mat, sindex, nthread); }
+                if (c->render_type == RenderType::PolygonTextureDoubleFace) { this->drawPolygonTextureDoubleFaceObject(c, mat, sindex, nthread); }
+                if (c->render_type == RenderType::PolygonTexturePerspectiveCorrect) { this->drawPolygonTexturePerspectiveCorrectObject(c, mat, sindex, nthread); }
+                if (c->render_type == RenderType::PolygonTexturePerspectiveCorrectDoubleFace) { this->drawPolygonTexturePerspectiveCorrectDoubleFaceObject(c, mat, sindex, nthread); }
             }
-            this->drawChild(c->child, mat);
+            this->drawChild(c->child, mat, sindex, nthread);
         }
     }
     
-    void drawChildT (E512Array<Object3D*>& child, Matrix4x4 pmat) {
+    void drawChildT (E512Array<Object3D*>& child, Matrix4x4 pmat, int sindex = 0, int nthread = 1) {
         for (auto&& c : child) {
             if (c->render_type == RenderType::Hide) { continue; }
             
             Matrix4x4 mat = this->worldMatrix(c, pmat);
             if (c->mesh != NULL) {
-                if (c->render_type == RenderType::PolygonTranslucent) { this->drawPolygonTranslucentObject(c, mat); }
+                if (c->render_type == RenderType::PolygonTranslucent) { this->drawPolygonTranslucentObject(c, mat, sindex, nthread); }
             }
-            this->drawChildT(c->child, mat);
+            this->drawChildT(c->child, mat, sindex, nthread);
         }
     }
     
@@ -1173,7 +1173,6 @@ private:
     }
     
     
-    
     Matrix4x4 worldMatrix (Object3D* o, Matrix4x4 pmat) {
         Matrix4x4 mat = Matrix4x4::identity();
         mat = Matrix4x4::mul(mat, Matrix4x4::scaleMatrix(o->scale));
@@ -1194,7 +1193,6 @@ private:
     inline float distance (const float& ax, const float& ay, const float& bx, const float& by) {
         return sqrt((ax - bx) * (ax - bx) + (ay - by) * (ay - by));
     }
-    
     
 /*
 Software License Agreement (BSD License)
@@ -1896,4 +1894,10 @@ private:
     }
     
 };
+
+
+
+
+
+
 
