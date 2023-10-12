@@ -25,6 +25,16 @@ vert:1183, face:2208, vertuv:1183, faceuv:2208,texture:64x32
 
 <https://ebicochineal.github.io/E512W3D/emscripten-e512w3d-example4/>  
 
+
+exampletm  
+![Image](./img/exampletm.png)  
+<https://ebicochineal.github.io/E512W3D/emscripten-e512w3d-exampletm/>  
+
+
+- [multicore](https://github.com/ebicochineal/E512W3D/tree/master/multicore)  
+- [gui](https://github.com/ebicochineal/E512W3D/tree/master/gui)  
+- [tilemap](https://github.com/ebicochineal/E512W3D/tree/master/tilemap)  
+
 ---
 
 Blender 3Dファイルエクスポート設定 
