@@ -28,7 +28,7 @@ struct E512W3DTile {
     uint8_t anim = 0;
     uint8_t anim_position = 0;
     uint16_t anim_cnt = 0;
-    uint16_t anim_wait_cnt = 8;
+    uint16_t anim_wait = 8;
     
     uint16_t child = 0;
     
@@ -40,7 +40,7 @@ struct E512W3DTile {
     uint8_t banim = 0;
     uint8_t banim_position = 0;
     uint16_t banim_cnt = 0;
-    uint16_t banim_wait_cnt = 8;
+    uint16_t banim_wait = 8;
     int16_t btex_h = 1;
     int16_t bstart_h = 0;
     
@@ -100,31 +100,31 @@ public:
         for (auto&& i : this->tile) {
             this->max_b_tex_h = max(i.btex_h-1, this->max_b_tex_h);
             if (i.anim > 0) {
-                i.anim_wait_cnt = max(i.anim_wait_cnt, 1);
-                if (i.anim_cnt % i.anim_wait_cnt == 0) {
+                i.anim_wait = max(i.anim_wait, 1);
+                if (i.anim_cnt % i.anim_wait == 0) {
                     i.anim_position = (i.anim_position + 1) % i.anim;
                 }
                 
                 i.anim_cnt += 1;
-                if (i.anim_cnt >= i.anim * i.anim_wait_cnt) { i.anim_cnt = 0; }
+                if (i.anim_cnt >= i.anim * i.anim_wait) { i.anim_cnt = 0; }
             }
             if (i.banim > 0) {
-                i.banim_wait_cnt = max(i.banim_wait_cnt, 1);
-                if (i.banim_cnt % i.banim_wait_cnt == 0) {
+                i.banim_wait = max(i.banim_wait, 1);
+                if (i.banim_cnt % i.banim_wait == 0) {
                     i.banim_position = (i.banim_position + 1) % i.banim;
                 }
                 
                 i.banim_cnt += 1;
-                if (i.banim_cnt >= i.banim * i.banim_wait_cnt) { i.banim_cnt = 0; }
+                if (i.banim_cnt >= i.banim * i.banim_wait) { i.banim_cnt = 0; }
             }
         }
     }
     
-    uint8_t getTileIndex (int x, int y) { return this->dat[y*this->width+x] & 0b1111111111; }
-    void setTileIndex (int x, int y, uint8_t t) { this->dat[y*this->width+x] = (t & 0b1111111111) | ((this->dat[y*this->width+x] >> 10) & 0b111111); }
+    uint16_t getTileIndex (int x, int y) { return this->dat[y*this->width+x] & 0b1111111111; }
+    void setTileIndex (int x, int y, uint16_t t) { this->dat[y*this->width+x] = (t & 0b1111111111) | (this->dat[y*this->width+x] & 0b1111110000000000); }
     E512W3DTile getTile (int x, int y) { return this->tile[this->getTileIndex(x, y)]; }
-    uint8_t getTileValue (int x, int y) { return (this->dat[y*this->width+x] >> 10) & 0b111111; }
-    void setTileValue (int x, int y, uint8_t t) { this->dat[y*this->width+x] = (this->dat[y*this->width+x] & 0b1111111111) | ((t & 0b111111) << 10); }
+    uint16_t getTileValue (int x, int y) { return (this->dat[y*this->width+x] >> 10) & 0b111111; }
+    void setTileValue (int x, int y, uint16_t t) { this->dat[y*this->width+x] = (this->dat[y*this->width+x] & 0b1111111111) | ((t & 0b111111) << 10); }
 };
 
 struct Object2D {
