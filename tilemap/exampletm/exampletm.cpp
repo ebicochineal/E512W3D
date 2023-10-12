@@ -106,7 +106,7 @@ void game () {
     if (tilemap.isInside(t.x, t.y)) {
         // draw
         if (E512W3DInput::getButton(0) && t.x < 16 && t.y < 16) { tilemap.setTileIndex(t.x, t.y, tileindex); }
-        // sellect
+        // select
         if (E512W3DInput::getButton(2)) {
             tilemap.setTileIndex(17, 6, tilemap.getTileIndex(t.x, t.y));
             tileindex = tilemap.getTileIndex(t.x, t.y);
