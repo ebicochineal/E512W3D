@@ -347,6 +347,38 @@ Arduino環境では可変長配列が無かったため可変長配列を作り�
 std::vectorと大体同じように使えるかと思います  
 クラスや構造体は引数無しコンストラクタが無い場合エラーになります  
 
+可変長配列とポインタ  
+E512W3DWindowはdrawメソッドで登録したオブジェクトを描画するためにObject3D\*型の変数を持っています  
+```cpp
+E512W3DWindow w;
+E512Array<Object3D> obs;
+void setup () {
+    ...
+    Object3D o;
+    // meshなど設定
+    objs.emplace_back(o);
+    w.addChild(objs[0]);
+    ...
+}
+```
+この場合動作しますが  
+addChildのあとにobjsに追加すると  
+配列の再確保によりwに保存されているObject3D\*がobjs[0]を示さなくなりエラーになります  
+そのためobjsはE512Array<Object3D\*>で作った方が良いです  
+```cpp
+E512W3DWindow w;
+E512Array<Object3D*> obs;
+void setup () {
+    ...
+    Object3D* o = new Object3D();
+    // meshなど設定
+    objs.emplace_back(o);
+    w.addChild(*objs[0]);
+    ...
+}
+```
+このようにすれば配列が再確保されたとしても動作します  
+
 ---
 ## 文字出力
 e512w3dのdrawメソッドで画面全体の描画を行わないのであれば文字の出力ができます  
