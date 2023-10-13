@@ -418,7 +418,7 @@ void loop () {
 ```cpp
 Vector3 p = w.screenPosition(a);
 w.setTextCursor(p.x, p.y);
-w.print('text');
+w.print("text");
 ```
 printメソッドで背景色を使用するにはtext_use_bgcolorをtrueにしてください  
 ```cpp
