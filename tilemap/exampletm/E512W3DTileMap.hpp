@@ -79,7 +79,7 @@ public:
     int tex_w = 0;
     int tex_h = 0;
     
-    int max_b_tex_h = 0;
+    int max_btex_h = 0;
     
     E512W3DTileMap () {}
     E512W3DTileMap (int width, int height) {
@@ -96,9 +96,9 @@ public:
     }
     
     void update () {
-        this->max_b_tex_h = 0;
+        this->max_btex_h = 0;
         for (auto&& i : this->tile) {
-            this->max_b_tex_h = max(i.btex_h-1, this->max_b_tex_h);
+            this->max_btex_h = max(i.btex_h-1, this->max_btex_h);
             if (i.anim > 0) {
                 i.anim_wait = max(i.anim_wait, 1);
                 if (i.anim_cnt % i.anim_wait == 0) {
@@ -692,7 +692,7 @@ void draw2dTileMap (E512W3DWindow& w, E512W3DTileMap& m) {
     
     m.update();
     
-    for (int y = tu; y >= td - m.max_b_tex_h; --y) {
+    for (int y = tu; y >= td - m.max_btex_h; --y) {
         for (int x = tl; x <= tr; ++x) {
             if (!m.isInside(x, y)) { continue; }
             int ti = m.getTileIndex(x, y);
@@ -709,8 +709,8 @@ void draw2dTileMap (E512W3DWindow& w, E512W3DTileMap& m) {
             }
             if (t.type == TileType::Object) {
                 int btx = t.btex_x * tw;
-                int bty = t.btex_y * th + (th-t.btex_h);
-                int bth = t.btex_h;
+                int bty = t.btex_y * th - th * (t.btex_h-1);
+                int bth = t.btex_h*th;
                 int btw = tw;
                 if (t.banim > 0) { btx += tw * t.banim_position; }
                 int px = x * tw;

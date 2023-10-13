@@ -45,22 +45,21 @@ void game () {
         tilemap.tile.emplace_back(1, 0, 0, 1);
         tilemap.tile.emplace_back(2, 0, 0, 0);
         tilemap.tile.emplace_back(0, 4, 4, 0);
-        tilemap.tile.emplace_back(2, 0, 0, 4, 2, 0, 16+8, 0, 1);
-        tilemap.tile.emplace_back(2, 0, 0, 0, 2, 4, 16, 0, 0);
+        tilemap.tile.emplace_back(2, 0, 0, 4, 2, 0, 2, 0, 1);
+        tilemap.tile.emplace_back(2, 0, 0, 0, 2, 4, 1, 0, 0);
         
-        int tsize = tilemap.tile.size();
         for (int y = 0; y < 5; ++y) {
             for (int x = 0; x < 5; ++x) {
                 tilemap.tile.emplace_back(x, y, 0, 0);
-                tilemap.setTileIndex(17+x, 4-y, tsize+y*5+x);
+                tilemap.setTileIndex(tilemap.width/2+1+x, 4-y, tilemap.tile.size()-1);
             }
         }
-        for (int x = 0; x < 6; ++x) { tilemap.setTileIndex(17+x, 5, x); }
+        for (int x = 0; x < 6; ++x) { tilemap.setTileIndex(tilemap.width/2+1+x, 5, x); }
         
-        for (int y = 0; y < 16; ++y) {
-            for (int x = 0; x < 16 ; ++x) {
+        for (int y = 0; y < tilemap.height/2; ++y) {
+            for (int x = 0; x < tilemap.width/2 ; ++x) {
                 bool a = (y > 2 && xrnd()%12==0);
-                bool b = (x == 0 || y == 0 || x == 16-1 || y == 16-1);
+                bool b = (x == 0 || y == 0 || x == tilemap.width/2-1 || y == tilemap.height/2-1);
                 tilemap.setTileIndex(x, y, (a || b ? 1 : 2));
             }
         }
@@ -80,8 +79,8 @@ void game () {
     }
     
     // drag camera move
-    camera.position.x -= E512W3DInput::delta2.x;
-    camera.position.y += E512W3DInput::delta2.y;
+    camera.position.x -= E512W3DInput::delta1.x;
+    camera.position.y += E512W3DInput::delta1.y;
     
     // character action
     bool ground = m.isGround(tilemap);
@@ -96,23 +95,20 @@ void game () {
         if (tilemap.getTileIndex(i.x, i.y) == 5) { tilemap.setTileIndex(i.x, i.y, 2); }
     }
     
-    
     draw2d(w, tilemap);
     draw2d(w, m);
-    
     
     E512Point t = tilemapPosition(w, tilemap);
     
     if (tilemap.isInside(t.x, t.y)) {
         // draw
-        if (E512W3DInput::getButton(0) && t.x < 16 && t.y < 16) { tilemap.setTileIndex(t.x, t.y, tileindex); }
+        if (E512W3DInput::getButton(0) && t.x < tilemap.width/2 && t.y < tilemap.height/2) { tilemap.setTileIndex(t.x, t.y, tileindex); }
         // select
         if (E512W3DInput::getButton(2)) {
-            tilemap.setTileIndex(17, 6, tilemap.getTileIndex(t.x, t.y));
+            tilemap.setTileIndex(tilemap.width/2+1, 6, tilemap.getTileIndex(t.x, t.y));
             tileindex = tilemap.getTileIndex(t.x, t.y);
         }
     }
-    
     w.print("tileindex = ");
     w.print(tileindex);
     w.print(" : (");
@@ -120,7 +116,6 @@ void game () {
     w.print(", ");
     w.print(tilemap.tile[tileindex].tex_y);
     w.print(")");
-    
 }
 
 void loop() {
@@ -132,8 +127,3 @@ void loop() {
         e512w3d.pushScreen();
     }
 }
-
-
-
-
-
