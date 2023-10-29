@@ -351,7 +351,7 @@ std::vectorと大体同じように使えるかと思います
 E512W3DWindowはdrawメソッドで登録したオブジェクトを描画するためにObject3D\*型の変数を持っています  
 ```cpp
 E512W3DWindow w;
-E512Array<Object3D> obs;
+E512Array<Object3D> objs;
 void setup () {
     ...
     Object3D o;
@@ -367,7 +367,7 @@ addChildのあとにobjsに追加すると
 そのためobjsはE512Array<Object3D\*>で作った方が良いです  
 ```cpp
 E512W3DWindow w;
-E512Array<Object3D*> obs;
+E512Array<Object3D*> objs;
 void setup () {
     ...
     Object3D* o = new Object3D();
