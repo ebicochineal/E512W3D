@@ -748,6 +748,50 @@ public:
             }
         }
     }
+    void drawTextureTXYWHZB (int16_t sx, int16_t sy, int16_t tex_x, int16_t tex_y, int16_t tex_w, int16_t tex_h, uint16_t z, float brightness, Texture& tex, bool flipx = false) {
+        if (this->dsy == this->dey || this->dsx == this->dex) { return; }
+        
+        sx += this->sx;
+        sy += this->sy;
+        int16_t ex = sx + tex_w;
+        int16_t ey = sy + tex_h;
+        
+        ex = min(ex, this->dex);
+        ey = min(ey, this->dey);
+        int16_t isx = max(sx, this->dsx);
+        int16_t isy = max(sy, this->dsy);
+        int16_t itx = tex_x + (sx < this->dsx ? this->dsx - sx : 0);
+        int16_t ity = tex_y + (sy < this->dsy ? this->dsy - sy : 0);
+        if (flipx) {
+            for (int y = isy, ty = ity * tex.width; y < ey; ++y, ty+=tex.width) {
+                for (int x = isx, tx = itx; x < ex; ++x, ++tx) {
+                    if (this->zbuff->readPixel(x, y) > z) { continue; }
+                    const uint16_t c1555 = tex.pixels[ty + tex_x+tex_w-tx-1];
+                    const uint16_t r = ((uint16_t)(((c1555 >> 10) & 0b11111) * brightness) << 11);
+                    const uint16_t g = ((uint16_t)(((c1555 >>  5) & 0b11111) * brightness) <<  6);
+                    const uint16_t b = ((uint16_t)(((c1555      ) & 0b11111) * brightness)      );
+                    if ((c1555 >> 15 & 1) == 0) {
+                        this->buff->drawPixel(x, y, r|g|b);
+                        this->zbuff->drawPixel(x, y, z);
+                    }
+                }
+            }
+        } else {
+            for (int y = isy, ty = ity * tex.width; y < ey; ++y, ty+=tex.width) {
+                for (int x = isx, tx = itx; x < ex; ++x, ++tx) {
+                    if (this->zbuff->readPixel(x, y) > z) { continue; }
+                    const uint16_t c1555 = tex.pixels[ty + tx];
+                    const uint16_t r = ((uint16_t)(((c1555 >> 10) & 0b11111) * brightness) << 11);
+                    const uint16_t g = ((uint16_t)(((c1555 >>  5) & 0b11111) * brightness) <<  6);
+                    const uint16_t b = ((uint16_t)(((c1555      ) & 0b11111) * brightness)      );
+                    if ((c1555 >> 15 & 1) == 0) {
+                        this->buff->drawPixel(x, y, r|g|b);
+                        this->zbuff->drawPixel(x, y, z);
+                    }
+                }
+            }
+        }
+    }
     
     
     Matrix4x4 view;

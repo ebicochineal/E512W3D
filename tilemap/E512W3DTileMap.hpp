@@ -11,6 +11,11 @@ struct E512Point {
     int x, y;
     E512Point () { this->x = 0; this->y = 0; };
     E512Point (int x, int y) { this->x = x; this->y = y; }
+    
+    E512Point operator + (const E512Point& t) const { return E512Point(this->x + t.x, this->y + t.y); }
+    E512Point operator - (const E512Point& t) const { return E512Point(this->x - t.x, this->y - t.y); }
+    bool operator == (const E512Point& t) const { return this->x == t.x && this->y == t.y; }
+    bool operator != (const E512Point& t) const { return this->x != t.x || this->y != t.y; }
 };
 
 namespace TileType {
@@ -100,7 +105,7 @@ public:
         for (auto&& i : this->tile) {
             this->max_btex_h = max(i.btex_h-1, this->max_btex_h);
             if (i.anim > 0) {
-                i.anim_wait = max(i.anim_wait, 1);
+                i.anim_wait = max((int)i.anim_wait, 1);
                 if (i.anim_cnt % i.anim_wait == 0) {
                     i.anim_position = (i.anim_position + 1) % i.anim;
                 }
@@ -109,7 +114,7 @@ public:
                 if (i.anim_cnt >= i.anim * i.anim_wait) { i.anim_cnt = 0; }
             }
             if (i.banim > 0) {
-                i.banim_wait = max(i.banim_wait, 1);
+                i.banim_wait = max((int)i.banim_wait, 1);
                 if (i.banim_cnt % i.banim_wait == 0) {
                     i.banim_position = (i.banim_position + 1) % i.banim;
                 }
@@ -125,6 +130,27 @@ public:
     E512W3DTile getTile (int x, int y) { return this->tile[this->getTileIndex(x, y)]; }
     uint16_t getTileValue (int x, int y) { return (this->dat[y*this->width+x] >> 10) & 0b111111; }
     void setTileValue (int x, int y, uint16_t t) { this->dat[y*this->width+x] = (this->dat[y*this->width+x] & 0b1111111111) | ((t & 0b111111) << 10); }
+    
+    uint16_t getTileIndexS (int x, int y) {
+        if (!this->isInside(x, y)) { return 0; }
+        return this->dat[y*this->width+x] & 0b1111111111;
+    }
+    void setTileIndexS (int x, int y, uint16_t t) {
+        if (!this->isInside(x, y)) { return; }
+        this->dat[y*this->width+x] = (t & 0b1111111111) | (this->dat[y*this->width+x] & 0b1111110000000000);
+    }
+    E512W3DTile getTileS (int x, int y) {
+        if (!this->isInside(x, y)) { return this->tile[0]; }
+        return this->tile[this->getTileIndex(x, y)];
+    }
+    uint16_t getTileValueS (int x, int y) {
+        if (!this->isInside(x, y)) { return 0; }
+        return (this->dat[y*this->width+x] >> 10) & 0b111111;
+    }
+    void setTileValueS (int x, int y, uint16_t t) {
+        if (!this->isInside(x, y)) { return; }
+        this->dat[y*this->width+x] = (this->dat[y*this->width+x] & 0b1111111111) | ((t & 0b111111) << 10);
+    }
 };
 
 struct Object2D {
@@ -724,6 +750,75 @@ void draw2dTileMap (E512W3DWindow& w, E512W3DTileMap& m) {
 
 void draw2d (E512W3DWindow& w, E512W3DTileMap& m) { draw2dTileMap(w, m); }
 
+
+
+
+void draw2dbTileMap (E512W3DWindow& w, E512W3DTileMap& m) {
+    const int cx = w.width/2 - w.camera->position.x;
+    const int cy = w.height/2 + w.camera->position.y;
+    const int th = m.tex_h;
+    const int tw = m.tex_w;
+    
+    int l = -cx;
+    int r = l + w.width;
+    int u = cy;
+    int d = u - w.height;
+    
+    int tl = l/tw;
+    int tr = r/tw;
+    int tu = u/th;
+    int td = d/th;
+    
+    m.update();
+    
+    for (int y = tu; y >= td - m.max_btex_h; --y) {
+        for (int x = tl; x <= tr; ++x) {
+            if (!m.isInside(x, y)) { continue; }
+            int ti = m.getTileIndex(x, y);
+            const E512W3DTile& t = m.getTile(x, y);
+            if (ti == 0) { continue; }
+            float b = (15 - min((int)m.getTileValue(x, y), 15)) / 15.0f ;
+            if (t.type == TileType::Normal || t.type == TileType::Object) {
+                int tx = t.tex_x * tw;
+                int ty = t.tex_y * th;
+                int px = x * tw;
+                int py = y * th;
+                if (t.anim > 0) { tx += tw * t.anim_position; }
+                w.drawTextureTXYWHZB(cx+px, cy-py-th, tx, ty, tw, th, m.z, b, *m.texture);
+            }
+            if (t.type == TileType::Object) {
+                int btx = t.btex_x * tw;
+                int bty = t.btex_y * th - th * (t.btex_h-1);
+                int bth = t.btex_h*th;
+                int btw = tw;
+                if (t.banim > 0) { btx += tw * t.banim_position; }
+                int px = x * tw;
+                int py = y * th;
+                int z = m.z+(cy-py)-t.bstart_h+1;
+                
+                w.drawTextureTXYWHZB(cx+px, cy-py-bth, btx, bty, btw, bth, z, b, *m.texture);
+            }
+        }
+    }
+}
+
+void draw2db (E512W3DWindow& w, E512W3DTileMap& m) { draw2dbTileMap(w, m); }
+
+void draw2dSpriteScreenPosition (E512W3DWindow& w, Object2D& o, int x, int y, int z = -1) {
+    const int cx = w.width/2 - w.camera->position.x;
+    const int cy = w.height/2 + w.camera->position.y;
+    int tx = o.tex_x;
+    int ty = o.tex_y;
+    int th = o.tex_h;
+    int tw = o.tex_w;
+    
+    if (z < 0) { z = (cy-o.position.y) + 1; }
+    if (x > w.width || x+tw < 0) { return; }
+    if (y-th > w.height || y-th+th < 0) { return; }
+    w.drawTextureTXYWHZ(x, y, tx, ty, tw, th, z, *o.texture);
+}
+
+
 Vector3 screenPosition (E512W3DWindow& w, E512W3DTileMap& m, int x, int y) {
     const int cx = w.width/2 - w.camera->position.x;
     const int cy = w.height/2 + w.camera->position.y;
@@ -733,20 +828,20 @@ Vector3 screenPosition (E512W3DWindow& w, E512W3DTileMap& m, int x, int y) {
     int py = y * th;
     return Vector3(cx+px, cy-py-th, cy-py);
 }
-Vector3 screenPosition (E512W3DWindow& w, E512W3DTileMap& m, Object2D& o) {
+Vector3 screenPosition (E512W3DWindow& w, Object2D& o) {
     const int cx = w.width/2 - w.camera->position.x;
     const int cy = w.height/2 + w.camera->position.y;
     return Vector3(cx+(int)o.position.x, cy-(int)o.position.y-o.tex_h, cy-o.position.y);
 }
-
-E512Point screenPositionTo2DWorldPosition (E512W3DWindow& w, E512W3DTileMap& m, int x, int y) {
-    Vector3 p = screenPosition(w, m, 0, 0);
-    int tx = (x-p.x);
-    int ty = (p.z-y);
+E512Point screenPositionTo2DWorldPosition (E512W3DWindow& w, int x, int y) {
+    const int cx = w.width/2 - w.camera->position.x;
+    const int cy = w.height/2 + w.camera->position.y;
+    int tx = (x-cx);
+    int ty = (cy-y);
     return E512Point(tx, ty);
 }
 E512Point tilemapPosition (E512W3DWindow& w, E512W3DTileMap& m, int x, int y) {
-    E512Point p = screenPositionTo2DWorldPosition(w, m, x, y);
+    E512Point p = screenPositionTo2DWorldPosition(w, x, y);
     int tx = p.x / m.tex_w;
     int ty = p.y / m.tex_h;
     return E512Point(tx, ty);
