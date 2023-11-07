@@ -27,7 +27,10 @@
 
 ---
 
-#### example
+#### examples
+
+Arduino以外の環境ではexampleの拡張子を.inoから.cppにしてください  
+Arduino以外の環境でもsetup関数が最初に呼ばれ、loop関数を繰り返し実行されます  
 
 ![Gif](./img/anim.gif)  
 ![Gif](./img/animc.gif)  
@@ -91,9 +94,7 @@ Arduino IDEで書き込み
 
 ---
 
-Arduino以外の環境ではexampleの拡張子を.inoから.cppにしてください  
 
----
 
 <a id="console"></a>
 
