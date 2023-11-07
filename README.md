@@ -7,7 +7,27 @@
 - Directional Light  
 - Ambient  
 - テクスチャなしなら8000ポリゴンくらいまで(m5stickc)  
-- シングルコアで動作しますが2コアで動作する[バージョン](https://github.com/ebicochineal/E512W3D/tree/master/multicore)もあります  
+- emscriptenを使用すればWebブラウザで動作させることもできます
+- シングルコアで動作します。2コアで動作する[バージョン](https://github.com/ebicochineal/E512W3D/tree/master/multicore)もあります  
+- タイルマップなど2Dゲームを作成するための機能
+- [multicore](https://github.com/ebicochineal/E512W3D/tree/master/multicore)  
+- [gui](https://github.com/ebicochineal/E512W3D/tree/master/gui)  
+- [tilemap](https://github.com/ebicochineal/E512W3D/tree/master/tilemap)  
+
+---
+
+
+- [M5StickC](#M5StickC)
+- [console-app](#console)
+- [ncurses](#ncurses)
+- [windows-app](#windows)
+- [emscripten](#emscripten)
+- [android](#android)
+- [raspberry-pi-pico](#raspberrypipico)
+
+---
+
+#### example
 
 ![Gif](./img/anim.gif)  
 ![Gif](./img/animc.gif)  
@@ -31,13 +51,9 @@ exampletm
 <https://ebicochineal.github.io/E512W3D/emscripten-e512w3d-exampletm/>  
 
 
-- [multicore](https://github.com/ebicochineal/E512W3D/tree/master/multicore)  
-- [gui](https://github.com/ebicochineal/E512W3D/tree/master/gui)  
-- [tilemap](https://github.com/ebicochineal/E512W3D/tree/master/tilemap)  
-
 ---
 
-Blender 3Dファイルエクスポート設定 
+#### Blender 3Dファイルエクスポート設定 
 ```
 objファイル
 [+] Triangulate Faces
@@ -48,7 +64,9 @@ objファイルをスクリプトでhppに変換
 pngファイルをスクリプトでhppに変換  
 
 ---
+<a id="M5StickC"></a>
 ## M5StickC
+
 arduino ide  
 M5StickC以外ではテストしていませんが他のボードでも動くかもしれません  
 - M5StickCPlus
@@ -76,8 +94,11 @@ Arduino IDEで書き込み
 Arduino以外の環境ではexampleの拡張子を.inoから.cppにしてください  
 
 ---
+
+<a id="console"></a>
+
 ## console-app
-  
+
 
 gcc  
 ncurses導入済みでこっちを使う場合はE512W3DUtilsXの#define USENCURSESをコメントアウト  
@@ -85,6 +106,7 @@ ncurses導入済みでこっちを使う場合はE512W3DUtilsXの#define USENCUR
 g++ -std=c++1z ***.cpp -o ***.out
 ```
 ---
+<a id="ncurses"></a>
 ## ncurses
 gcc, ncurses  
 ncursesインストール  
@@ -97,6 +119,7 @@ g++ -std=c++1z ***.cpp -o ***.out -lncurses
 ```
 
 ---
+<a id="windows"></a>
 ## windows-app
 mingw  
 ```
@@ -104,6 +127,7 @@ g++ -std=c++1z -static-libstdc++ -static -lstdc++ -mwindows ***.cpp -o ***.exe
 ```
 
 ---
+<a id="emscripten"></a>
 ## emscripten
 emscripten  
 ```
@@ -146,6 +170,9 @@ py -m http.server 8000
 http://localhost:8000/
 ```
 ---
+
+<a id="android"></a>
+
 ## android
 Visual Studio 2019  
 Visual Studio 2019インストール デスクトップとモバイル C++によるモバイル開発  
@@ -162,6 +189,7 @@ Visual Studio 2019インストール デスクトップとモバイル C++によ
 
 
 ---
+<a id="raspberrypipico"></a>
 ## raspberry-pi-pico
 ArduinoIDEで動作します  
 ST7735を搭載した解像度160x80ディスプレイを使用します  

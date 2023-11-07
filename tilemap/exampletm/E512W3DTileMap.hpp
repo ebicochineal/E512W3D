@@ -844,6 +844,8 @@ E512Point tilemapPosition (E512W3DWindow& w, E512W3DTileMap& m, int x, int y) {
     E512Point p = screenPositionTo2DWorldPosition(w, x, y);
     int tx = p.x / m.tex_w;
     int ty = p.y / m.tex_h;
+    if (p.x < 0) { tx -= 1; }
+    if (p.y < 0) { ty -= 1; }
     return E512Point(tx, ty);
 }
 E512Point tilemapPosition (E512W3DWindow& w, E512W3DTileMap& m) {
