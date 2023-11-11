@@ -24,13 +24,6 @@ void setup() {
     w.bgcolor = color565(80, 80, 80);
 }
 
-inline uint32_t xrnd() {
-    static uint32_t y = 2463534242;
-    y = y ^ (y << 13);
-    y = y ^ (y >> 17);
-    return y = y ^ (y << 5);
-}
-
 void game () {
     static bool initf = true;
     static E512W3DTileMap tilemap(32, 32);

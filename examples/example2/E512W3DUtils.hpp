@@ -6,7 +6,13 @@ inline float toRadianF (float d) { return d * DEGREE_TO_RADIAN_F; }
 uint16_t color565 (uint16_t r, uint16_t g, uint16_t b) { return ((r>>3)<<11) | ((g>>2)<<5) | (b>>3); }
 uint16_t color1555 (uint16_t a, uint16_t r, uint16_t g, uint16_t b) { return a << 15 | ((r>>3)<<10) | ((g>>3)<<5) | (b>>3); }
 
-
+float lerp (float a, float b, float v) { return a + v * (b - a); }
+uint64_t xrnd() {
+    static uint64_t y = 2463534242;
+    y = y ^ (y << 13);
+    y = y ^ (y >> 17);
+    return y = y ^ (y << 5);
+}
 
 // max size uint16_t
 // template <class T>
@@ -253,8 +259,6 @@ public:
     T* begin () { return &this->a[0]; }
     T* end () { return &this->a[this->array_size]; }
 };
-
-
 
 
 struct Vector2 {
@@ -724,6 +728,34 @@ struct RaycastHit {
     operator bool () const { return this->distance > -1; }
 };
 
+struct PerlinNoise {
+private:
+    static Vector2 randomGradient (int ix, int iy) {
+        static const uint64_t w = 8 * sizeof(uint64_t);
+        static const uint64_t s = w / 2;
+        uint64_t a = ix, b = iy;
+        a *= 3284157443; b ^= (a << s) | (a >> (w-s));
+        b *= 1911520717; a ^= (b << s) | (b >> (w-s));
+        a *= 2048419325;
+        float random = a * (3.14159265f / ~(~0u >> 1));
+        return Vector2(cos(random), sin(random));
+    }
+    //static float fede (float t) { return 1.0f-3.0f*(t*t)+2.0f*abs(t*t*t); }
+    static float fede (float t) { return 1.0f-(6.0f*abs(t*t*t*t*t)-15.0f*(t*t*t*t)+10.0f*abs(t*t*t)); }
+    static float vxy (Vector2 a, float x, float y) { return fede(x) * fede(y) * (a.x*x + a.y*y); }
+public:
+    static float getNoise (float x, float y) {
+        const int iy = y < 0 ? y-1 : y;
+        const int ix = x < 0 ? x-1 : x;
+        const float u = (x - ix);
+        const float v = (y - iy);
+        const float w00 = vxy(randomGradient(  ix,   iy),      u,      v);
+        const float w10 = vxy(randomGradient(ix+1,   iy), u-1.0f,      v);
+        const float w01 = vxy(randomGradient(  ix, iy+1),      u, v-1.0f);
+        const float w11 = vxy(randomGradient(ix+1, iy+1), u-1.0f, v-1.0f);
+        return lerp(lerp(w00, w10, u), lerp(w01, w11, u), v);
+    }
+};
 
 struct Face {
     uint16_t a, b, c;
@@ -1327,3 +1359,77 @@ E512Array<uint8_t> numtostr (int v) {
         return cptoe512array(cp, n);
     }
 #endif
+
+
+int u8aToInt (E512Array<uint8_t>& t) {
+    static int x[] = {1, 10, 100, 1000, 10000, 100000, 1000000};
+    if (t.size() > 7) { return 0; }
+    int m = 0;
+    if (t.size() > 0 && t[0] == '-') { m = 1; }
+    int n = 0;
+    for (int i = m; i < t.size(); ++i) { n += (int)(t[i]-'0') * x[t.size()-1-i]; }
+    if (m == 1) { n = -n; }
+    return n;
+}
+
+E512Array<int> u8aToIntArray (E512Array<uint8_t>& a) {
+    static E512Array<uint8_t> tmp;
+    E512Array<int> ret;
+    for (auto&& i : a) {
+        if ((i >= '0' && i <= '9') || i == '-') {
+            if (tmp.size() > 0 && tmp[0] == '-' && i == '-') {
+                if (tmp.size() != 1) { ret.emplace_back(u8aToInt(tmp)); }
+                tmp.clear();
+            }
+            tmp.emplace_back(i);
+        } else {
+            if (tmp.size() > 0 && !(tmp.size() == 1 && tmp[0] == '-')) { ret.emplace_back(u8aToInt(tmp)); }
+            tmp.clear();
+        }
+    }
+    if (tmp.size() > 0 && !(tmp.size() == 1 && tmp[0] == '-')) { ret.emplace_back(u8aToInt(tmp)); }
+    tmp.clear();
+    return ret;
+}
+
+#if defined(__EMSCRIPTEN__)
+EM_JS(void, readHTMLTextAreaJS, (const char* textareaid, char* text), {
+    var d = document.getElementById(UTF8ToString(textareaid));
+    if (d === null) { return; }
+    var e512w3d_textarea_value = d.value.replace("\r", "");
+    var l = Math.min(e512w3d_textarea_value.length+1, 4194304);
+    stringToUTF8(e512w3d_textarea_value, text, l)
+});
+#endif
+E512Array<uint8_t> readHTMLTextArea (const char* textareaid) {
+    E512Array<uint8_t> ret;
+#if defined(__EMSCRIPTEN__)
+    const int maxsize = 4194304;
+    char* text = new char[maxsize];
+    readHTMLTextAreaJS(textareaid, text);
+    
+    int cnt = 0;
+    while (text[cnt] != '\0' && cnt < maxsize) {
+        ret.emplace_back(text[cnt]);
+        cnt += 1;
+    }
+    delete[] text;
+#endif
+    return ret;
+}
+
+#if defined(__EMSCRIPTEN__)
+EM_JS(void, writeHTMLTextAreaJS, (const char* textareaid, const char* text), {
+    var d = document.getElementById(UTF8ToString(textareaid));
+    if (d === null) { return; }
+    d.value = UTF8ToString(text);
+});
+#endif
+void writeHTMLTextArea (const char* textareaid, const char* text) {
+#if defined(__EMSCRIPTEN__)
+    writeHTMLTextAreaJS(textareaid, text);
+#endif
+    return;
+}
+
+

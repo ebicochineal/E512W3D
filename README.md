@@ -533,6 +533,13 @@ uint16_t color1555 (uint16_t a, uint16_t r, uint16_t g, uint16_t b)
 E512Array<uint8_t> cptou8a (const char* cp)  
 E512Array<uint8_t> atok (E512Array<uint8_t>& u8a)  
 E512Array<uint8_t> atok (const char* cp)  
+float lerp (float a, float b, float v)  
+uint64_t xrnd()  
+int u8aToInt (E512Array<uint8_t>& t)  
+E512Array<int> u8aToIntArray (E512Array<uint8_t>& a)  
+void writeHTMLTextArea (const char* textareaid, const char* text)  
+E512Array<uint8_t> readHTMLTextArea (const char* textareaid)  
+
 
 #### E512Array
 uint32_t size ()  
@@ -658,6 +665,9 @@ Vector3 down ()
 Vector3 right ()  
 Vector3 left ()  
 RaycastHit raycast (Ray r)  
+
+#### PerlinNoise
+static float getNoise (float x, float y)  
 
 #### Ray
 Vector3 position  

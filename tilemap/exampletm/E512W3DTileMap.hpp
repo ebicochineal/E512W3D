@@ -828,11 +828,21 @@ Vector3 screenPosition (E512W3DWindow& w, E512W3DTileMap& m, int x, int y) {
     int py = y * th;
     return Vector3(cx+px, cy-py-th, cy-py);
 }
+
 Vector3 screenPosition (E512W3DWindow& w, Object2D& o) {
     const int cx = w.width/2 - w.camera->position.x;
     const int cy = w.height/2 + w.camera->position.y;
     return Vector3(cx+(int)o.position.x, cy-(int)o.position.y-o.tex_h, cy-o.position.y);
 }
+
+Vector2 screenPosition (E512W3DWindow& w, int x, int y) {
+    const int cx = w.width/2 - w.camera->position.x;
+    const int cy = w.height/2 + w.camera->position.y;
+    if (cx+x > w.width  || cx+x < 0) { Vector2(-1.0f, -1.0f); }
+    if (cy-y > w.height || cy-y < 0) { Vector2(-1.0f, -1.0f); }
+    return Vector2(cx+x, cy-y);
+}
+
 E512Point screenPositionTo2DWorldPosition (E512W3DWindow& w, int x, int y) {
     const int cx = w.width/2 - w.camera->position.x;
     const int cy = w.height/2 + w.camera->position.y;
