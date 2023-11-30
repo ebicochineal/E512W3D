@@ -683,7 +683,7 @@ void emplace (Args... args)
 void push (T t)  
 void pop ()  
 
-#### GraphEdge {
+#### GraphEdge
 int a, b, cost  
 #### GraphDijkstra
 E512Array<int> path  
