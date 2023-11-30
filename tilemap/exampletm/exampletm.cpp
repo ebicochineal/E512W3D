@@ -38,8 +38,12 @@ void game () {
         tilemap.tile.emplace_back(1, 0, 0, 1);
         tilemap.tile.emplace_back(2, 0, 0, 0);
         tilemap.tile.emplace_back(0, 4, 4, 0);
-        tilemap.tile.emplace_back(2, 0, 0, 4, 2, 0, 2, 0, 1);
-        tilemap.tile.emplace_back(2, 0, 0, 0, 2, 4, 1, 0, 0);
+        tilemap.tile.emplace_back(E512W3DTileLayer(2, 0, 0), E512W3DTileLayer(3, 1, 0, 2, 0), 1);
+        tilemap.tile.emplace_back(E512W3DTileLayer(2, 0, 0), E512W3DTileLayer(0, 2, 4), 0);
+        
+        tilemap.tile.emplace_back(E512W3DTileLayer(4, 0, 0), 0);
+        tilemap.tile[6].a.autotile = true;
+        
         
         for (int y = 0; y < 5; ++y) {
             for (int x = 0; x < 5; ++x) {
@@ -47,7 +51,7 @@ void game () {
                 tilemap.setTileIndex(tilemap.width/2+1+x, 4-y, tilemap.tile.size()-1);
             }
         }
-        for (int x = 0; x < 6; ++x) { tilemap.setTileIndex(tilemap.width/2+1+x, 5, x); }
+        for (int x = 0; x < 7; ++x) { tilemap.setTileIndex(tilemap.width/2+1+x, 5, x); }
         
         for (int y = 0; y < tilemap.height/2; ++y) {
             for (int x = 0; x < tilemap.width/2 ; ++x) {
@@ -102,13 +106,33 @@ void game () {
             tileindex = tilemap.getTileIndex(t.x, t.y);
         }
     }
+    
+    // tile info text
     w.print("tileindex = ");
     w.print(tileindex);
-    w.print(" : (");
-    w.print(tilemap.tile[tileindex].tex_x);
-    w.print(", ");
-    w.print(tilemap.tile[tileindex].tex_y);
-    w.print(")");
+    w.print(" : ");
+    if (tilemap.tile[tileindex].a.use) {
+        w.print("(");
+        w.print(tilemap.tile[tileindex].a.tex_x);
+        w.print(", ");
+        w.print(tilemap.tile[tileindex].a.tex_y);
+        w.print(")");
+    }
+    if (tilemap.tile[tileindex].b.use) {
+        w.print("(");
+        w.print(tilemap.tile[tileindex].b.tex_x);
+        w.print(", ");
+        w.print(tilemap.tile[tileindex].b.tex_y);
+        w.print(")");
+    }
+    
+    if (tilemap.tile[tileindex].a.anim > 0 || tilemap.tile[tileindex].b.anim > 0) { w.print(" animated"); }
+    if (tilemap.tile[tileindex].b.use && !tilemap.tile[tileindex].b.autotile) { w.print(" object"); }
+    if ((tilemap.tile[tileindex].a.use && tilemap.tile[tileindex].a.autotile) || (tilemap.tile[tileindex].b.use && tilemap.tile[tileindex].b.autotile)) { w.print(" autotile"); }
+    w.println(" ");
+    
+    w.println("draw   : left button");
+    w.println("select : right button");
 }
 
 void loop() {

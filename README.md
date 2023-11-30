@@ -9,7 +9,7 @@
 - テクスチャなしなら8000ポリゴンくらいまで(m5stickc)  
 - emscriptenを使用すればWebブラウザで動作させることもできます
 - シングルコアで動作します。2コアで動作する[バージョン](https://github.com/ebicochineal/E512W3D/tree/master/multicore)もあります  
-- タイルマップなど2Dゲームを作成するための機能
+- タイルマップなど2Dゲームを作成するための機能  
 - [multicore](https://github.com/ebicochineal/E512W3D/tree/master/multicore)  
 - [gui](https://github.com/ebicochineal/E512W3D/tree/master/gui)  
 - [tilemap](https://github.com/ebicochineal/E512W3D/tree/master/tilemap)  
@@ -46,6 +46,7 @@ example4
 ![Image](./img/4.jpg)  
 vert:1183, face:2208, vertuv:1183, faceuv:2208,texture:64x32  
 
+example4  
 <https://ebicochineal.github.io/E512W3D/emscripten-e512w3d-example4/>  
 
 
@@ -556,6 +557,9 @@ void clear ()
 T& front ()  
 T& back ()  
 
+#### E512Point
+int x, y  
+
 #### E512W3DInput
 static void update ()  
 static bool getKey (uint8_t c)  
@@ -669,6 +673,26 @@ RaycastHit raycast (Ray r)
 #### PerlinNoise
 static float getNoise (float x, float y)  
 
+#### E512PriorityQueueMin
+#### E512PriorityQueueMax
+T top ()  
+bool empty ()  
+void clear ()  
+void reserve (uint32_t sz)  
+void emplace (Args... args)  
+void push (T t)  
+void pop ()  
+
+#### GraphEdge {
+int a, b, cost  
+#### GraphDijkstra
+E512Array<int> path  
+E512Array<int> rpath  
+int pathcost  
+GraphDijkstra (int n, E512Array\<GraphEdge\> Graphedges, bool undir = false)  
+GraphDijkstra (E512Array\<GraphEdge\> Graphedges, bool undir = false)  
+void calcPath (int start_i, int end_i)  
+
 #### Ray
 Vector3 position  
 Vector3 direction  
@@ -711,3 +735,4 @@ PolygonTexturePerspectiveCorrect
 PolygonTexturePerspectiveCorrectDoubleFace  
 Hide  
 None  
+

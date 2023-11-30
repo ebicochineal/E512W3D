@@ -7,71 +7,135 @@ bool aabb (int asx, int asy, int aex, int aey, int bsx, int bsy, int bex, int be
     return min(aex, bex) > max(asx, bsx) && min(aey, bey) > max(asy, bsy);
 }
 
-struct E512Point {
-    int x, y;
-    E512Point () { this->x = 0; this->y = 0; };
-    E512Point (int x, int y) { this->x = x; this->y = y; }
-    
-    E512Point operator + (const E512Point& t) const { return E512Point(this->x + t.x, this->y + t.y); }
-    E512Point operator - (const E512Point& t) const { return E512Point(this->x - t.x, this->y - t.y); }
-    bool operator == (const E512Point& t) const { return this->x == t.x && this->y == t.y; }
-    bool operator != (const E512Point& t) const { return this->x != t.x || this->y != t.y; }
-};
-
-namespace TileType {
-    enum Type {
-        Normal,
-        Object,
-    };
-}
-
-struct E512W3DTile {
+struct E512W3DTileLayer {
     int16_t tex_x = 0;
     int16_t tex_y = 0;
-    uint16_t collision_layer = 0;
-    
     uint8_t anim = 0;
     uint8_t anim_position = 0;
     uint16_t anim_cnt = 0;
     uint16_t anim_wait = 8;
     
-    uint16_t child = 0;
+    int16_t tex_h = 1;
+    int16_t start_h = 0;
     
-    int type = 0;
+    bool use = false;
     
-    // Object
-    int16_t btex_x = 0;
-    int16_t btex_y = 0;
-    uint8_t banim = 0;
-    uint8_t banim_position = 0;
-    uint16_t banim_cnt = 0;
-    uint16_t banim_wait = 8;
-    int16_t btex_h = 1;
-    int16_t bstart_h = 0;
+    bool autotile = false;
+    uint16_t autotile_plug = 0;
+    uint16_t autotile_jack = 0;
     
-    
-    E512W3DTile () {}
-    E512W3DTile (int16_t tex_x, int16_t tex_y, uint8_t anim, uint16_t collision_layer) {
+    E512W3DTileLayer () {}
+    E512W3DTileLayer (int16_t tex_x, int16_t tex_y) {
         this->tex_x = tex_x;
         this->tex_y = tex_y;
-        this->collision_layer = collision_layer;
+        this->use = true;
+    }
+    E512W3DTileLayer (int16_t tex_x, int16_t tex_y, uint8_t anim) {
+        this->tex_x = tex_x;
+        this->tex_y = tex_y;
         this->anim = anim;
-        this->type = TileType::Normal;
+        this->use = true;
+    }
+    E512W3DTileLayer (int16_t tex_x, int16_t tex_y, uint8_t anim, int16_t tex_h, int16_t start_h) {
+        this->tex_x = tex_x;
+        this->tex_y = tex_y;
+        this->anim = anim;
+        this->tex_h = tex_h;
+        this->start_h = start_h;
+        this->use = true;
+    }
+};
+
+struct E512W3DTile {
+    uint16_t collision_layer = 0;
+    
+    E512W3DTileLayer a;
+    E512W3DTileLayer b;
+    
+    E512W3DTile () {}
+    
+    E512W3DTile (E512W3DTileLayer a, uint16_t collision_layer) {
+        this->collision_layer = collision_layer;
+        this->a = a;
+    }
+    
+    E512W3DTile (E512W3DTileLayer a, E512W3DTileLayer b, uint16_t collision_layer) {
+        this->collision_layer = collision_layer;
+        this->a = a;
+        this->b = b;
+    }
+    
+    E512W3DTile (int16_t tex_x, int16_t tex_y, uint8_t anim, uint16_t collision_layer) {
+        this->collision_layer = collision_layer;
+        this->a.tex_x = tex_x;
+        this->a.tex_y = tex_y;
+        this->a.anim = anim;
+        this->a.use = true;
     }
     
     E512W3DTile (int16_t tex_x, int16_t tex_y, uint8_t anim, int16_t btex_x, int16_t btex_y, uint8_t banim, int16_t btex_h, int16_t bstart_h, uint16_t collision_layer) {
-        this->tex_x = tex_x;
-        this->tex_y = tex_y;
-        this->anim = anim;
-        this->btex_x = btex_x;
-        this->btex_y = btex_y;
-        this->banim = banim;
-        this->btex_h = btex_h;
-        this->bstart_h = bstart_h;
         this->collision_layer = collision_layer;
-        this->type = TileType::Object;
+        this->a.tex_x = tex_x;
+        this->a.tex_y = tex_y;
+        this->a.anim = anim;
+        this->a.use = true;
+        
+        this->b.tex_x = btex_x;
+        this->b.tex_y = btex_y;
+        this->b.anim = banim;
+        this->b.tex_h = btex_h;
+        this->b.start_h = bstart_h;
+        this->b.use = true;
     }
 };
+
+// struct E512W3DTile {
+//     int16_t tex_x = 0;
+//     int16_t tex_y = 0;
+//     uint16_t collision_layer = 0;
+    
+//     uint8_t anim = 0;
+//     uint8_t anim_position = 0;
+//     uint16_t anim_cnt = 0;
+//     uint16_t anim_wait = 8;
+    
+//     uint16_t child = 0;
+    
+//     int type = 0;
+    
+//     // Object
+//     int16_t btex_x = 0;
+//     int16_t btex_y = 0;
+//     uint8_t banim = 0;
+//     uint8_t banim_position = 0;
+//     uint16_t banim_cnt = 0;
+//     uint16_t banim_wait = 8;
+//     int16_t btex_h = 1;
+//     int16_t bstart_h = 0;
+    
+    
+//     E512W3DTile () {}
+//     E512W3DTile (int16_t tex_x, int16_t tex_y, uint8_t anim, uint16_t collision_layer) {
+//         this->tex_x = tex_x;
+//         this->tex_y = tex_y;
+//         this->collision_layer = collision_layer;
+//         this->anim = anim;
+//         this->type = TileType::Normal;
+//     }
+    
+//     E512W3DTile (int16_t tex_x, int16_t tex_y, uint8_t anim, int16_t btex_x, int16_t btex_y, uint8_t banim, int16_t btex_h, int16_t bstart_h, uint16_t collision_layer) {
+//         this->tex_x = tex_x;
+//         this->tex_y = tex_y;
+//         this->anim = anim;
+//         this->btex_x = btex_x;
+//         this->btex_y = btex_y;
+//         this->banim = banim;
+//         this->btex_h = btex_h;
+//         this->bstart_h = bstart_h;
+//         this->collision_layer = collision_layer;
+//         this->type = TileType::Object;
+//     }
+// };
 
 class E512W3DTileMap {
 public:
@@ -84,7 +148,7 @@ public:
     int tex_w = 0;
     int tex_h = 0;
     
-    int max_btex_h = 0;
+    int max_tex_h = 0;
     
     E512W3DTileMap () {}
     E512W3DTileMap (int width, int height) {
@@ -101,26 +165,24 @@ public:
     }
     
     void update () {
-        this->max_btex_h = 0;
+        this->max_tex_h = 0;
         for (auto&& i : this->tile) {
-            this->max_btex_h = max(i.btex_h-1, this->max_btex_h);
-            if (i.anim > 0) {
-                i.anim_wait = max((int)i.anim_wait, 1);
-                if (i.anim_cnt % i.anim_wait == 0) {
-                    i.anim_position = (i.anim_position + 1) % i.anim;
+            this->max_tex_h = max(i.b.tex_h-1, this->max_tex_h);
+            if (i.a.anim > 0) {
+                i.a.anim_wait = max((int)i.a.anim_wait, 1);
+                if (i.a.anim_cnt % i.a.anim_wait == 0) {
+                    i.a.anim_position = (i.a.anim_position + 1) % i.a.anim;
                 }
-                
-                i.anim_cnt += 1;
-                if (i.anim_cnt >= i.anim * i.anim_wait) { i.anim_cnt = 0; }
+                i.a.anim_cnt += 1;
+                if (i.a.anim_cnt >= i.a.anim * i.a.anim_wait) { i.a.anim_cnt = 0; }
             }
-            if (i.banim > 0) {
-                i.banim_wait = max((int)i.banim_wait, 1);
-                if (i.banim_cnt % i.banim_wait == 0) {
-                    i.banim_position = (i.banim_position + 1) % i.banim;
+            if (i.b.anim > 0) {
+                i.b.anim_wait = max((int)i.b.anim_wait, 1);
+                if (i.b.anim_cnt % i.b.anim_wait == 0) {
+                    i.b.anim_position = (i.b.anim_position + 1) % i.b.anim;
                 }
-                
-                i.banim_cnt += 1;
-                if (i.banim_cnt >= i.banim * i.banim_wait) { i.banim_cnt = 0; }
+                i.b.anim_cnt += 1;
+                if (i.b.anim_cnt >= i.b.anim * i.b.anim_wait) { i.b.anim_cnt = 0; }
             }
         }
     }
@@ -705,6 +767,8 @@ void draw2dTileMap (E512W3DWindow& w, E512W3DTileMap& m) {
     const int cy = w.height/2 + w.camera->position.y;
     const int th = m.tex_h;
     const int tw = m.tex_w;
+    const int hth = m.tex_h / 2;
+    const int htw = m.tex_w / 2;
     
     int l = -cx;
     int r = l + w.width;
@@ -718,31 +782,135 @@ void draw2dTileMap (E512W3DWindow& w, E512W3DTileMap& m) {
     
     m.update();
     
-    for (int y = tu; y >= td - m.max_btex_h; --y) {
+    int ti9[9];
+    // 678
+    // 345
+    // 012
+    
+    for (int y = tu; y >= td - m.max_tex_h; --y) {
         for (int x = tl; x <= tr; ++x) {
             if (!m.isInside(x, y)) { continue; }
             int ti = m.getTileIndex(x, y);
             const E512W3DTile& t = m.getTile(x, y);
             if (ti == 0) { continue; }
             
-            if (t.type == TileType::Normal || t.type == TileType::Object) {
-                int tx = t.tex_x * tw;
-                int ty = t.tex_y * th;
+            if ((t.a.use && t.a.autotile) || (t.b.use && t.b.autotile)) {
+                for (int dy = 0; dy < 3; ++dy) {
+                    for (int dx = 0; dx < 3; ++dx) {
+                        ti9[dy*3+dx] = m.getTileIndexS(x-1+dx, y-1+dy);
+                    }
+                }
+            }
+            
+            if (t.a.use && !t.a.autotile) {
+                int tx = t.a.tex_x * tw;
+                int ty = t.a.tex_y * th;
                 int px = x * tw;
                 int py = y * th;
-                if (t.anim > 0) { tx += tw * t.anim_position; }
+                if (t.a.anim > 0) { tx += tw * t.a.anim_position; }
                 w.drawTextureTXYWHZ(cx+px, cy-py-th, tx, ty, tw, th, m.z, *m.texture);
             }
-            if (t.type == TileType::Object) {
-                int btx = t.btex_x * tw;
-                int bty = t.btex_y * th - th * (t.btex_h-1);
-                int bth = t.btex_h*th;
-                int btw = tw;
-                if (t.banim > 0) { btx += tw * t.banim_position; }
+            if (t.a.use && t.a.autotile) {
+                int tx = t.a.tex_x * tw;
+                int ty = t.a.tex_y * th;
                 int px = x * tw;
                 int py = y * th;
-                int z = m.z+(cy-py)-t.bstart_h+1;
-                w.drawTextureTXYWHZ(cx+px, cy-py-bth, btx, bty, btw, bth, z, *m.texture);
+                if (t.a.anim > 0) { tx += tw * t.a.anim_position; }
+                
+                int t1 = 0;
+                int t2 = 0;
+                int t3 = 0;
+                int t4 = 0;
+                if (ti9[7] == ti || m.tile[ti9[7]].a.autotile_jack & m.tile[ti].a.autotile_plug) {
+                    t1 = 1;
+                    t2 = 1;
+                }
+                if (ti9[1] == ti || m.tile[ti9[1]].a.autotile_jack & m.tile[ti].a.autotile_plug) {
+                    t3 = 1;
+                    t4 = 1;
+                }
+                if (ti9[3] == ti || m.tile[ti9[3]].a.autotile_jack & m.tile[ti].a.autotile_plug) {
+                    t1 = t1 == 1 ? 3 : 2;
+                    t3 = t3 == 1 ? 3 : 2;
+                }
+                if (ti9[5] == ti || m.tile[ti9[5]].a.autotile_jack & m.tile[ti].a.autotile_plug) {
+                    t2 = t2 == 1 ? 3 : 2;
+                    t4 = t4 == 1 ? 3 : 2;
+                }
+                if (t1 == 3 && (ti9[6] == ti || m.tile[ti9[6]].a.autotile_jack & m.tile[ti].a.autotile_plug)) { t1 = 4; }
+                if (t2 == 3 && (ti9[8] == ti || m.tile[ti9[8]].a.autotile_jack & m.tile[ti].a.autotile_plug)) { t2 = 4; }
+                if (t3 == 3 && (ti9[0] == ti || m.tile[ti9[0]].a.autotile_jack & m.tile[ti].a.autotile_plug)) { t3 = 4; }
+                if (t4 == 3 && (ti9[2] == ti || m.tile[ti9[2]].a.autotile_jack & m.tile[ti].a.autotile_plug)) { t4 = 4; }
+                
+                int tx1 = tx;
+                int ty1 = ty + t1 * th;
+                w.drawTextureTXYWHZ(cx+px, cy-py-th, tx1, ty1, htw, hth, m.z, *m.texture);
+                int tx2 = tx + htw;
+                int ty2 = ty + t2 * th;
+                w.drawTextureTXYWHZ(cx+px+htw, cy-py-th, tx2, ty2, htw, hth, m.z, *m.texture);
+                int tx3 = tx;
+                int ty3 = ty + hth + t3 * th;
+                w.drawTextureTXYWHZ(cx+px, cy-py-th+hth, tx3, ty3, htw, hth, m.z, *m.texture);
+                int tx4 = tx + htw;
+                int ty4 = ty + hth + t4 * th;
+                w.drawTextureTXYWHZ(cx+px+htw, cy-py-th+hth, tx4, ty4, htw, hth, m.z, *m.texture);
+            }
+            if (t.b.use && !t.b.autotile) {
+                int tx = t.b.tex_x * tw;
+                int ty = t.b.tex_y * th - th * (t.b.tex_h-1);
+                int bth = t.b.tex_h * th;
+                int px = x * tw;
+                int py = y * th;
+                int z = m.z+(cy-py)-t.b.start_h+1;
+                if (t.b.anim > 0) { tx += tw * t.b.anim_position; }
+                w.drawTextureTXYWHZ(cx+px, cy-py-bth, tx, ty, tw, bth, z, *m.texture);
+            }
+            if (t.b.use && t.b.autotile && t.b.tex_h == 1) {
+                int tx = t.b.tex_x * tw;
+                int ty = t.b.tex_y * th;
+                // int bth = t.b.tex_h * th;
+                int px = x * tw;
+                int py = y * th;
+                int z = m.z+(cy-py)-t.b.start_h+1;
+                if (t.b.anim > 0) { tx += tw * t.b.anim_position; }
+                
+                int t1 = 0;
+                int t2 = 0;
+                int t3 = 0;
+                int t4 = 0;
+                if (ti9[7] == ti || m.tile[ti9[7]].b.autotile_jack & m.tile[ti].b.autotile_plug) {
+                    t1 = 1;
+                    t2 = 1;
+                }
+                if (ti9[1] == ti || m.tile[ti9[1]].b.autotile_jack & m.tile[ti].b.autotile_plug) {
+                    t3 = 1;
+                    t4 = 1;
+                }
+                if (ti9[3] == ti || m.tile[ti9[3]].b.autotile_jack & m.tile[ti].b.autotile_plug) {
+                    t1 = t1 == 1 ? 3 : 2;
+                    t3 = t3 == 1 ? 3 : 2;
+                }
+                if (ti9[5] == ti || m.tile[ti9[5]].b.autotile_jack & m.tile[ti].b.autotile_plug) {
+                    t2 = t2 == 1 ? 3 : 2;
+                    t4 = t4 == 1 ? 3 : 2;
+                }
+                if (t1 == 3 && (ti9[6] == ti || m.tile[ti9[6]].b.autotile_jack & m.tile[ti].b.autotile_plug)) { t1 = 4; }
+                if (t2 == 3 && (ti9[8] == ti || m.tile[ti9[8]].b.autotile_jack & m.tile[ti].b.autotile_plug)) { t2 = 4; }
+                if (t3 == 3 && (ti9[0] == ti || m.tile[ti9[0]].b.autotile_jack & m.tile[ti].b.autotile_plug)) { t3 = 4; }
+                if (t4 == 3 && (ti9[2] == ti || m.tile[ti9[2]].b.autotile_jack & m.tile[ti].b.autotile_plug)) { t4 = 4; }
+                
+                int tx1 = tx;
+                int ty1 = ty + t1 * th;
+                w.drawTextureTXYWHZ(cx+px, cy-py-th, tx1, ty1, htw, hth, z, *m.texture);
+                int tx2 = tx + htw;
+                int ty2 = ty + t2 * th;
+                w.drawTextureTXYWHZ(cx+px+htw, cy-py-th, tx2, ty2, htw, hth, z, *m.texture);
+                int tx3 = tx;
+                int ty3 = ty + hth + t3 * th;
+                w.drawTextureTXYWHZ(cx+px, cy-py-th+hth, tx3, ty3, htw, hth, z, *m.texture);
+                int tx4 = tx + htw;
+                int ty4 = ty + hth + t4 * th;
+                w.drawTextureTXYWHZ(cx+px+htw, cy-py-th+hth, tx4, ty4, htw, hth, z, *m.texture);
             }
         }
     }
@@ -758,6 +926,8 @@ void draw2dbTileMap (E512W3DWindow& w, E512W3DTileMap& m) {
     const int cy = w.height/2 + w.camera->position.y;
     const int th = m.tex_h;
     const int tw = m.tex_w;
+    const int hth = m.tex_h / 2;
+    const int htw = m.tex_w / 2;
     
     int l = -cx;
     int r = l + w.width;
@@ -771,32 +941,140 @@ void draw2dbTileMap (E512W3DWindow& w, E512W3DTileMap& m) {
     
     m.update();
     
-    for (int y = tu; y >= td - m.max_btex_h; --y) {
+    int ti9[9];
+    // 678
+    // 345
+    // 012
+    
+    for (int y = tu; y >= td - m.max_tex_h; --y) {
         for (int x = tl; x <= tr; ++x) {
             if (!m.isInside(x, y)) { continue; }
             int ti = m.getTileIndex(x, y);
             const E512W3DTile& t = m.getTile(x, y);
             if (ti == 0) { continue; }
+            
+            if ((t.a.use && t.a.autotile) || (t.b.use && t.b.autotile)) {
+                for (int dy = 0; dy < 3; ++dy) {
+                    for (int dx = 0; dx < 3; ++dx) {
+                        ti9[dy*3+dx] = m.getTileIndexS(x-1+dx, y-1+dy);
+                    }
+                }
+            }
+            
             float b = (15 - min((int)m.getTileValue(x, y), 15)) / 15.0f ;
-            if (t.type == TileType::Normal || t.type == TileType::Object) {
-                int tx = t.tex_x * tw;
-                int ty = t.tex_y * th;
+            if (t.a.use && !t.a.autotile) {
+                int tx = t.a.tex_x * tw;
+                int ty = t.a.tex_y * th;
                 int px = x * tw;
                 int py = y * th;
-                if (t.anim > 0) { tx += tw * t.anim_position; }
+                if (t.a.anim > 0) { tx += tw * t.a.anim_position; }
                 w.drawTextureTXYWHZB(cx+px, cy-py-th, tx, ty, tw, th, m.z, b, *m.texture);
             }
-            if (t.type == TileType::Object) {
-                int btx = t.btex_x * tw;
-                int bty = t.btex_y * th - th * (t.btex_h-1);
-                int bth = t.btex_h*th;
-                int btw = tw;
-                if (t.banim > 0) { btx += tw * t.banim_position; }
+            
+            if (t.a.use && t.a.autotile) {
+                int tx = t.a.tex_x * tw;
+                int ty = t.a.tex_y * th;
                 int px = x * tw;
                 int py = y * th;
-                int z = m.z+(cy-py)-t.bstart_h+1;
+                if (t.a.anim > 0) { tx += tw * t.a.anim_position; }
                 
-                w.drawTextureTXYWHZB(cx+px, cy-py-bth, btx, bty, btw, bth, z, b, *m.texture);
+                int t1 = 0;
+                int t2 = 0;
+                int t3 = 0;
+                int t4 = 0;
+                if (ti9[7] == ti || m.tile[ti9[7]].a.autotile_jack & m.tile[ti].a.autotile_plug) {
+                    t1 = 1;
+                    t2 = 1;
+                }
+                if (ti9[1] == ti || m.tile[ti9[1]].a.autotile_jack & m.tile[ti].a.autotile_plug) {
+                    t3 = 1;
+                    t4 = 1;
+                }
+                if (ti9[3] == ti || m.tile[ti9[3]].a.autotile_jack & m.tile[ti].a.autotile_plug) {
+                    t1 = t1 == 1 ? 3 : 2;
+                    t3 = t3 == 1 ? 3 : 2;
+                }
+                if (ti9[5] == ti || m.tile[ti9[5]].a.autotile_jack & m.tile[ti].a.autotile_plug) {
+                    t2 = t2 == 1 ? 3 : 2;
+                    t4 = t4 == 1 ? 3 : 2;
+                }
+                if (t1 == 3 && (ti9[6] == ti || m.tile[ti9[6]].a.autotile_jack & m.tile[ti].a.autotile_plug)) { t1 = 4; }
+                if (t2 == 3 && (ti9[8] == ti || m.tile[ti9[8]].a.autotile_jack & m.tile[ti].a.autotile_plug)) { t2 = 4; }
+                if (t3 == 3 && (ti9[0] == ti || m.tile[ti9[0]].a.autotile_jack & m.tile[ti].a.autotile_plug)) { t3 = 4; }
+                if (t4 == 3 && (ti9[2] == ti || m.tile[ti9[2]].a.autotile_jack & m.tile[ti].a.autotile_plug)) { t4 = 4; }
+                
+                int tx1 = tx;
+                int ty1 = ty + t1 * th;
+                w.drawTextureTXYWHZB(cx+px, cy-py-th, tx1, ty1, htw, hth, m.z, b, *m.texture);
+                int tx2 = tx + htw;
+                int ty2 = ty + t2 * th;
+                w.drawTextureTXYWHZB(cx+px+htw, cy-py-th, tx2, ty2, htw, hth, m.z, b, *m.texture);
+                int tx3 = tx;
+                int ty3 = ty + hth + t3 * th;
+                w.drawTextureTXYWHZB(cx+px, cy-py-th+hth, tx3, ty3, htw, hth, m.z, b, *m.texture);
+                int tx4 = tx + htw;
+                int ty4 = ty + hth + t4 * th;
+                w.drawTextureTXYWHZB(cx+px+htw, cy-py-th+hth, tx4, ty4, htw, hth, m.z, b, *m.texture);
+                
+            }
+            
+            if (t.b.use && !t.b.autotile) {
+                int tx = t.b.tex_x * tw;
+                int ty = t.b.tex_y * th - th * (t.b.tex_h-1);
+                int bth = t.b.tex_h * th;
+                int px = x * tw;
+                int py = y * th;
+                int z = m.z+(cy-py)-t.b.start_h+1;
+                if (t.b.anim > 0) { tx += tw * t.b.anim_position; }
+                w.drawTextureTXYWHZB(cx+px, cy-py-bth, tx, ty, tw, bth, z, b, *m.texture);
+            }
+            if (t.b.use && t.b.autotile && t.b.tex_h == 1) {
+                int tx = t.b.tex_x * tw;
+                int ty = t.b.tex_y * th;
+                // int bth = t.b.tex_h * th;
+                int px = x * tw;
+                int py = y * th;
+                int z = m.z+(cy-py)-t.b.start_h+1;
+                if (t.b.anim > 0) { tx += tw * t.b.anim_position; }
+                
+                int t1 = 0;
+                int t2 = 0;
+                int t3 = 0;
+                int t4 = 0;
+                if (ti9[7] == ti || m.tile[ti9[7]].b.autotile_jack & m.tile[ti].b.autotile_plug) {
+                    t1 = 1;
+                    t2 = 1;
+                }
+                if (ti9[1] == ti || m.tile[ti9[1]].b.autotile_jack & m.tile[ti].b.autotile_plug) {
+                    t3 = 1;
+                    t4 = 1;
+                }
+                if (ti9[3] == ti || m.tile[ti9[3]].b.autotile_jack & m.tile[ti].b.autotile_plug) {
+                    t1 = t1 == 1 ? 3 : 2;
+                    t3 = t3 == 1 ? 3 : 2;
+                }
+                if (ti9[5] == ti || m.tile[ti9[5]].b.autotile_jack & m.tile[ti].b.autotile_plug) {
+                    t2 = t2 == 1 ? 3 : 2;
+                    t4 = t4 == 1 ? 3 : 2;
+                }
+                if (t1 == 3 && (ti9[6] == ti || m.tile[ti9[6]].b.autotile_jack & m.tile[ti].b.autotile_plug)) { t1 = 4; }
+                if (t2 == 3 && (ti9[8] == ti || m.tile[ti9[8]].b.autotile_jack & m.tile[ti].b.autotile_plug)) { t2 = 4; }
+                if (t3 == 3 && (ti9[0] == ti || m.tile[ti9[0]].b.autotile_jack & m.tile[ti].b.autotile_plug)) { t3 = 4; }
+                if (t4 == 3 && (ti9[2] == ti || m.tile[ti9[2]].b.autotile_jack & m.tile[ti].b.autotile_plug)) { t4 = 4; }
+                
+                int tx1 = tx;
+                int ty1 = ty + t1 * th;
+                w.drawTextureTXYWHZB(cx+px, cy-py-th, tx1, ty1, htw, hth, z, b, *m.texture);
+                int tx2 = tx + htw;
+                int ty2 = ty + t2 * th;
+                w.drawTextureTXYWHZB(cx+px+htw, cy-py-th, tx2, ty2, htw, hth, z, b, *m.texture);
+                int tx3 = tx;
+                int ty3 = ty + hth + t3 * th;
+                w.drawTextureTXYWHZB(cx+px, cy-py-th+hth, tx3, ty3, htw, hth, z, b, *m.texture);
+                int tx4 = tx + htw;
+                int ty4 = ty + hth + t4 * th;
+                w.drawTextureTXYWHZB(cx+px+htw, cy-py-th+hth, tx4, ty4, htw, hth, z, b, *m.texture);
+                
             }
         }
     }

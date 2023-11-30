@@ -260,6 +260,225 @@ public:
     T* end () { return &this->a[this->array_size]; }
 };
 
+struct E512Point {
+    int x, y;
+    E512Point () { this->x = 0; this->y = 0; };
+    E512Point (int x, int y) { this->x = x; this->y = y; }
+    
+    E512Point operator + (const E512Point& t) const { return E512Point(this->x + t.x, this->y + t.y); }
+    E512Point operator - (const E512Point& t) const { return E512Point(this->x - t.x, this->y - t.y); }
+    bool operator == (const E512Point& t) const { return this->x == t.x && this->y == t.y; }
+    bool operator != (const E512Point& t) const { return this->x != t.x || this->y != t.y; }
+};
+
+template <class T>
+class E512PriorityQueueMin {
+private:
+    E512Array<T> v;
+public:
+    E512PriorityQueueMin () {}
+    T top () { return v[0]; }
+    bool empty () { return v.size() == 0; }
+    void clear () { this->v.clear(); }
+    void reserve (uint32_t sz) { this->v.reserve(sz); }
+    template <class... Args> void emplace (Args... args) { this->push(T(args...)); }
+    void push (T t) {
+        int n = v.size();
+        this->v.emplace_back(t);
+        while (n != 0) {
+            int i = (n - 1) / 2;
+            if (this->v[n] < this->v[i]) {
+                T tmp = this->v[n];
+                this->v[n] = this->v[i];
+                this->v[i] = tmp;
+            }
+            n = i;
+        }
+    }
+    void pop () {
+        int n = this->v.size() - 1;
+        this->v[0] = this->v[n];
+        this->v.pop_back();
+        int i = 0;
+        int j = 1;
+        while (j < n) {
+            if (j != n - 1 && this->v[j+1] < this->v[j]) { j += 1; }
+            if (this->v[j] < this->v[i]) {
+                T tmp = this->v[j];
+                this->v[j] = this->v[i];
+                this->v[i] = tmp;
+            }
+            i = j;
+            j = 2 * i + 1;
+        }
+    }
+};
+
+template <class T>
+class E512PriorityQueueMax {
+private:
+    E512Array<T> v;
+public:
+    E512PriorityQueueMax () {}
+    T top () { return v[0]; }
+    bool empty () { return v.size() == 0; }
+    void clear () { this->v.clear(); }
+    void reserve (uint32_t sz) { this->v.reserve(sz); }
+    template <class... Args> void emplace (Args... args) { this->push(T(args...)); }
+    void push (T t) {
+        int n = v.size();
+        this->v.emplace_back(t);
+        while (n != 0) {
+            int i = (n - 1) >> 1;
+            if (this->v[n] > this->v[i]) {
+                T tmp = this->v[n];
+                this->v[n] = this->v[i];
+                this->v[i] = tmp;
+            }
+            n = i;
+        }
+    }
+    void pop () {
+        int n = this->v.size() - 1;
+        this->v[0] = this->v[n];
+        this->v.pop_back();
+        int i = 0;
+        int j = 1;
+        while (j < n) {
+            if (j != n - 1 && this->v[j+1] > this->v[j]) { j += 1; }
+            if (this->v[j] > this->v[i]) {
+                T tmp = this->v[j];
+                this->v[j] = this->v[i];
+                this->v[i] = tmp;
+            }
+            i = j;
+            j = 2 * i + 1;
+        }
+    }
+};
+
+struct GraphEdge {
+public:
+    int a, b, cost;
+    GraphEdge () {
+        this->a = 0;
+        this->b = 0;
+        this->cost = 1000000;
+    }
+    GraphEdge (int a, int b, int cost) {
+        this->a = a;
+        this->b = b;
+        this->cost = cost;
+    }
+    bool operator == (const GraphEdge& t) const { return this->a == t.a && this->b == t.b; }
+};
+class GraphDijkstra {
+private:
+    class Node {
+    public:
+        int cost;
+        int index;
+        Node () {}
+        Node (int cost, int index) {
+            this->cost = cost;
+            this->index = index;
+        }
+        bool operator > (const Node& t) const { return this->cost > t.cost; }
+        bool operator < (const Node& t) const { return this->cost < t.cost; }
+    };
+    int tmp = -1;
+    E512Array<int> prevs;
+    E512Array<int> costs;
+    E512PriorityQueueMin<Node> que;
+    E512Array< E512Array<E512Point> > Graphedgecost;
+public:
+    int n;
+    E512Array<int> path;
+    E512Array<int> rpath;
+    int pathcost;
+    
+    GraphDijkstra () {}
+    
+    GraphDijkstra (int n, E512Array<GraphEdge> Graphedges, bool undir = false) {
+        this->pathcost = 0;
+        this->path.clear();
+        this->n = n;
+        this->Graphedgecost = E512Array< E512Array<E512Point> >(this->n, E512Array<E512Point>());
+        
+        if (undir) {// undirected
+            for (auto&& i : Graphedges) {
+                this->Graphedgecost[i.a].emplace_back(i.b, i.cost);
+                this->Graphedgecost[i.b].emplace_back(i.a, i.cost);
+            }
+        } else {// directed
+            for (auto&& i : Graphedges) {
+                this->Graphedgecost[i.a].emplace_back(i.b, i.cost);
+            }
+        }
+    }
+    
+    GraphDijkstra (E512Array<GraphEdge> Graphedges, bool undir = false) {
+        this->pathcost = 0;
+        this->path.clear();
+        int n = 0;
+        for (auto&& i : Graphedges) { n = max(max(i.a, i.b), n); }
+        this->n = n+1;
+        this->Graphedgecost = E512Array< E512Array<E512Point> >(this->n, E512Array<E512Point>());
+        if (undir) {// undirected
+            for (auto&& i : Graphedges) {
+                this->Graphedgecost[i.a].emplace_back(i.b, i.cost);
+                this->Graphedgecost[i.b].emplace_back(i.a, i.cost);
+            }
+        } else {// directed
+            for (auto&& i : Graphedges) {
+                this->Graphedgecost[i.a].emplace_back(i.b, i.cost);
+            }
+        }
+    }
+    
+    void calcPath (int start_i, int end_i) {
+        this->path.clear();
+        this->rpath.clear();
+        if (this->tmp != start_i) {
+            this->prevs = E512Array<int>(this->n, -1);
+            this->costs = E512Array<int>(this->n, 2147483647);
+            this->que.clear();
+            this->costs[start_i] = 0;
+            this->que.emplace(0, start_i);
+        }
+        this->tmp = start_i;
+        
+        while (!this->que.empty()) {
+            const Node t = this->que.top();
+            if (t.cost >= this->costs[end_i]) { break; }
+            this->que.pop();
+            for (auto&& i : this->Graphedgecost[t.index]) {
+                const int cost = t.cost + i.y;
+                if (cost < this->costs[i.x]) {
+                    this->costs[i.x] = cost;
+                    this->prevs[i.x] = t.index;
+                    this->que.emplace(cost, i.x);
+                }
+            }
+        }
+        
+        if (this->costs[end_i] < 2147483647) {
+            this->pathcost = this->costs[end_i];
+            int e = end_i;
+            while (e > -1) {
+                this->rpath.emplace_back(e);
+                e = this->prevs[e];
+            }
+            this->path.reserve(this->rpath.size());
+            for (int i = 0; i < this->rpath.size(); ++i) {
+                this->path.emplace_back(this->rpath[this->rpath.size()-1-i]);
+            }
+        } else {
+            this->pathcost = -1;
+        }
+    }
+};
+
 
 struct Vector2 {
 public:
@@ -268,6 +487,11 @@ public:
     Vector2 (float t) { this->x = t; this->y = t; }
     Vector2 (float x, float y) { this->x = x; this->y = y; }
     //Vector2 (Vector3 v) { this->x = v.x; this->y = v.y; }
+    static Vector2 normalize (Vector2 v) {
+        float d = sqrt(v.x * v.x + v.y * v.y);
+        if (d == 0) { return Vector2(0.0f, 0.0f); }
+        return v / d;
+    }
     static float distance (const Vector2 a, const Vector2 b) { return sqrt((a.x - b.x) * (a.x - b.x) + (a.y - b.y) * (a.y - b.y)); }
     Vector2 operator + (const Vector2& t) const { return Vector2(this->x + t.x, this->y + t.y); }
     Vector2 operator - (const Vector2& t) const { return Vector2(this->x - t.x, this->y - t.y); }
@@ -731,13 +955,12 @@ struct RaycastHit {
 struct PerlinNoise {
 private:
     static Vector2 randomGradient (int ix, int iy) {
-        static const uint64_t w = 8 * sizeof(uint64_t);
-        static const uint64_t s = w / 2;
+        static const uint64_t s = (4 * sizeof(uint64_t));
         uint64_t a = ix, b = iy;
-        a *= 3284157443; b ^= (a << s) | (a >> (w-s));
-        b *= 1911520717; a ^= (b << s) | (b >> (w-s));
+        a *= 3284157443; b ^= (a << s) | (a >> s);
+        b *= 1911520717; a ^= (b << s) | (b >> s);
         a *= 2048419325;
-        float random = a * (3.14159265f / ~(~0u >> 1));
+        float random = a * (3.14159265f / 2147483648);
         return Vector2(cos(random), sin(random));
     }
     //static float fede (float t) { return 1.0f-3.0f*(t*t)+2.0f*abs(t*t*t); }
