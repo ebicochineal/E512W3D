@@ -390,7 +390,7 @@ private:
     E512Array<int> prevs;
     E512Array<int> costs;
     E512PriorityQueueMin<Node> que;
-    E512Array< E512Array<E512Point> > Graphedgecost;
+    E512Array< E512Array<E512Point> > edgecost;
 public:
     int n;
     E512Array<int> path;
@@ -399,39 +399,39 @@ public:
     
     GraphDijkstra () {}
     
-    GraphDijkstra (int n, E512Array<GraphEdge> Graphedges, bool undir = false) {
+    GraphDijkstra (int n, E512Array<GraphEdge> edges, bool undir = false) {
         this->pathcost = 0;
         this->path.clear();
         this->n = n;
-        this->Graphedgecost = E512Array< E512Array<E512Point> >(this->n, E512Array<E512Point>());
+        this->edgecost = E512Array< E512Array<E512Point> >(this->n, E512Array<E512Point>());
         
         if (undir) {// undirected
-            for (auto&& i : Graphedges) {
-                this->Graphedgecost[i.a].emplace_back(i.b, i.cost);
-                this->Graphedgecost[i.b].emplace_back(i.a, i.cost);
+            for (auto&& i : edges) {
+                this->edgecost[i.a].emplace_back(i.b, i.cost);
+                this->edgecost[i.b].emplace_back(i.a, i.cost);
             }
         } else {// directed
-            for (auto&& i : Graphedges) {
-                this->Graphedgecost[i.a].emplace_back(i.b, i.cost);
+            for (auto&& i : edges) {
+                this->edgecost[i.a].emplace_back(i.b, i.cost);
             }
         }
     }
     
-    GraphDijkstra (E512Array<GraphEdge> Graphedges, bool undir = false) {
+    GraphDijkstra (E512Array<GraphEdge> edges, bool undir = false) {
         this->pathcost = 0;
         this->path.clear();
         int n = 0;
-        for (auto&& i : Graphedges) { n = max(max(i.a, i.b), n); }
+        for (auto&& i : edges) { n = max(max(i.a, i.b), n); }
         this->n = n+1;
-        this->Graphedgecost = E512Array< E512Array<E512Point> >(this->n, E512Array<E512Point>());
+        this->edgecost = E512Array< E512Array<E512Point> >(this->n, E512Array<E512Point>());
         if (undir) {// undirected
-            for (auto&& i : Graphedges) {
-                this->Graphedgecost[i.a].emplace_back(i.b, i.cost);
-                this->Graphedgecost[i.b].emplace_back(i.a, i.cost);
+            for (auto&& i : edges) {
+                this->edgecost[i.a].emplace_back(i.b, i.cost);
+                this->edgecost[i.b].emplace_back(i.a, i.cost);
             }
         } else {// directed
-            for (auto&& i : Graphedges) {
-                this->Graphedgecost[i.a].emplace_back(i.b, i.cost);
+            for (auto&& i : edges) {
+                this->edgecost[i.a].emplace_back(i.b, i.cost);
             }
         }
     }
@@ -452,7 +452,7 @@ public:
             const Node t = this->que.top();
             if (t.cost >= this->costs[end_i]) { break; }
             this->que.pop();
-            for (auto&& i : this->Graphedgecost[t.index]) {
+            for (auto&& i : this->edgecost[t.index]) {
                 const int cost = t.cost + i.y;
                 if (cost < this->costs[i.x]) {
                     this->costs[i.x] = cost;

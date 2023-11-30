@@ -689,8 +689,8 @@ int a, b, cost
 E512Array<int> path  
 E512Array<int> rpath  
 int pathcost  
-GraphDijkstra (int n, E512Array\<GraphEdge\> Graphedges, bool undir = false)  
-GraphDijkstra (E512Array\<GraphEdge\> Graphedges, bool undir = false)  
+GraphDijkstra (int n, E512Array\<GraphEdge\> edges, bool undir = false)  
+GraphDijkstra (E512Array\<GraphEdge\> edges, bool undir = false)  
 void calcPath (int start_i, int end_i)  
 
 #### Ray
