@@ -89,54 +89,6 @@ struct E512W3DTile {
     }
 };
 
-// struct E512W3DTile {
-//     int16_t tex_x = 0;
-//     int16_t tex_y = 0;
-//     uint16_t collision_layer = 0;
-    
-//     uint8_t anim = 0;
-//     uint8_t anim_position = 0;
-//     uint16_t anim_cnt = 0;
-//     uint16_t anim_wait = 8;
-    
-//     uint16_t child = 0;
-    
-//     int type = 0;
-    
-//     // Object
-//     int16_t btex_x = 0;
-//     int16_t btex_y = 0;
-//     uint8_t banim = 0;
-//     uint8_t banim_position = 0;
-//     uint16_t banim_cnt = 0;
-//     uint16_t banim_wait = 8;
-//     int16_t btex_h = 1;
-//     int16_t bstart_h = 0;
-    
-    
-//     E512W3DTile () {}
-//     E512W3DTile (int16_t tex_x, int16_t tex_y, uint8_t anim, uint16_t collision_layer) {
-//         this->tex_x = tex_x;
-//         this->tex_y = tex_y;
-//         this->collision_layer = collision_layer;
-//         this->anim = anim;
-//         this->type = TileType::Normal;
-//     }
-    
-//     E512W3DTile (int16_t tex_x, int16_t tex_y, uint8_t anim, int16_t btex_x, int16_t btex_y, uint8_t banim, int16_t btex_h, int16_t bstart_h, uint16_t collision_layer) {
-//         this->tex_x = tex_x;
-//         this->tex_y = tex_y;
-//         this->anim = anim;
-//         this->btex_x = btex_x;
-//         this->btex_y = btex_y;
-//         this->banim = banim;
-//         this->btex_h = btex_h;
-//         this->bstart_h = bstart_h;
-//         this->collision_layer = collision_layer;
-//         this->type = TileType::Object;
-//     }
-// };
-
 class E512W3DTileMap {
 public:
     E512Array<uint16_t> dat;
@@ -707,7 +659,7 @@ struct E512W3DGameObject2D : Object2D {
         return false;
     }
     
-    E512Array<E512Point> isCollisionList (E512W3DTileMap& tm, int extend_l=0, int extend_u=0, int extend_r=0, int extend_d=0) {
+    E512Array<E512Point> collisionTilePositionList (E512W3DTileMap& tm, int extend_l=0, int extend_u=0, int extend_r=0, int extend_d=0) {
         int l = this->cl+this->position.x-extend_l;
         int r = this->cr+this->position.x+extend_r;
         int d = this->cd+this->position.y-extend_d;
@@ -725,7 +677,7 @@ struct E512W3DGameObject2D : Object2D {
         }
         return ret;
     }
-    E512Array<E512Point> adjacentTileList (E512W3DTileMap& tm, int extend_l=0, int extend_u=0, int extend_r=0, int extend_d=0) {
+    E512Array<E512Point> adjacentTilePositionList (E512W3DTileMap& tm, int extend_l=0, int extend_u=0, int extend_r=0, int extend_d=0) {
         int l = this->cl+this->position.x-extend_l;
         int r = this->cr+this->position.x+extend_r;
         int d = this->cd+this->position.y-extend_d;

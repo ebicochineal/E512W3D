@@ -88,7 +88,7 @@ void game () {
     if (m.moveX(tilemap)) { m.velocity.x = 0; }
     if (m.moveY(tilemap)) { m.velocity.y = 0; }
     m.velocity.x *= 0.6;
-    for (auto&& i : m.adjacentTileList(tilemap)) {
+    for (auto&& i : m.adjacentTilePositionList(tilemap)) {
         if (tilemap.getTileIndex(i.x, i.y) == 5) { tilemap.setTileIndex(i.x, i.y, 2); }
     }
     
