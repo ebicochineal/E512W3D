@@ -1056,28 +1056,28 @@ Vector3 screenPosition (E512W3DWindow& w, E512W3DTileMap& m, int x, int y) {
     const int tw = m.tex_w;
     int px = x * tw;
     int py = y * th;
-    return Vector3(cx+px, cy-py-th, cy-py);
+    return Vector3(cx+px, cy-py-th-1, cy-py-1);
 }
 
 Vector3 screenPosition (E512W3DWindow& w, Object2D& o) {
     const int cx = w.width/2 - w.camera->position.x;
     const int cy = w.height/2 + w.camera->position.y;
-    return Vector3(cx+(int)o.position.x, cy-(int)o.position.y-o.tex_h, cy-o.position.y);
+    return Vector3(cx+(int)o.position.x, cy-(int)o.position.y-o.tex_h-1, cy-o.position.y-1);
 }
 
 Vector2 screenPosition (E512W3DWindow& w, int x, int y) {
     const int cx = w.width/2 - w.camera->position.x;
     const int cy = w.height/2 + w.camera->position.y;
-    if (cx+x > w.width  || cx+x < 0) { Vector2(-1.0f, -1.0f); }
-    if (cy-y > w.height || cy-y < 0) { Vector2(-1.0f, -1.0f); }
-    return Vector2(cx+x, cy-y);
+    // if (cx+x > w.width  || cx+x < 0) { return Vector2(-1.0f, -1.0f); }
+    // if (cy-y > w.height || cy-y < 0) { return Vector2(-1.0f, -1.0f); }
+    return Vector2(cx+x, cy-y-1);
 }
 
 E512Point screenPositionTo2DWorldPosition (E512W3DWindow& w, int x, int y) {
     const int cx = w.width/2 - w.camera->position.x;
     const int cy = w.height/2 + w.camera->position.y;
-    int tx = (x-cx);
-    int ty = (cy-y);
+    int tx = x-cx;
+    int ty = cy-y-1;
     return E512Point(tx, ty);
 }
 E512Point tilemapPosition (E512W3DWindow& w, E512W3DTileMap& m, int x, int y) {
