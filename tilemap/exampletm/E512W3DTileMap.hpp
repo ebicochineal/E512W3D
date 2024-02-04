@@ -227,7 +227,7 @@ struct E512W3DGameObject2D : Object2D {
         
         bool ret = false;
         if (this->velocity.x > 0) {
-            tr = min((int)((r+v)/tm.tex_h), tm.width-1);
+            tr = min((int)((r+v)/tm.tex_w), tm.width-1);
             int p = r+v;
             for (int y = td; y <= tu; ++y) {
                 for (int x = tl; x <= tr; ++x) {
