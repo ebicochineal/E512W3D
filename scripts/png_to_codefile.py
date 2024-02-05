@@ -31,6 +31,7 @@ p = os.path.dirname(__file__).replace('\\', '/') + '/'
 p = '' if p == '/' else p
 if w < 1 : exit()
 with open(p+file_name+'.hpp', 'w') as f:
+    f.write('#pragma once\n')
     f.write('#include "E512W3D.hpp"\n')
     f.write('uint16_t %s_pixels[] = {'%(file_name))
     for i in pixels: f.write(str(i) + ',')

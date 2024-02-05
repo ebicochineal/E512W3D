@@ -49,7 +49,7 @@ obj_file_name = os.path.basename(path).split('.')[0]
 p = os.path.dirname(__file__).replace('\\', '/') + '/'
 p = '' if p == '/' else p
 with open(p+obj_file_name+'.hpp', 'w') as f:
-    
+    f.write('#pragma once\n')
     f.write('#include "E512W3D.hpp"\nMesh %s;\nvoid %sInit () {\n'%(obj_file_name, obj_file_name))
     
     f.write('    // %s.vertexs '%obj_file_name + str(len(vertex)) + '\n')

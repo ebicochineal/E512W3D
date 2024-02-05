@@ -1,3 +1,4 @@
+#pragma once
 #include "E512W3D.hpp"
 Mesh zou;
 
