@@ -357,22 +357,22 @@ public:
     }
 };
 
-struct GraphEdge {
+struct E512Edge {
 public:
     int a, b, cost;
-    GraphEdge () {
+    E512Edge () {
         this->a = 0;
         this->b = 0;
         this->cost = 1000000;
     }
-    GraphEdge (int a, int b, int cost) {
+    E512Edge (int a, int b, int cost) {
         this->a = a;
         this->b = b;
         this->cost = cost;
     }
-    bool operator == (const GraphEdge& t) const { return this->a == t.a && this->b == t.b; }
+    bool operator == (const E512Edge& t) const { return this->a == t.a && this->b == t.b; }
 };
-class GraphDijkstra {
+class E512GraphDijkstra {
 private:
     class Node {
     public:
@@ -397,9 +397,9 @@ public:
     E512Array<int> rpath;
     int pathcost;
     
-    GraphDijkstra () {}
+    E512GraphDijkstra () {}
     
-    GraphDijkstra (int n, E512Array<GraphEdge> edges, bool undir = false) {
+    E512GraphDijkstra (int n, E512Array<E512Edge>& edges, bool undir = false) {
         this->pathcost = 0;
         this->path.clear();
         this->n = n;
@@ -417,13 +417,27 @@ public:
         }
     }
     
-    GraphDijkstra (E512Array<GraphEdge> edges, bool undir = false) {
+    E512GraphDijkstra (E512Array<E512Edge>& edges, bool undir = false) {
         this->pathcost = 0;
         this->path.clear();
         int n = 0;
         for (auto&& i : edges) { n = max(max(i.a, i.b), n); }
         this->n = n+1;
         this->edgecost = E512Array< E512Array<E512Point> >(this->n, E512Array<E512Point>());
+        if (undir) {// undirected
+            for (auto&& i : edges) {
+                this->edgecost[i.a].emplace_back(i.b, i.cost);
+                this->edgecost[i.b].emplace_back(i.a, i.cost);
+            }
+        } else {// directed
+            for (auto&& i : edges) {
+                this->edgecost[i.a].emplace_back(i.b, i.cost);
+            }
+        }
+    }
+    
+    void costUpdate (E512Array<E512Edge>& edges, bool undir = false) {
+        for (auto&& i : this->edgecost) { i.clear(); }
         if (undir) {// undirected
             for (auto&& i : edges) {
                 this->edgecost[i.a].emplace_back(i.b, i.cost);
