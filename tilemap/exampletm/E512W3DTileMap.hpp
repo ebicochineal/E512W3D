@@ -335,9 +335,9 @@ public:
                 if ((i.collision_layer & this->collision_layer) == 0) { continue; }
                 float gx = i.position.x;
                 float gy = i.position.y;
-                if (aabb(s.l, s.d, s.r+s.v, s.u, gx, gy, gx+i.cr, gy+i.cu)) {
+                if (aabb(s.l, s.d, s.r+s.v, s.u, gx+i.cl, gy+i.cd, gx+i.cr, gy+i.cu)) {
                     s.ret = true;
-                    s.p = min(s.p, (int)gx);
+                    s.p = min(s.p, (int)gx+i.cl);
                 }
             }
             this->moveRightAfter(s);
@@ -348,7 +348,7 @@ public:
                 if ((i.collision_layer & this->collision_layer) == 0) { continue; }
                 float gx = i.position.x;
                 float gy = i.position.y;
-                if (aabb(s.l+s.v, s.d, s.r, s.u, gx, gy, gx+i.cr, gy+i.cu)) {
+                if (aabb(s.l+s.v, s.d, s.r, s.u, gx+i.cl, gy+i.cd, gx+i.cr, gy+i.cu)) {
                     s.ret = true;
                     s.p = max(s.p, (int)gx+i.cr);
                 }
@@ -366,9 +366,9 @@ public:
                 if ((i.collision_layer & this->collision_layer) == 0) { continue; }
                 float gx = i.position.x;
                 float gy = i.position.y;
-                if (aabb(s.l, s.d, s.r, s.u+s.v, gx, gy, gx+i.cr, gy+i.cu)) {
+                if (aabb(s.l, s.d, s.r, s.u+s.v, gx+i.cl, gy+i.cd, gx+i.cr, gy+i.cu)) {
                     s.ret = true;
-                    s.p = min(s.p, (int)gy);
+                    s.p = min(s.p, (int)gy+i.cd);
                 }
             }
             this->moveUpAfter(s);
@@ -379,7 +379,7 @@ public:
                 if ((i.collision_layer & this->collision_layer) == 0) { continue; }
                 float gx = i.position.x;
                 float gy = i.position.y;
-                if (aabb(s.l, s.d+s.v, s.r, s.u, gx, gy, gx+i.cr, gy+i.cu)) {
+                if (aabb(s.l, s.d+s.v, s.r, s.u, gx+i.cl, gy+i.cd, gx+i.cr, gy+i.cu)) {
                     s.ret = true;
                     s.p = max(s.p, (int)gy+i.cu);
                 }
@@ -399,9 +399,9 @@ public:
                 if ((i.collision_layer & this->collision_layer) == 0) { continue; }
                 float gx = i.position.x;
                 float gy = i.position.y;
-                if (aabb(s.l, s.d, s.r+s.v, s.u, gx, gy, gx+i.cr, gy+i.cu)) {
+                if (aabb(s.l, s.d, s.r+s.v, s.u, gx+i.cl, gy+i.cd, gx+i.cr, gy+i.cu)) {
                     s.ret = true;
-                    s.p = min(s.p, (int)gx);
+                    s.p = min(s.p, (int)gx+i.cl);
                 }
             }
             this->moveRightAfter(s);
@@ -413,7 +413,7 @@ public:
                 if ((i.collision_layer & this->collision_layer) == 0) { continue; }
                 float gx = i.position.x;
                 float gy = i.position.y;
-                if (aabb(s.l+s.v, s.d, s.r, s.u, gx, gy, gx+i.cr, gy+i.cu)) {
+                if (aabb(s.l+s.v, s.d, s.r, s.u, gx+i.cl, gy+i.cd, gx+i.cr, gy+i.cu)) {
                     s.ret = true;
                     s.p = max(s.p, (int)gx+i.cr);
                 }
@@ -432,9 +432,9 @@ public:
                 if ((i.collision_layer & this->collision_layer) == 0) { continue; }
                 float gx = i.position.x;
                 float gy = i.position.y;
-                if (aabb(s.l, s.d, s.r, s.u+s.v, gx, gy, gx+i.cr, gy+i.cu)) {
+                if (aabb(s.l, s.d, s.r, s.u+s.v, gx+i.cl, gy+i.cd, gx+i.cr, gy+i.cu)) {
                     s.ret = true;
-                    s.p = min(s.p, (int)gy);
+                    s.p = min(s.p, (int)gy+i.cd);
                 }
             }
             this->moveUpAfter(s);
@@ -446,7 +446,7 @@ public:
                 if ((i.collision_layer & this->collision_layer) == 0) { continue; }
                 float gx = i.position.x;
                 float gy = i.position.y;
-                if (aabb(s.l, s.d+s.v, s.r, s.u, gx, gy, gx+i.cr, gy+i.cu)) {
+                if (aabb(s.l, s.d+s.v, s.r, s.u, gx+i.cl, gy+i.cd, gx+i.cr, gy+i.cu)) {
                     s.ret = true;
                     s.p = max(s.p, (int)gy+i.cu);
                 }
