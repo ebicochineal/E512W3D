@@ -191,6 +191,98 @@ struct Object2D {
 };
 
 struct E512W3DGameObject2D : Object2D {
+private:
+    struct MoveStruct {
+        bool ret = false;
+        int p;
+        float l, r, d, u;
+        int tl, tr, td, tu;
+        float px, py, v;
+        MoveStruct (E512W3DTileMap& tm, E512W3DGameObject2D& o, float& v) {
+            this->v = v;
+            this->px = o.position.x;
+            this->py = o.position.y;
+            this->l = o.cl+o.position.x;
+            this->r = o.cr+o.position.x;
+            this->d = o.cd+o.position.y;
+            this->u = o.cu+o.position.y;
+            this->tl = max((int)(l/tm.tex_w), 0);
+            this->tr = min((int)((r-1)/tm.tex_w), tm.width-1);
+            this->td = max((int)(d/tm.tex_h), 0);
+            this->tu = min((int)((u-1)/tm.tex_h), tm.height-1);
+        }
+    };
+    
+    void moveRight (E512W3DTileMap& tm, MoveStruct& s) {
+        s.tr = min((int)((s.r+s.v)/tm.tex_w), tm.width-1);
+        s.p = s.r+s.v;
+        for (int y = s.td; y <= s.tu; ++y) {
+            for (int x = s.tl; x <= s.tr; ++x) {
+                if ((tm.getTile(x, y).collision_layer & this->collision_layer) == 0) { continue; }
+                s.ret = true;
+                s.p = min(s.p, x*tm.tex_w);
+            }
+        }
+    }
+    void moveRightAfter (MoveStruct& s) {
+        if (s.ret) { s.v -= (s.px+this->cr-1+s.v) - s.p; }
+        s.v = max(s.v, 0.0f);
+        this->position.x += s.v;
+        if (s.ret) { this->position.x -= 0.5f; }
+    }
+    void moveLeft (E512W3DTileMap& tm, MoveStruct& s) {
+        s.tl = max((int)((s.l+s.v)/tm.tex_w), 0);
+        s.p = s.l+s.v;
+        for (int y = s.td; y <= s.tu; ++y) {
+            for (int x = s.tl; x <= s.tr; ++x) {
+                if ((tm.getTile(x, y).collision_layer & this->collision_layer) == 0) { continue; }
+                s.ret = true;
+                s.p = max(s.p, x*tm.tex_w+tm.tex_w);
+            }
+        }
+    }
+    void moveLeftAfter (MoveStruct& s) {
+        if (s.ret) { s.v += s.p - (s.px+s.v+this->cl); }
+        s.v = min(s.v, 0.0f);
+        this->position.x += s.v;
+        if (s.ret) { this->position.x += 0.5f; }
+    }
+    
+    void moveUp (E512W3DTileMap& tm, MoveStruct& s) {
+        s.tu = min((int)((s.u+s.v)/tm.tex_h), tm.height-1);
+        s.p = s.u+s.v;
+        for (int y = s.td; y <= s.tu; ++y) {
+            for (int x = s.tl; x <= s.tr; ++x) {
+                if ((tm.getTile(x, y).collision_layer & this->collision_layer) == 0) { continue; }
+                s.ret = true;
+                s.p = min(s.p, y*tm.tex_h);
+            }
+        }
+    }
+    void moveUpAfter (MoveStruct& s) {
+        if (s.ret) { s.v -= (s.py+this->cu-1+s.v) - s.p; }
+        s.v = max(s.v, 0.0f);
+        this->position.y += s.v;
+        if (s.ret) { this->position.y -= 0.5f; }
+    }
+    void moveDown (E512W3DTileMap& tm, MoveStruct& s) {
+        s.td = max((int)((s.d+s.v)/tm.tex_h), 0);
+        s.p = s.d+s.v;
+        for (int y = s.td; y <= s.tu; ++y) {
+            for (int x = s.tl; x <= s.tr; ++x) {
+                if ((tm.getTile(x, y).collision_layer & this->collision_layer) == 0) { continue; }
+                s.ret = true;
+                s.p = max(s.p, y*tm.tex_h+tm.tex_h);
+            }
+        }
+    }
+    void moveDownAfter (MoveStruct& s) {
+        if (s.ret) { s.v += s.p - (s.py+s.v+this->cd); }
+        s.v = min(s.v, 0.0f);
+        this->position.y += s.v;
+        if (s.ret) { this->position.y += 0.5f; }
+    }
+public:
     int16_t cl = 0;
     int16_t cr = 0;
     int16_t cu = 0;
@@ -207,381 +299,166 @@ struct E512W3DGameObject2D : Object2D {
         this->cd = 0;
     }
     
-    bool isGround (E512W3DTileMap& tm) { return this->isCollision(tm, 0, 0, 0, 1); }
-    
     bool moveX (E512W3DTileMap& tm) {
-        float v = this->velocity.x;
-        if (v == 0) { return false; }
-        float px = this->position.x;
-        float py = this->position.y;
-        
-        float l = this->cl+this->position.x;
-        float r = this->cr+this->position.x;
-        float d = this->cd+this->position.y;
-        float u = this->cu+this->position.y;
-        
-        int tl = max((int)(l/tm.tex_w), 0);
-        int tr = min((int)((r-1)/tm.tex_w), tm.width-1);
-        int td = max((int)(d/tm.tex_h), 0);
-        int tu = min((int)((u-1)/tm.tex_h), tm.height-1);
-        
-        bool ret = false;
+        if (this->velocity.x == 0) { return false; }
+        MoveStruct s(tm, *this, this->velocity.x);
         if (this->velocity.x > 0) {
-            tr = min((int)((r+v)/tm.tex_w), tm.width-1);
-            int p = r+v;
-            for (int y = td; y <= tu; ++y) {
-                for (int x = tl; x <= tr; ++x) {
-                    if ((tm.getTile(x, y).collision_layer & this->collision_layer) == 0) { continue; }
-                    ret = true;
-                    p = min(p, x*tm.tex_w);
-                }
-            }
-            if (ret) { v -= (px+this->cr-1+v) - p; }
-            v = max(v, 0.0f);
-            this->position.x += v;
-            if (ret) { this->position.x -= 0.5f; }
+            this->moveRight(tm, s);
+            this->moveRightAfter(s);
         }
         if (this->velocity.x < 0) {
-            tl = max((int)((l+v)/tm.tex_w), 0);
-            int p = l+v;
-            for (int y = td; y <= tu; ++y) {
-                for (int x = tl; x <= tr; ++x) {
-                    if ((tm.getTile(x, y).collision_layer & this->collision_layer) == 0) { continue; }
-                    ret = true;
-                    p = max(p, x*tm.tex_w+tm.tex_w);
-                }
-            }
-            if (ret) { v += p - (px+v+this->cl); }
-            v = min(v, 0.0f);
-            this->position.x += v;
-            if (ret) { this->position.x += 0.5f; }
+            this->moveLeft(tm, s);
+            this->moveLeftAfter(s);
         }
-        return ret;
+        return s.ret;
     }
     bool moveY (E512W3DTileMap& tm) {
-        float v = this->velocity.y;
-        if (v == 0) { return false; }
-        float px = this->position.x;
-        float py = this->position.y;
-        
-        float l = this->cl+this->position.x;
-        float r = this->cr+this->position.x;
-        float d = this->cd+this->position.y;
-        float u = this->cu+this->position.y;
-        
-        int tl = max((int)(l/tm.tex_w), 0);
-        int tr = min((int)((r-1)/tm.tex_w), tm.width-1);
-        int td = max((int)(d/tm.tex_h), 0);
-        int tu = min((int)((u-1)/tm.tex_h), tm.height-1);
-        
-        bool ret = false;
+        if (this->velocity.y == 0) { return false; }
+        MoveStruct s(tm, *this, this->velocity.y);
         if (this->velocity.y > 0) {
-            tu = min((int)((u+v)/tm.tex_h), tm.height-1);
-            int p = u+v;
-            for (int y = td; y <= tu; ++y) {
-                for (int x = tl; x <= tr; ++x) {
-                    if ((tm.getTile(x, y).collision_layer & this->collision_layer) == 0) { continue; }
-                    ret = true;
-                    p = min(p, y*tm.tex_h);
-                }
-            }
-            if (ret) { v -= (py+this->cu-1+v) - p; }
-            v = max(v, 0.0f);
-            this->position.y += v;
-            if (ret) { this->position.y -= 0.5f; }
+            this->moveUp(tm, s);
+            this->moveUpAfter(s);
         }
         if (this->velocity.y < 0) {
-            td = max((int)((d+v)/tm.tex_h), 0);
-            int p = d+v;
-            for (int y = td; y <= tu; ++y) {
-                for (int x = tl; x <= tr; ++x) {
-                    if ((tm.getTile(x, y).collision_layer & this->collision_layer) == 0) { continue; }
-                    ret = true;
-                    p = max(p, y*tm.tex_h+tm.tex_h);
-                }
-            }
-            if (ret) { v += p - (py+v+this->cd); }
-            v = min(v, 0.0f);
-            this->position.y += v;
-            if (ret) { this->position.y += 0.5f; }
+            this->moveDown(tm, s);
+            this->moveDownAfter(s);
         }
-        return ret;
+        return s.ret;
     }
-    
-    bool isGround (E512W3DTileMap& tm, E512Array<E512W3DGameObject2D>& o) { return this->isCollision(tm, o, 0, 0, 0, 1); }
     
     bool moveX (E512W3DTileMap& tm, E512Array<E512W3DGameObject2D>& o) {
-        float v = this->velocity.x;
-        if (v == 0) { return false; }
-        float px = this->position.x;
-        float py = this->position.y;
-        
-        float l = this->cl+this->position.x;
-        float r = this->cr+this->position.x;
-        float d = this->cd+this->position.y;
-        float u = this->cu+this->position.y;
-        
-        int tl = max((int)(l/tm.tex_w), 0);
-        int tr = min((int)((r-1)/tm.tex_w), tm.width-1);
-        int td = max((int)(d/tm.tex_h), 0);
-        int tu = min((int)((u-1)/tm.tex_h), tm.height-1);
-        
-        bool ret = false;
+        if (this->velocity.x == 0) { return false; }
+        MoveStruct s(tm, *this, this->velocity.x);
         if (this->velocity.x > 0) {
-            tr = min((int)((r+v)/tm.tex_h), tm.width-1);
-            int p = r+v;
-            for (int y = td; y <= tu; ++y) {
-                for (int x = tl; x <= tr; ++x) {
-                    if ((tm.getTile(x, y).collision_layer & this->collision_layer) == 0) { continue; }
-                    ret = true;
-                    p = min(p, x*tm.tex_w);
-                }
-            }
+            this->moveRight(tm, s);
             for (auto&& i : o) {
                 if ((i.collision_layer & this->collision_layer) == 0) { continue; }
                 float gx = i.position.x;
                 float gy = i.position.y;
-                if (aabb(l, d, r+v, u, gx, gy, gx+i.cr, gy+i.cu)) {
-                    ret = true;
-                    p = min(p, (int)gx);
+                if (aabb(s.l, s.d, s.r+s.v, s.u, gx, gy, gx+i.cr, gy+i.cu)) {
+                    s.ret = true;
+                    s.p = min(s.p, (int)gx);
                 }
             }
-            if (ret) { v -= (px+this->cr-1+v) - p; }
-            v = max(v, 0.0f);
-            this->position.x += v;
-            if (ret) { this->position.x -= 0.5f; }
+            this->moveRightAfter(s);
         }
         if (this->velocity.x < 0) {
-            tl = max((int)((l+v)/tm.tex_w), 0);
-            int p = l+v;
-            for (int y = td; y <= tu; ++y) {
-                for (int x = tl; x <= tr; ++x) {
-                    if ((tm.getTile(x, y).collision_layer & this->collision_layer) == 0) { continue; }
-                    ret = true;
-                    p = max(p, x*tm.tex_w+tm.tex_w);
-                }
-            }
+            this->moveLeft(tm, s);
             for (auto&& i : o) {
                 if ((i.collision_layer & this->collision_layer) == 0) { continue; }
                 float gx = i.position.x;
                 float gy = i.position.y;
-                if (aabb(l+v, d, r, u, gx, gy, gx+i.cr, gy+i.cu)) {
-                    ret = true;
-                    p = max(p, (int)gx+i.cr);
+                if (aabb(s.l+s.v, s.d, s.r, s.u, gx, gy, gx+i.cr, gy+i.cu)) {
+                    s.ret = true;
+                    s.p = max(s.p, (int)gx+i.cr);
                 }
             }
-            if (ret) { v += p - (px+v+this->cl); }
-            v = min(v, 0.0f);
-            this->position.x += v;
-            if (ret) { this->position.x += 0.5f; }
+            this->moveLeftAfter(s);
         }
-        return ret;
+        return s.ret;
     }
     bool moveY (E512W3DTileMap& tm, E512Array<E512W3DGameObject2D>& o) {
-        float v = this->velocity.y;
-        if (v == 0) { return false; }
-        float px = this->position.x;
-        float py = this->position.y;
-        
-        float l = this->cl+this->position.x;
-        float r = this->cr+this->position.x;
-        float d = this->cd+this->position.y;
-        float u = this->cu+this->position.y;
-        
-        int tl = max((int)(l/tm.tex_w), 0);
-        int tr = min((int)((r-1)/tm.tex_w), tm.width-1);
-        int td = max((int)(d/tm.tex_h), 0);
-        int tu = min((int)((u-1)/tm.tex_h), tm.height-1);
-        
-        bool ret = false;
+        if (this->velocity.y == 0) { return false; }
+        MoveStruct s(tm, *this, this->velocity.y);
         if (this->velocity.y > 0) {
-            tu = min((int)((u+v)/tm.tex_h), tm.height-1);
-            int p = u+v;
-            for (int y = td; y <= tu; ++y) {
-                for (int x = tl; x <= tr; ++x) {
-                    if ((tm.getTile(x, y).collision_layer & this->collision_layer) == 0) { continue; }
-                    ret = true;
-                    p = min(p, y*tm.tex_h);
-                }
-            }
+            this->moveUp(tm, s);
             for (auto&& i : o) {
                 if ((i.collision_layer & this->collision_layer) == 0) { continue; }
                 float gx = i.position.x;
                 float gy = i.position.y;
-                if (aabb(l, d, r, u+v, gx, gy, gx+i.cr, gy+i.cu)) {
-                    ret = true;
-                    p = min(p, (int)gy);
+                if (aabb(s.l, s.d, s.r, s.u+s.v, gx, gy, gx+i.cr, gy+i.cu)) {
+                    s.ret = true;
+                    s.p = min(s.p, (int)gy);
                 }
             }
-            if (ret) { v -= (py+this->cu-1+v) - p; }
-            v = max(v, 0.0f);
-            this->position.y += v;
-            if (ret) { this->position.y -= 0.5f; }
+            this->moveUpAfter(s);
         }
         if (this->velocity.y < 0) {
-            td = max((int)((d+v)/tm.tex_h), 0);
-            int p = d+v;
-            for (int y = td; y <= tu; ++y) {
-                for (int x = tl; x <= tr; ++x) {
-                    if ((tm.getTile(x, y).collision_layer & this->collision_layer) == 0) { continue; }
-                    ret = true;
-                    p = max(p, y*tm.tex_h+tm.tex_h);
-                }
-            }
+            this->moveDown(tm, s);
             for (auto&& i : o) {
                 if ((i.collision_layer & this->collision_layer) == 0) { continue; }
                 float gx = i.position.x;
                 float gy = i.position.y;
-                if (aabb(l, d+v, r, u, gx, gy, gx+i.cr, gy+i.cu)) {
-                    ret = true;
-                    p = max(p, (int)gy+i.cu);
+                if (aabb(s.l, s.d+s.v, s.r, s.u, gx, gy, gx+i.cr, gy+i.cu)) {
+                    s.ret = true;
+                    s.p = max(s.p, (int)gy+i.cu);
                 }
             }
-            if (ret) { v += p - (py+v+this->cd); }
-            v = min(v, 0.0f);
-            this->position.y += v;
-            if (ret) { this->position.y += 0.5f; }
+            this->moveDownAfter(s);
         }
-        return ret;
+        return s.ret;
     }
-    
-    bool isGround (E512W3DTileMap& tm, E512Array<E512W3DGameObject2D*>& o) { return this->isCollision(tm, o, 0, 0, 0, 1); }
     
     bool moveX (E512W3DTileMap& tm, E512Array<E512W3DGameObject2D*>& o) {
-        float v = this->velocity.x;
-        if (v == 0) { return false; }
-        float px = this->position.x;
-        float py = this->position.y;
-        
-        float l = this->cl+this->position.x;
-        float r = this->cr+this->position.x;
-        float d = this->cd+this->position.y;
-        float u = this->cu+this->position.y;
-        
-        int tl = max((int)(l/tm.tex_w), 0);
-        int tr = min((int)((r-1)/tm.tex_w), tm.width-1);
-        int td = max((int)(d/tm.tex_h), 0);
-        int tu = min((int)((u-1)/tm.tex_h), tm.height-1);
-        
-        bool ret = false;
+        if (this->velocity.x == 0) { return false; }
+        MoveStruct s(tm, *this, this->velocity.x);
         if (this->velocity.x > 0) {
-            tr = min((int)((r+v)/tm.tex_h), tm.width-1);
-            int p = r+v;
-            for (int y = td; y <= tu; ++y) {
-                for (int x = tl; x <= tr; ++x) {
-                    if ((tm.getTile(x, y).collision_layer & this->collision_layer) == 0) { continue; }
-                    ret = true;
-                    p = min(p, x*tm.tex_w);
+            this->moveRight(tm, s);
+            for (auto&& j : o) {
+                E512W3DGameObject2D& i = *j;
+                if ((i.collision_layer & this->collision_layer) == 0) { continue; }
+                float gx = i.position.x;
+                float gy = i.position.y;
+                if (aabb(s.l, s.d, s.r+s.v, s.u, gx, gy, gx+i.cr, gy+i.cu)) {
+                    s.ret = true;
+                    s.p = min(s.p, (int)gx);
                 }
             }
-            for (auto&& i : o) {
-                if ((i->collision_layer & this->collision_layer) == 0) { continue; }
-                float gx = i->position.x;
-                float gy = i->position.y;
-                if (aabb(l, d, r+v, u, gx, gy, gx+i->cr, gy+i->cu)) {
-                    ret = true;
-                    p = min(p, (int)gx);
-                }
-            }
-            if (ret) { v -= (px+this->cr-1+v) - p; }
-            v = max(v, 0.0f);
-            this->position.x += v;
-            if (ret) { this->position.x -= 0.5f; }
+            this->moveRightAfter(s);
         }
         if (this->velocity.x < 0) {
-            tl = max((int)((l+v)/tm.tex_w), 0);
-            int p = l+v;
-            for (int y = td; y <= tu; ++y) {
-                for (int x = tl; x <= tr; ++x) {
-                    if ((tm.getTile(x, y).collision_layer & this->collision_layer) == 0) { continue; }
-                    ret = true;
-                    p = max(p, x*tm.tex_w+tm.tex_w);
+            this->moveLeft(tm, s);
+            for (auto&& j : o) {
+                E512W3DGameObject2D& i = *j;
+                if ((i.collision_layer & this->collision_layer) == 0) { continue; }
+                float gx = i.position.x;
+                float gy = i.position.y;
+                if (aabb(s.l+s.v, s.d, s.r, s.u, gx, gy, gx+i.cr, gy+i.cu)) {
+                    s.ret = true;
+                    s.p = max(s.p, (int)gx+i.cr);
                 }
             }
-            for (auto&& i : o) {
-                if ((i->collision_layer & this->collision_layer) == 0) { continue; }
-                float gx = i->position.x;
-                float gy = i->position.y;
-                if (aabb(l+v, d, r, u, gx, gy, gx+i->cr, gy+i->cu)) {
-                    ret = true;
-                    p = max(p, (int)gx+i->cr);
-                }
-            }
-            if (ret) { v += p - (px+v+this->cl); }
-            v = min(v, 0.0f);
-            this->position.x += v;
-            if (ret) { this->position.x += 0.5f; }
+            this->moveLeftAfter(s);
         }
-        return ret;
+        return s.ret;
     }
     bool moveY (E512W3DTileMap& tm, E512Array<E512W3DGameObject2D*>& o) {
-        float v = this->velocity.y;
-        if (v == 0) { return false; }
-        float px = this->position.x;
-        float py = this->position.y;
-        
-        float l = this->cl+this->position.x;
-        float r = this->cr+this->position.x;
-        float d = this->cd+this->position.y;
-        float u = this->cu+this->position.y;
-        
-        int tl = max((int)(l/tm.tex_w), 0);
-        int tr = min((int)((r-1)/tm.tex_w), tm.width-1);
-        int td = max((int)(d/tm.tex_h), 0);
-        int tu = min((int)((u-1)/tm.tex_h), tm.height-1);
-        
-        bool ret = false;
+        if (this->velocity.y == 0) { return false; }
+        MoveStruct s(tm, *this, this->velocity.y);
         if (this->velocity.y > 0) {
-            tu = min((int)((u+v)/tm.tex_h), tm.height-1);
-            int p = u+v;
-            for (int y = td; y <= tu; ++y) {
-                for (int x = tl; x <= tr; ++x) {
-                    if ((tm.getTile(x, y).collision_layer & this->collision_layer) == 0) { continue; }
-                    ret = true;
-                    p = min(p, y*tm.tex_h);
+            this->moveUp(tm, s);
+            for (auto&& j : o) {
+                E512W3DGameObject2D& i = *j;
+                if ((i.collision_layer & this->collision_layer) == 0) { continue; }
+                float gx = i.position.x;
+                float gy = i.position.y;
+                if (aabb(s.l, s.d, s.r, s.u+s.v, gx, gy, gx+i.cr, gy+i.cu)) {
+                    s.ret = true;
+                    s.p = min(s.p, (int)gy);
                 }
             }
-            for (auto&& i : o) {
-                if ((i->collision_layer & this->collision_layer) == 0) { continue; }
-                float gx = i->position.x;
-                float gy = i->position.y;
-                if (aabb(l, d, r, u+v, gx, gy, gx+i->cr, gy+i->cu)) {
-                    ret = true;
-                    p = min(p, (int)gy);
-                }
-            }
-            if (ret) { v -= (py+this->cu-1+v) - p; }
-            v = max(v, 0.0f);
-            this->position.y += v;
-            if (ret) { this->position.y -= 0.5f; }
+            this->moveUpAfter(s);
         }
         if (this->velocity.y < 0) {
-            td = max((int)((d+v)/tm.tex_h), 0);
-            int p = d+v;
-            for (int y = td; y <= tu; ++y) {
-                for (int x = tl; x <= tr; ++x) {
-                    if ((tm.getTile(x, y).collision_layer & this->collision_layer) == 0) { continue; }
-                    ret = true;
-                    p = max(p, y*tm.tex_h+tm.tex_h);
+            this->moveDown(tm, s);
+            for (auto&& j : o) {
+                E512W3DGameObject2D& i = *j;
+                if ((i.collision_layer & this->collision_layer) == 0) { continue; }
+                float gx = i.position.x;
+                float gy = i.position.y;
+                if (aabb(s.l, s.d+s.v, s.r, s.u, gx, gy, gx+i.cr, gy+i.cu)) {
+                    s.ret = true;
+                    s.p = max(s.p, (int)gy+i.cu);
                 }
             }
-            for (auto&& i : o) {
-                if ((i->collision_layer & this->collision_layer) == 0) { continue; }
-                float gx = i->position.x;
-                float gy = i->position.y;
-                if (aabb(l, d+v, r, u, gx, gy, gx+i->cr, gy+i->cu)) {
-                    ret = true;
-                    p = max(p, (int)gy+i->cu);
-                }
-            }
-            if (ret) { v += p - (py+v+this->cd); }
-            v = min(v, 0.0f);
-            this->position.y += v;
-            if (ret) { this->position.y += 0.5f; }
+            this->moveDownAfter(s);
         }
-        return ret;
+        return s.ret;
     }
     
+    bool isGround (E512W3DTileMap& tm) { return this->isCollision(tm, 0, 0, 0, 1); }
+    bool isGround (E512W3DTileMap& tm, E512Array<E512W3DGameObject2D>& o) { return this->isCollision(tm, o, 0, 0, 0, 1); }
+    bool isGround (E512W3DTileMap& tm, E512Array<E512W3DGameObject2D*>& o) { return this->isCollision(tm, o, 0, 0, 0, 1); }
     
     bool objectAABB (E512W3DGameObject2D& o, int extend_l=0, int extend_u=0, int extend_r=0, int extend_d=0) {
         const int al = this->cl+this->position.x-extend_l;
@@ -618,20 +495,7 @@ struct E512W3DGameObject2D : Object2D {
     }
     
     bool isCollision (E512W3DTileMap& tm, E512Array<E512W3DGameObject2D>& o, int extend_l=0, int extend_u=0, int extend_r=0, int extend_d=0) {
-        float l = this->cl+this->position.x-extend_l;
-        float r = this->cr+this->position.x+extend_r;
-        float d = this->cd+this->position.y-extend_d;
-        float u = this->cu+this->position.y+extend_u;
-        int tl = max((int)(l/tm.tex_w), 0);
-        int tr = min((int)((r-1)/tm.tex_w), tm.width-1);
-        int td = max((int)(d/tm.tex_h), 0);
-        int tu = min((int)((u-1)/tm.tex_h), tm.height-1);
-        for (int y = td; y <= tu; ++y) {
-            for (int x = tl; x <= tr; ++x) {
-                if ((tm.getTile(x, y).collision_layer & this->collision_layer) == 0) { continue; }
-                return true;
-            }
-        }
+        if (this->isCollision(tm, extend_l, extend_u, extend_r, extend_d)) { return true; }
         for (auto&& i : o) {
             if (this->isCollision(i, extend_l, extend_u, extend_r, extend_d)) { return true; }
         }
@@ -639,20 +503,7 @@ struct E512W3DGameObject2D : Object2D {
     }
     
     bool isCollision (E512W3DTileMap& tm, E512Array<E512W3DGameObject2D*>& o, int extend_l=0, int extend_u=0, int extend_r=0, int extend_d=0) {
-        float l = this->cl+this->position.x-extend_l;
-        float r = this->cr+this->position.x+extend_r;
-        float d = this->cd+this->position.y-extend_d;
-        float u = this->cu+this->position.y+extend_u;
-        int tl = max((int)(l/tm.tex_w), 0);
-        int tr = min((int)((r-1)/tm.tex_w), tm.width-1);
-        int td = max((int)(d/tm.tex_h), 0);
-        int tu = min((int)((u-1)/tm.tex_h), tm.height-1);
-        for (int y = td; y <= tu; ++y) {
-            for (int x = tl; x <= tr; ++x) {
-                if ((tm.getTile(x, y).collision_layer & this->collision_layer) == 0) { continue; }
-                return true;
-            }
-        }
+        if (this->isCollision(tm, extend_l, extend_u, extend_r, extend_d)) { return true; }
         for (auto&& i : o) {
             if (this->isCollision(*i, extend_l, extend_u, extend_r, extend_d)) { return true; }
         }

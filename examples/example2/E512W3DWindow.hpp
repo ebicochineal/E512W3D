@@ -1858,7 +1858,8 @@ public:
     TFT_eSprite* tft_es_buff;
     TFT_eSprite* zbuff;
     
-    uint16_t fixed_milli_time = 33;
+    // uint16_t fixed_milli_time = 33;
+    float fixed_milli_time = 33.333f;
     E512W3DWindowManager () {}
     
     void begin () {
@@ -1918,7 +1919,8 @@ public:
     }
     void clear (uint16_t color = 0) {
         this->over_time = (millis() - this->prev_time) - (this->fixed_milli_time - this->over_time);
-        this->over_time = min(this->over_time, this->fixed_milli_time);
+        //this->over_time = min(this->over_time, this->fixed_milli_time);
+        this->over_time = min((float)this->over_time, this->fixed_milli_time);
         this->prev_time = millis();
         this->colorBufferClear(color);
     }
