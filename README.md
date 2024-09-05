@@ -1,4 +1,4 @@
-## 3d-software-rendering m5stickc/m5stack/console-app/windows-app/ncurses/emscripten/android/raspberry-pi-pico  
+## 3d-software-rendering m5stickc/m5stack/console-app/windows-app/ncurses/emscripten/android/raspberry-pi-pico/raspberry-pi-pico2  
 - C++で3Dモデルの表示やゲームなどを作成できます  
 - ソフトウェアレンダリングなのでマイコンボードなどでも動作します  
 - 複数のウィンドウ  
@@ -192,8 +192,8 @@ Visual Studio 2019インストール デスクトップとモバイル C++によ
 
 ---
 <a id="raspberrypipico"></a>
-## raspberry-pi-pico
-ArduinoIDEで動作します  
+## raspberry-pi-pico / raspberry-pi-pico2
+ArduinoIDEでpico1, 2どちらでも動作します  
 ST7735を搭載した解像度160x80ディスプレイを使用します  
 必要に応じて変更すれば他のディスプレイを使うことができるかもしれませんE512W3DUtilsX.cppの16~115行のコードを変更してください  
 ライブラリにバグがあるらしく青と赤が反転しているためE512W3DUtilsX.cppの100行目からの処理で再び反転させています  
