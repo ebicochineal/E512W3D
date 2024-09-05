@@ -5,13 +5,13 @@
 E512W3DWindowManager e512w3d;
 
 
-#if !(defined(ARDUINO_M5Stick_C) || defined(ARDUINO_M5Stick_C_PLUS) || defined(ARDUINO_M5Stack_Core_ESP32) || defined(ARDUINO_M5STACK_FIRE) || defined(ARDUINO_M5STACK_Core2) || defined(ARDUINO_ARCH_RP2040))
+#if !(defined(ARDUINO_M5Stick_C) || defined(ARDUINO_M5Stick_C_PLUS) || defined(ARDUINO_M5Stack_Core_ESP32) || defined(ARDUINO_M5STACK_FIRE) || defined(ARDUINO_M5STACK_Core2) || defined(ARDUINO_ARCH_RP2040) || defined(ARDUINO_ARCH_RP2350))
     void setup();
     void loop();
 #endif
 
 
-#if defined(ARDUINO_M5Stick_C) || defined(ARDUINO_ARCH_RP2040)
+#if defined(ARDUINO_M5Stick_C) || defined(ARDUINO_ARCH_RP2040) || defined(ARDUINO_ARCH_RP2350)
     inline void delay1 () { delay(1); }
 #else
     inline void delay1 () { usleep(10); }
@@ -312,7 +312,7 @@ void loop1 () {
         }
         return 0;
     }
-#elif !(defined(ARDUINO_M5Stick_C) || defined(ARDUINO_M5Stick_C_PLUS) || defined(ARDUINO_M5Stack_Core_ESP32) || defined(ARDUINO_M5STACK_FIRE) || defined(ARDUINO_M5STACK_Core2) || defined(ARDUINO_ARCH_RP2040))
+#elif !(defined(ARDUINO_M5Stick_C) || defined(ARDUINO_M5Stick_C_PLUS) || defined(ARDUINO_M5Stack_Core_ESP32) || defined(ARDUINO_M5STACK_FIRE) || defined(ARDUINO_M5STACK_Core2) || defined(ARDUINO_ARCH_RP2040) || defined(ARDUINO_ARCH_RP2350))
     #if __has_include(<curses.h>) && defined(USENCURSES)
         #include <csignal>
         bool floop = true;

@@ -66,7 +66,7 @@ void loop () {
     
     // if (e512w3d.isFixedTime()) {
         a.rotation *= Quaternion::angleAxis(5.0, Vector3(0, 1, 0));
-        if ((cnt / 120) % 2 == 0) {
+        if ((cnt / 360) % 2 == 0) {
             // e512w3d.clear();
             // w.draw();// window all object draw
             

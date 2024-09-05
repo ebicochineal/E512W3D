@@ -12,7 +12,7 @@
     #include "M5Stack.h"
 #elif defined(ARDUINO_M5STACK_Core2)
     #include "M5Core2.h"
-#elif defined(ARDUINO_ARCH_RP2040)
+#elif defined(ARDUINO_ARCH_RP2040) || defined(ARDUINO_ARCH_RP2350)
     #include <Adafruit_GFX.h>
     #include <Adafruit_ST7735.h>
     #include <SPI.h>
