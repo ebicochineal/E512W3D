@@ -50,12 +50,50 @@ p = os.path.dirname(__file__).replace('\\', '/') + '/'
 p = '' if p == '/' else p
 with open(p+obj_file_name+'.hpp', 'w') as f:
     f.write('#pragma once\n')
-    f.write('#include "E512W3D.hpp"\nMesh %s;\nvoid %sInit () {\n'%(obj_file_name, obj_file_name))
+    f.write('#include "E512W3D.hpp"\nMesh %s;\n'%(obj_file_name))
     
-    f.write('    // %s.vertexs '%obj_file_name + str(len(vertex)) + '\n')
-    f.write('    // %s.faces '%obj_file_name + str(len(face)) + '\n')
-    f.write('    // %s.uv_vertexs '%obj_file_name + str(len(uvvertex)) + '\n')
-    f.write('    // %s.uv_faces '%obj_file_name + str(len(uvface)) + '\n')
+    f.write('    // %s.vertex '%obj_file_name + str(len(vertex)) + '\n')
+    f.write('    // %s.face '%obj_file_name + str(len(face)) + '\n')
+    f.write('    // %s.uv_vertex '%obj_file_name + str(len(uvvertex)) + '\n')
+    f.write('    // %s.uv_face '%obj_file_name + str(len(uvface)) + '\n')
+    
+    f.write('#if defined(ARDUINO)\n')
+    
+    f.write('void %sVertexAdd () {\n'%obj_file_name)
+    f.write('    %s.vertexs.reserve('%obj_file_name + str(len(vertex)) + ');\n')
+    for i in vertex:
+        f.write('    %s.vertexs.emplace_back('%obj_file_name + ', '.join(str(x) for x in i) + ');\n')
+    f.write('}\n')
+    
+    f.write('void %sFaceAdd () {\n'%obj_file_name)
+    f.write('    %s.faces.reserve('%obj_file_name + str(len(face)) + ');\n')
+    for i in face:
+        f.write('    %s.faces.emplace_back('%obj_file_name + ', '.join(str(x) for x in i) + ');\n')
+    f.write('}\n')
+    
+    f.write('void %sUVVertexAdd () {\n'%obj_file_name)
+    if len(uvface) > 0:
+        f.write('    %s.uv_vertexs.reserve('%obj_file_name + str(len(uvvertex)) + ');\n')
+        for i in uvvertex:
+            f.write('    %s.uv_vertexs.emplace_back('%obj_file_name + ', '.join(str(x) for x in i) + ');\n')
+    f.write('}\n')
+    
+    
+    f.write('void %sUVFaceAdd () {\n'%obj_file_name)
+    if len(uvface) > 0:
+        f.write('    %s.uv_faces.reserve('%obj_file_name + str(len(uvface)) + ');\n')
+        for i in uvface:
+            f.write('    %s.uv_faces.emplace_back('%obj_file_name + ', '.join(str(x) for x in i) + ');\n')
+    f.write('}\n')
+    
+    f.write('#endif\n')
+    
+    
+    
+    
+    f.write('void %sInit () {\n'%(obj_file_name))
+    
+    
     
     f.write('#if !defined(ARDUINO)\n')
     
@@ -111,34 +149,10 @@ with open(p+obj_file_name+'.hpp', 'w') as f:
     
     f.write('#else\n')
     
-    
-    # f.write('    %s.vertexs.reserve('%obj_file_name + str(len(vertex)) + ');\n')
-    # f.write('    %s.faces.reserve('%obj_file_name + str(len(face)) + ');\n')
-    # for i in vertex:
-    #     f.write('    %s.addVertex('%obj_file_name + ', '.join(str(x) for x in i) + ');\n')
-    # for i in face:
-    #     f.write('    %s.addFace('%obj_file_name + ', '.join(str(x) for x in i) + ');\n')
-    # if len(uvface) > 0:
-    #     f.write('    %s.uv_vertexs.reserve('%obj_file_name + str(len(uvvertex)) + ');\n')
-    #     f.write('    %s.uv_faces.reserve('%obj_file_name + str(len(uvface)) + ');\n')
-    #     for i in uvvertex:
-    #         f.write('    %s.addVertexUV('%obj_file_name + ', '.join(str(x) for x in i) + ');\n')
-    #     for i in uvface:
-    #         f.write('    %s.addFaceUV('%obj_file_name + ', '.join(str(x) for x in i) + ');\n')
-    
-    f.write('    %s.vertexs.reserve('%obj_file_name + str(len(vertex)) + ');\n')
-    f.write('    %s.faces.reserve('%obj_file_name + str(len(face)) + ');\n')
-    for i in vertex:
-        f.write('    %s.vertexs.emplace_back('%obj_file_name + ', '.join(str(x) for x in i) + ');\n')
-    for i in face:
-        f.write('    %s.faces.emplace_back('%obj_file_name + ', '.join(str(x) for x in i) + ');\n')
-    if len(uvface) > 0:
-        f.write('    %s.uv_vertexs.reserve('%obj_file_name + str(len(uvvertex)) + ');\n')
-        f.write('    %s.uv_faces.reserve('%obj_file_name + str(len(uvface)) + ');\n')
-        for i in uvvertex:
-            f.write('    %s.uv_vertexs.emplace_back('%obj_file_name + ', '.join(str(x) for x in i) + ');\n')
-        for i in uvface:
-            f.write('    %s.uv_faces.emplace_back('%obj_file_name + ', '.join(str(x) for x in i) + ');\n')
+    f.write('    %sVertexAdd();\n'%obj_file_name)
+    f.write('    %sFaceAdd();\n'%obj_file_name)
+    f.write('    %sUVVertexAdd();\n'%obj_file_name)
+    f.write('    %sUVFaceAdd();\n'%obj_file_name)
     
     
     f.write('#endif\n')
