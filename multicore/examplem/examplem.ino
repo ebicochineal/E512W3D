@@ -5,25 +5,21 @@
 
 class FPSCnt {
 private:
-    int tcnt = 0;
-    int cnt = 0;
-    int sumtime = 0;
     int prevtime = 0;
 public:
     FPSCnt () {
-        this->sumtime = millis();
-        this->prevtime = this->sumtime;
+        this->prevtime = millis();
     }
     int getCnt () {
         int time = millis();
-        this->sumtime += time-this->prevtime;
-        this->prevtime = time;
-        this->tcnt += 1;
-        if (this->sumtime >= 1000) {
-            this->sumtime = this->sumtime%1000;
-            this->cnt = this->tcnt;
-            this->tcnt = 0;
+        int d = time-this->prevtime;
+        int cnt = 0;
+        int sumt = 0;
+        while (cnt < 1000 && sumt < 1000) {
+            sumt += d;
+            cnt += 1;
         }
+        this->prevtime = time;
         return cnt;
     }
 };
@@ -62,11 +58,18 @@ void setup () {
 }
 
 void loop () {
-    static int cnt = 0;
+    static int prev = 0;
+    static int sumtime = 0;
+    static int core = 0;
     
     // if (e512w3d.isFixedTime()) {
+        int time = millis();
+        int d = time - prev;
+        sumtime += d;
+        prev = millis();
+        
         a.rotation *= Quaternion::angleAxis(5.0, Vector3(0, 1, 0));
-        if ((cnt / 360) % 2 == 0) {
+        if ((sumtime / 4000) % 2 == 0) {
             // e512w3d.clear();
             // w.draw();// window all object draw
             
@@ -88,7 +91,4 @@ void loop () {
         w.print("FPS:");
         w.println(numtostr(fps.getCnt()));
         e512w3d.pushScreen();
-
-        cnt += 1;
-    // }
 }
