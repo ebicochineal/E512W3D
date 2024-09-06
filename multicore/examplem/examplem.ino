@@ -61,7 +61,6 @@ void loop () {
     static int prev = 0;
     static int sumtime = 0;
     static int core = 0;
-    
     // if (e512w3d.isFixedTime()) {
         int time = millis();
         int d = time - prev;
