@@ -204,13 +204,13 @@ private:
             this->d = o.cd+o.position.y;
             this->u = o.cu+o.position.y;
             this->tl = max((l/tm.tex_w), 0);
-            this->tr = min(((r-1)/tm.tex_w), tm.width-1);
+            this->tr = min(((r-1)/tm.tex_w)-(r<=0), tm.width-1);
             this->td = max((d/tm.tex_h), 0);
-            this->tu = min(((u-1)/tm.tex_h), tm.height-1);
+            this->tu = min(((u-1)/tm.tex_h)-(u<=0), tm.height-1);
             
             if (c == 'R') {
                 this->r = o.cr+o.position.x+this->v;
-                this->tr = min(this->r/tm.tex_w, tm.width-1);
+                this->tr = min(this->r/tm.tex_w-(r<=0), tm.width-1);
             }
             if (c == 'L') {
                 this->l = o.cl+o.position.x+this->v;
@@ -218,7 +218,7 @@ private:
             }
             if (c == 'U') {
                 this->u = o.cu+o.position.y+this->v;
-                this->tu = min(this->u/tm.tex_h, tm.height-1);
+                this->tu = min(this->u/tm.tex_h-(u<=0), tm.height-1);
             }
             if (c == 'D') {
                 this->d = o.cd+o.position.y+this->v;
@@ -238,7 +238,7 @@ private:
     }
     void moveRightAfter (MoveStruct& s) {
         if (s.ret) { s.v -= (this->position.x+this->cr-1+s.v) - s.r; }
-        this->position.x += max(s.v, 0.0f) - (s.ret ? 0.5f : 0.0f);
+        this->position.x += max(s.v, 0.0f) - (s.ret ? 0.5f : 0.0f) - (s.ret && s.l < 0)*0.5;
     }
     void moveLeft (E512W3DTileMap& tm, MoveStruct& s) {
         for (int y = s.td; y <= s.tu; ++y) {
@@ -251,7 +251,7 @@ private:
     }
     void moveLeftAfter (MoveStruct& s) {
         if (s.ret) { s.v += s.l - (this->position.x+s.v+this->cl); }
-        this->position.x += min(s.v, 0.0f) + (s.ret ? 0.5f : 0.0f);
+        this->position.x += min(s.v, 0.0f) + (s.ret ? 0.5f : 0.0f) - (s.ret && s.l < 0)*0.5;
     }
     
     void moveUp (E512W3DTileMap& tm, MoveStruct& s) {
@@ -265,7 +265,7 @@ private:
     }
     void moveUpAfter (MoveStruct& s) {
         if (s.ret) { s.v -= (this->position.y+this->cu-1+s.v) - s.u; }
-        this->position.y += max(s.v, 0.0f) - (s.ret ? 0.5f : 0.0f);
+        this->position.y += max(s.v, 0.0f) - (s.ret ? 0.5f : 0.0f) - (s.ret && s.d < 0)*0.5;
     }
     void moveDown (E512W3DTileMap& tm, MoveStruct& s) {
         for (int y = s.td; y <= s.tu; ++y) {
@@ -278,7 +278,7 @@ private:
     }
     void moveDownAfter (MoveStruct& s) {
         if (s.ret) { s.v += s.d - (this->position.y+s.v+this->cd); }
-        this->position.y += min(s.v, 0.0f) + (s.ret ? 0.5f : 0.0f);
+        this->position.y += min(s.v, 0.0f) + (s.ret ? 0.5f : 0.0f) - (s.ret && s.d < 0)*0.5;
     }
 public:
     int16_t cl = 0;
@@ -496,9 +496,9 @@ public:
         float d = this->cd+this->position.y-extend_d;
         float u = this->cu+this->position.y+extend_u;
         int tl = max((int)(l/tm.tex_w), 0);
-        int tr = min((int)((r-1)/tm.tex_w), tm.width-1);
+        int tr = min((int)((r-1)/tm.tex_w)-(r<=0), tm.width-1);
         int td = max((int)(d/tm.tex_h), 0);
-        int tu = min((int)((u-1)/tm.tex_h), tm.height-1);
+        int tu = min((int)((u-1)/tm.tex_h)-(u<=0), tm.height-1);
         for (int y = td; y <= tu; ++y) {
             for (int x = tl; x <= tr; ++x) {
                 if ((tm.getTile(x, y).collision_layer & this->collision_layer) == 0) { continue; }
@@ -530,9 +530,9 @@ public:
         int d = this->cd+this->position.y-extend_d;
         int u = this->cu+this->position.y+extend_u;
         int tl = max((int)(l/tm.tex_w), 0);
-        int tr = min((int)((r-1)/tm.tex_w), tm.width-1);
+        int tr = min((int)((r-1)/tm.tex_w)-(r<=0), tm.width-1);
         int td = max((int)(d/tm.tex_h), 0);
-        int tu = min((int)((u-1)/tm.tex_h), tm.height-1);
+        int tu = min((int)((u-1)/tm.tex_h)-(u<=0), tm.height-1);
         E512Array<E512Point> ret;
         for (int y = td; y <= tu; ++y) {
             for (int x = tl; x <= tr; ++x) {
@@ -548,9 +548,9 @@ public:
         int d = this->cd+this->position.y-extend_d;
         int u = this->cu+this->position.y+extend_u;
         int tl = max((int)(l/tm.tex_w), 0);
-        int tr = min((int)((r-1)/tm.tex_w), tm.width-1);
+        int tr = min((int)((r-1)/tm.tex_w)-(r<=0), tm.width-1);
         int td = max((int)(d/tm.tex_h), 0);
-        int tu = min((int)((u-1)/tm.tex_h), tm.height-1);
+        int tu = min((int)((u-1)/tm.tex_h)-(u<=0), tm.height-1);
         E512Array<E512Point> ret;
         for (int y = td; y <= tu; ++y) {
             for (int x = tl; x <= tr; ++x) {
