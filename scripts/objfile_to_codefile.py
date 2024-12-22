@@ -22,7 +22,7 @@ def addface(a, b, c, face, uvface):
     
     
 
-with open(path) as f:
+with open(path, encoding="utf-8") as f:
     toint = lambda x : int(x.split('/')[0])
     for i in f.readlines():
         if str(i).startswith('v '):
