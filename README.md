@@ -720,6 +720,17 @@ void addFaceUV (uint16_t a, uint16_t b, uint16_t c)
 void addFaceUV (Face f)  
 #### Face
 uint16_t a, b, c  
+#### Texture
+Texture (uint16_t width, uint16_t height, uint16_t* pixels)  
+virtual uint16_t getColor (float u, float v)  
+virtual void setColor (float u, float v, uint16_t color)  
+virtual uint16_t getColorXY (uint16_t x, uint16_t y)  
+virtual void setColorXY (uint16_t x, uint16_t y, uint16_t color)  
+#### CTexture : Texture
+CTexture (uint16_t width, uint16_t height, const uint16_t* pixels)  
+uint16_t getColor (float u, float v)  
+uint16_t getColorXY (uint16_t x, uint16_t y)  
+
 
 #### Quaternion
 static Quaternion angleAxis (float w, float x, float y, float z)  

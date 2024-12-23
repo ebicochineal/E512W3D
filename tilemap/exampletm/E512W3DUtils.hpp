@@ -1048,17 +1048,40 @@ struct Texture {
         this->height = height;
         this->pixels = pixels;
     }
-    uint16_t getColor (float u, float v) {
+    virtual uint16_t getColor (float u, float v) {
         const uint16_t u16i = (uint16_t)(this->width * u) % this->width;
         const uint16_t v16i = (uint16_t)(this->height * (1.0f-v)) % this->height;
         return this->pixels[v16i*this->width+u16i];
     }
-    void setColor (float u, float v, uint16_t color) {
+    virtual void setColor (float u, float v, uint16_t color) {
         const uint16_t u16i = (uint16_t)(this->width * u) % this->width;
         const uint16_t v16i = (uint16_t)(this->height * (1.0f-v)) % this->height;
         this->pixels[v16i*this->width+u16i] = color;
     }
+    virtual uint16_t getColorXY (uint16_t x, uint16_t y) { return this->pixels[y*this->width+x]; }
+    virtual void setColorXY (uint16_t x, uint16_t y, uint16_t color) { this->pixels[y*this->width+x] = color; }
 };
+
+struct CTexture : Texture {
+    uint16_t width = 0;
+    uint16_t height = 0;
+    const uint16_t* pixels;
+    CTexture () {};
+    CTexture (uint16_t width, uint16_t height, const uint16_t* pixels) {
+        this->width = width;
+        this->height = height;
+        this->pixels = pixels;
+    }
+    uint16_t getColor (float u, float v) override {
+        const uint16_t u16i = (uint16_t)(this->width * u) % this->width;
+        const uint16_t v16i = (uint16_t)(this->height * (1.0f-v)) % this->height;
+        return this->pixels[v16i*this->width+u16i];
+    }
+    void setColor (float u, float v, uint16_t color) override {}
+    uint16_t getColorXY (uint16_t x, uint16_t y) override { return this->pixels[y*this->width+x]; }
+    void setColorXY (uint16_t x, uint16_t y, uint16_t color) override {}
+};
+
 
 namespace RenderType {
     enum Type {
