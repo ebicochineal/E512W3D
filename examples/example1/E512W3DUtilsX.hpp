@@ -24,7 +24,7 @@
     #define TFT_MOSI 19
     #define TFT_SCLK 18
     
-    class DummyMPU6886 {
+    class DummyIMU {
     public:
         void Init () {}
         void getAccelData(float* ax, float* ay, float* az) {}
@@ -51,7 +51,7 @@
     public:
         DummyLcd Lcd;
         DummyAxp Axp;
-        DummyMPU6886 MPU6886;
+        DummyIMU IMU;
         
         void begin () {
             tft.initR(INITR_MINI160x80);
@@ -268,7 +268,7 @@
         #endif
     #endif
     
-    class DummyMPU6886 {
+    class DummyIMU {
     public:
         void Init () {}
         void getAccelData(float* ax, float* ay, float* az) {}
@@ -322,7 +322,7 @@
     public:
         DummyLcd Lcd;
         DummyAxp Axp;
-        DummyMPU6886 MPU6886;
+        DummyIMU IMU;
         void begin () {}
         void update () {}
     #if defined(_WIN32)

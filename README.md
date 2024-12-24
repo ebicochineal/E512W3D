@@ -276,6 +276,8 @@ m5stickcでのカーソル位置の確認
 ```cpp
 void loop () {
     if (e512w3d.isFixedTime()) {
+        // E512W3DInput::width = e512w3d.width;
+        // E512W3DInput::height = e512w3d.height;
         E512W3DInput::update();
         e512w3d.clear();
         w.begin();
@@ -483,6 +485,9 @@ RenderTypeはPolygonTexturePerspectiveCorrectを指定します
 // example4 loop
 void loop () {
     if (e512w3d.isFixedTime()) {
+        // E512W3DInput::width = e512w3d.width;
+        // E512W3DInput::height = e512w3d.height;
+        E512W3DInput::update();
         a.rotation *= Quaternion::angleAxis(5.0, Vector3(0, 1, 0));
         e512w3d.clear();
         w.begin();
@@ -523,7 +528,7 @@ M5環境では普通に機能すると思うのでバックライトの明るさ
 M5.begin();
 M5.Lcd.setRotation(1);
 M5.Axp.ScreenBreath(9);
-M5.MPU6886.Init();
+M5.IMU.Init();
 ```
 
 ---

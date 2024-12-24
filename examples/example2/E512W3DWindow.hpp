@@ -31,7 +31,7 @@ public:
 #if defined(ARDUINO_M5Stick_C) || defined(ARDUINO_M5Stick_C_PLUS) || defined(ARDUINO_M5Stack_Core_ESP32) || defined(ARDUINO_M5STACK_FIRE) || defined(ARDUINO_M5STACK_Core2)
         float ax, ay, az;
         M5.update();
-        M5.MPU6886.getAccelData(&ax, &ay, &az);
+        M5.IMU.getAccelData(&ax, &ay, &az);
         
         E512W3DInput::mprev[0] = E512W3DInput::mtmp[0];
         E512W3DInput::mprev[1] = E512W3DInput::mtmp[1];
