@@ -18,7 +18,7 @@ void setup () {
     M5.begin();
     M5.Lcd.setRotation(1);
     M5.Axp.ScreenBreath(9);
-    M5.MPU6886.Init();
+    M5.IMU.Init();
     e512w3d.width = 160*2;
     e512w3d.height = 80*2;
     w.width = e512w3d.width;
