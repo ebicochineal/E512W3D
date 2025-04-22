@@ -1359,7 +1359,7 @@ POSSIBILITY OF SUCH DAMAGE.
         sx = max(sx, (int16_t)0);
         ex = min(ex, (int16_t)(this->width - 1));
         
-        for (int16_t x = sx; x < ex; ++x) {
+        for (int16_t x = sx; x <= ex; ++x) {
             if (!this->inSide2(x, y)) { continue; }
             if (z > this->zbuff->readPixel(x+this->sx, y+this->sy)) {
                 this->zbuff->drawPixel(x+this->sx, y+this->sy, z);
@@ -1377,7 +1377,7 @@ POSSIBILITY OF SUCH DAMAGE.
         sx = max(sx, (int16_t)0);
         ex = min(ex, (int16_t)(this->width - 1));
         
-        for (int16_t x = sx; x < ex; ++x) {
+        for (int16_t x = sx; x <= ex; ++x) {
             if (!this->inSide2(x, y)) { continue; }
             if (z > this->zbuff->readPixel(x+this->sx, y+this->sy)) {
                 uint16_t color2 = this->buff->readPixel(x+this->sx, y+this->sy);
@@ -1415,7 +1415,7 @@ POSSIBILITY OF SUCH DAMAGE.
         float ab = 0;
         float ac = 0;
         float t = abs((v2x-v1x) * (v3y-v1y) - (v2y-v1y) * (v3x-v1x));
-        for (int16_t x = sx; x < ex; ++x) {
+        for (int16_t x = sx; x <= ex; ++x) {
             if (!this->inSide2(x, y)) { continue; }
             
             if (t > 0) {
@@ -1466,7 +1466,7 @@ POSSIBILITY OF SUCH DAMAGE.
         float ab = 0;
         float ac = 0;
         float t = abs((v2x-v1x) * (v3y-v1y) - (v2y-v1y) * (v3x-v1x));
-        for (int16_t x = sx; x < ex; ++x) {
+        for (int16_t x = sx; x <= ex; ++x) {
             if (!this->inSide2(x, y)) { continue; }
             
             if (t > 0) {
