@@ -26,6 +26,7 @@ uint64_t xrnd() {
 //     E512Array () { this->a = new T[1]; }
 //     E512Array (uint16_t sz) {
 //         this->a = new T[sz];
+//         this->array_size = sz;
 //         this->array_capacity = sz;
 //     }
 //     E512Array (uint16_t sz, T t) {
@@ -149,6 +150,7 @@ public:
     E512Array () { this->a = new T[1]; }
     E512Array (uint32_t sz) {
         this->a = new T[sz];
+        this->array_size = sz;
         this->array_capacity = sz;
     }
     E512Array (uint32_t sz, T t) {
