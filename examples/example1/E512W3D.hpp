@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 
 #include "E512W3DUtils.hpp"
 #include "E512W3DWindow.hpp"
